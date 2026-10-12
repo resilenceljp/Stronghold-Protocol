@@ -3,7 +3,7 @@
 | 字段 | 内容 |
 |---|---|
 | 日期 | 2026-10-13，Asia/Macau |
-| 状态 | 实现与定向验证完成；正在生成精简包，正式服务器未部署 |
+| 状态 | 已完成：实现、定向验证、精简包和功能分支发布；正式服务器未部署 |
 | 分支与基线 | feat/entertainment-endless；源HEAD 6a2b72bb97d1469194fd758b3001017a632ce23f |
 | 仓库 | resilenceljp/Stronghold-Protocol-20p，独立导入LongQianChen的20人分支 |
 | 提交归属 | 完成后与本文同一提交，按记录路径查询 |
@@ -28,3 +28,13 @@
 - 完整CI未全部重跑：已有wire-network末项仍期待5Hz，而来源现为8Hz；check-imports在未修改的nodeData.js报3个Node导入。
 - 内置浏览器真实操作：20席位无尽房建房、策略、休整、搜索普通/精锐干员、直接获取、7级调度、9999层实时同步；关闭按钮、无尽标识与监视台3024识别正常。Edge连接不可用，未作20真人实战或无限回合长跑压测。
 - 独立版本0.2.5，原版内容基线仍为上游0.2.4；更新package/lock/APP_VERSION/README/CHANGELOG，版本测试通过。监视台UI1.5已通过Package-Update.ps1打包并复制boot/helper、版本ZIP及latest ZIP到D:\Stronghold-Protocol。
+
+## 发布结果
+
+- GitHub功能分支：feat/entertainment-endless；实现提交5fffcd8e59ebc388125f6025658cf750d9c3b602，树6623defa4f142c090dd9d508356d0f842a3b55af，与本地实现提交9f043bd1的文件树完全一致。原feat/IncreasePlayerCapacity分支保持原样。
+- Git命令行push等待未返回，已中止，改用已连接GitHub接口创建树、提交与分支；没有读取或保存新令牌。
+- 正式生产精简包Stronghold-Protocol-v0.2.5-lite.zip已生成，约25.7MB，包含生产依赖、启动脚本、monitor和MANIFEST；首次启动仍需素材下载/沿用本机素材。
+- 游戏ZIP SHA256：426F99030A95AB2C822CEEEE6F680AE6439E3A3AFF5229052055F84A85E27B2A；程序、helper和控制台文件存在，ZIP无monitor/data、runtime、日志或私人设置。
+- 游戏版本ZIP及latest ZIP、监视台UI1.5 ZIP和latest ZIP、boot/helper全部已复制到D:\Stronghold-Protocol，逐文件哈希一致。
+- 打包第一次账号名检查误报RequireAdministrator和英文administrators，均为公开代码词汇；使用工具的SP_PACKAGE_SCAN_USER=0排除通用Windows账号名，私人home路径扫描继续执行且通过。
+- 测试游戏3020/3022与监视台3024在验证后关闭，正式3000/3010未停止。
