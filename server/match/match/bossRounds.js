@@ -50,7 +50,7 @@ export class MatchBoss {
     // the pool's own per-player tally, one pool per boss round. stats.bossDamage (the result's 领袖伤害) adds up both
     // rounds, so it would credit the Final Assault's damage to the hidden leader ("隐藏boss还没打就出了50%播报").
     const hitSteps = new Map();
-    const pool = new SharedBossPool(bossPoolHp(this.gd, bossId, alive.length), {
+    const pool = new SharedBossPool(bossPoolHp(this.gd, bossId, alive.length) * (this.ruleset === 'endless' ? this.gd.enemyScale(this.round).hpMul : 1), {
       onHit: (pid, dmg) => {
         const ps = this.players.get(pid);
         if (!ps) return;
@@ -542,6 +542,13 @@ export class MatchBoss {
     this.overtimeAt = 0;
     this.markPublic();
     this.runner = null;
+    if (this.ruleset === 'endless' && victory && !hidden) {
+      this.later(this.scaled(DELAYS.SETTLE), () => {
+        this.bossPool = null; this.bossWaves = null; this.teamLp = null;
+        this.startRound(this.round + 1);
+      });
+      return;
+    }
     if (!hidden) {
       const eligible = victory && !!this.hiddenBossId && hiddenEligible(this.gd, { layerSum: this.hiddenLayerSum, teamLp: this.teamLp, playerCount: this.alivePlayers().length });
       this.later(this.scaled(DELAYS.SETTLE), () => {

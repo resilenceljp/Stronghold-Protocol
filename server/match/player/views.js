@@ -60,6 +60,7 @@ export class PlayerViews {
     return {
       t: 'm.private',
       playerId: this.playerId,
+      ...(this.m.ruleset !== 'standard' ? { ruleset: this.m.ruleset, consoleEnabled: this.m.consoleEnabled, layerCap: this.gd.layerCap } : {}),
       seat: this.seat,
       alive: this.alive,
       lp: this.lp,

@@ -953,3 +953,7 @@ Operator capacities use measured single-player exceptions and twice those counts
 `take(..., { overdraw: true })` records full occupation of a granted/promoted elite or a Mimic copy beyond capacity;
 normal takes remain bounded. Negative internal balance is a deficit, never negative available stock. Existing
 item selection probabilities and explicit grant weights remain unchanged.
+
+## 分支娱乐扩展
+
+`room.create {ruleset?, consoleEnabled?}` 选择标准/娱乐/无尽；`g.console {kind,id?,amount?}` 为仅本房休整期的本人操作。新增字段走wire v1 extension，新增类型走JSON fallback，既有紧凑协议位置不变。规则及假设见 [ENTERTAINMENT.md](ENTERTAINMENT.md)。

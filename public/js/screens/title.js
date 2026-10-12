@@ -10,6 +10,7 @@
 // entry/loading illustration names) it is layered under the CSS art; otherwise the screen is
 // pure CSS/SVG (radar, ridgelines, glow), so it never issues a request that can 404.
 
+import { ProjectNotice } from '../ui/projectNotice.js';
 import { ResumeMatchButton } from '../ui/resumeMatch.js';
 import { useMemo, useState } from '../../vendor/hooks.module.js';
 import { NAME_MAX_LEN, APP_VERSION, DEV_BUILD } from '../../../shared/constants.js';
@@ -287,6 +288,7 @@ export function TitleScreen() {
       </div>
     </main>
 
+    <${ProjectNotice} />
     <${SettingsModal} open=${settingsOpen} onClose=${() => setSettingsOpen(false)} />
 
     <footer class="title-foot">

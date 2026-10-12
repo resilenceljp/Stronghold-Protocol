@@ -399,7 +399,8 @@ export const C2S = {
   'lobby.spectate': { roomId: isRoomId,
     assetCache: isAssetCacheReadiness, $optional: ['assetCache'] },
   'room.create': { mode: (v) => v === 'solo' || v === 'coop', difficulty: (v) => DIFFICULTIES.includes(v), capacity: (v) => ROOM_CAPACITIES.includes(v),
-    assetCache: isAssetCacheReadiness, $optional: ['capacity', 'assetCache'] },
+    assetCache: isAssetCacheReadiness, ruleset: (v) => ['standard', 'entertainment', 'endless'].includes(v), consoleEnabled: isBool,
+    $optional: ['capacity', 'assetCache', 'ruleset', 'consoleEnabled'] },
   'room.join': { code: (v) => isStr(v, ROOM_CODE_LEN + 2) && /^[A-Za-z0-9]+$/.test(v), assetCache: isAssetCacheReadiness, $optional: ['assetCache'] },
   'room.leave': {},
   'room.ready': { ready: isBool },
@@ -441,6 +442,8 @@ export const C2S = {
   // the strategy highlighted in the draft screen (user playtest #4 item 4): a turn that runs out takes it while it is
   // free (Match.timeoutBand); absent / null clears it
   'g.bandFocus': { bandId: nullable(isId), ...draftScope, $optional: ['bandId', ...draftScopeOptional] },
+  'g.console': { kind: (v) => ['chess', 'item', 'layers', 'level', 'funds'].includes(v),
+    id: isId, amount: (v) => isInt(v, 1, 9999), $optional: ['id', 'amount'] },
   'g.buy': { slot: (v) => isInt(v, 0, 15) },
   'g.refresh': {},
   'g.freeze': {},

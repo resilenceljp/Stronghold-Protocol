@@ -72,6 +72,7 @@ import { useFieldView } from '../ui/fieldHost.js';
 import { TopBar, liveLp, ownLeaks, uniteRemaining, tempInfo, tempReadyReason } from '../ui/hud.js';
 import { BondStrip, BondPopup } from '../ui/bondStrip.js';
 import { TeamPanel } from '../ui/teamPanel.js';
+import { EntertainmentConsole } from '../ui/entertainmentConsole.js';
 import { ShopBar } from '../ui/shopBar.js';
 import { DetailPanel, resolveDetail } from '../ui/detailPanel.js';
 import { RewardOverlay } from '../ui/rewardOverlay.js';
@@ -1482,6 +1483,8 @@ function MatchScreen() {
         ${spectator ? null : html`<${Button} size="sm" variant="primary" icon="back" onClick=${() => watchPlayer({ playerId: myId })}>${t('返回自己')}<//>`}
       </div>` : null}
 
+      ${pub?.ruleset && pub.ruleset !== 'standard' ? html`<div class="fun-game-label">${pub.endless ? t('无尽模拟') : t('娱乐模式')} · ${t('层数上限')} ${pub.layerCap}</div>` : null}
+      <${EntertainmentConsole} priv=${priv} editable=${editable && !spectator} />
       ${showShop ? html`<${ShopBar} priv=${priv} editable=${editable} collapsed=${collapsed} onCollapse=${setCollapsed}
         barRef=${barRef} offBonds=${offBonds}
         onBuy=${buy} onLevel=${() => actions.levelUp()} onRefresh=${() => actions.refresh()} onFreeze=${() => actions.freeze()}

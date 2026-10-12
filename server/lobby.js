@@ -239,6 +239,7 @@ export class Room {
       maxAiPerRoom: this.maxAiPerRoom,
       mode: this.mode,
       difficulty: this.difficulty,
+      ruleset: this.ruleset || 'standard', consoleEnabled: !!this.consoleEnabled,
       capacity: this.capacity,
       aiPicksLast: this.aiPicksLast,
       allowMatchmaking: this.allowMatchmaking,
@@ -489,9 +490,10 @@ export class Lobby {
   // room.* handlers
   // ---------------------------------------------------------------------------------------------------
 
-  create(session, { mode, difficulty, capacity = DEFAULT_SEATS, assetCache }) {
+  create(session, { mode, difficulty, capacity = DEFAULT_SEATS, assetCache, ruleset = 'standard', consoleEnabled = false }) {
     if (this.emergency.active) return fail(ERR.SERVER_EMERGENCY);
     if (!ROOM_CAPACITIES.includes(capacity)) return fail(ERR.BAD_MSG, 'invalid capacity');
+    if (!['standard', 'entertainment', 'endless'].includes(ruleset) || (ruleset === 'standard' && consoleEnabled)) return fail(ERR.BAD_MSG);
     const cur = this.roomOf(session);
     if (cur && cur.match) return fail(ERR.ROOM_STARTED, 'leave your running match first');
     const admission = this.assetCacheAdmission(assetCache);
@@ -510,6 +512,10 @@ export class Lobby {
     if (!code) return fail(ERR.INTERNAL, 'no room code available');
     if (cur) this.removeMember(cur, session.playerId);
     const room = new Room(code, mode, difficulty, this.now(), capacity);
+    room.ruleset = ruleset;
+    room.consoleEnabled = ruleset !== 'standard' && consoleEnabled === true;
+    // Entertainment rooms are isolated from automatic standard matchmaking. Invite codes still work.
+    if (ruleset !== 'standard') room.allowMatchmaking = false;
     room.maxAiPerRoom = this.maxAiPerRoom;
     room.ownerKey = key;
     room.seats[0] = this.humanSeat(0, session);
@@ -649,6 +655,7 @@ export class Lobby {
     if (room.match) return fail(ERR.ROOM_STARTED);
     if (room.mode !== 'coop') return fail(ERR.BAD_TARGET, 'solo rooms cannot be matched');
     if (typeof allowed !== 'boolean') return fail(ERR.BAD_MSG, 'invalid matchmaking policy');
+    if (allowed && room.ruleset && room.ruleset !== 'standard') return fail(ERR.BAD_TARGET, 'entertainment uses invite codes');
     if (room.allowMatchmaking === allowed) return OK;
     this.dropReplay(room, session.playerId);
     room.allowMatchmaking = allowed;
@@ -662,6 +669,7 @@ export class Lobby {
     if (room.hostId !== session.playerId) return fail(ERR.NOT_HOST);
     if (room.match) return fail(ERR.ROOM_STARTED);
     this.dropReplay(room, session.playerId);
+    if (room.ruleset === 'endless' && difficulty !== 'NORMAL') return fail(ERR.BAD_TARGET, 'endless uses NORMAL campaign');
     if (room.difficulty !== difficulty) {
       room.difficulty = difficulty;
       for (const s of room.seats) if (s && !s.isBot && s.playerId !== room.hostId) s.ready = false;
@@ -899,6 +907,7 @@ export class Lobby {
         roomCode: room.code,
         mode: room.mode,
         difficulty: room.difficulty,
+        ruleset: room.ruleset, consoleEnabled: room.consoleEnabled,
         modeId: modeIdFor(room.mode, room.difficulty),
         // 「AI 队友最后选择」 (GitHub #338): fixed for the match
         aiPicksLast: room.mode !== 'solo' && room.aiPicksLast === true,

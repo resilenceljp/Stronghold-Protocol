@@ -42,3 +42,8 @@ normative lines it rewrote).
 | §27 | [history/0.2.2.md](history/0.2.2.md) | 0.2.2 — after the 0.2.1 release (2026-10-09) |
 | §28 | [history/0.2.3.md](history/0.2.3.md) | 0.2.3 — after the 0.2.2 release (2026-10-10) |
 | §29 | [history/0.2.4.md](history/0.2.4.md) | 0.2.4 — after the 0.2.3 release (2026-10-11) |
+| §30 | [design/entertainment.md](design/entertainment.md) | 本分支可选娱乐与无尽规则 |
+
+分支新增的娱乐与无尽规则与原版模式隔离：见 [娱乐与无尽](ENTERTAINMENT.md)。
+
+分支规则补充：[DESIGN §30 — 娱乐与无尽](design/entertainment.md)。

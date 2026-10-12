@@ -87,12 +87,16 @@ export function bossPoolShareOf(modeScale, cfgScale, isSolo, aliveCount) {
 /** Strip the _a/_b suffix of an item id (the registry key of an item family). */
 export const itemKey = (id) => (typeof id === 'string' ? id.replace(/_[ab]$/, '') : '');
 
+import { endlessFactor } from './entertainment.js';
+
 export class GameData {
   /**
    * @param {Readonly<Record<string, any>>} data server/data.js getData() (may be partial)
    * @param {string} modeId e.g. 'mode_multi_hard'
    */
   constructor(data, modeId) {
+    this.ruleset = 'standard';
+    this.layerCap = 999;
     this.raw = data && typeof data === 'object' ? data : {};
     this.config = getConfig(this.raw) || {};
     this.modeId = modeId;
@@ -351,6 +355,7 @@ export class GameData {
   get maxShopLevel() { return posIntOr(this.mode.maxShopLevel, DEFAULTS.maxShopLevel); }
 
   roundCfg(r) {
+    if (this.ruleset === 'endless' && r > 14) r = 8 + ((r - 15) % 6);
     const rounds = this.mode.rounds;
     return rounds && typeof rounds === 'object' && rounds[String(r)] && typeof rounds[String(r)] === 'object' ? rounds[String(r)] : null;
   }
@@ -442,7 +447,9 @@ export class GameData {
 
   /** Enemy multipliers of round r = the official table (baseEnemyScale; no custom multiplier). */
   enemyScale(r) {
-    return this.baseEnemyScale(r);
+    if (this.ruleset !== 'endless') return this.baseEnemyScale(r);
+    const factor = endlessFactor(r);
+    return { hpMul: factor, atkMul: factor, defMul: factor, speedMul: 1 };
   }
 
   timer(key) {
@@ -475,7 +482,8 @@ export class GameData {
   }
   get dp() {
     const d = this.config.dp && typeof this.config.dp === 'object' ? this.config.dp : {};
-    return { dpInit: numOr(d.init, 10), dpPerSec: numOr(d.perSec, 1), dpMax: numOr(d.max, 99) };
+    return { dpInit: numOr(d.init, 10), dpPerSec: numOr(d.perSec, 1), dpMax: numOr(d.max, 99),
+      ...(this.ruleset && this.ruleset !== 'standard' ? { layerCap: this.layerCap } : {}) };
   }
   get unite() {
     const u = this.config.unite && typeof this.config.unite === 'object' ? this.config.unite : {};

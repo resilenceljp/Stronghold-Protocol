@@ -223,8 +223,8 @@ export class SharedItemPool {
     let count = 0;
     const see = p => {
       if (!p) return;
-      if (p.kind === 'item' && this.gd.baseIdOf(p.id) === base) count += this.need(p.id);
-      for (const item of p.items || []) if (this.gd.baseIdOf(item.id) === base) count += this.need(item.id);
+      if (p.kind === 'item' && !(p.consoleGrant && this.gd.ruleset !== 'standard') && this.gd.baseIdOf(p.id) === base) count += this.need(p.id);
+      for (const item of p.items || []) if (!(item.consoleGrant && this.gd.ruleset !== 'standard') && this.gd.baseIdOf(item.id) === base) count += this.need(item.id);
     };
     for (const ps of this.players()) {
       for (const p of ps.hand) see(p);

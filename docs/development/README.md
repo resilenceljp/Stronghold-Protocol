@@ -87,3 +87,7 @@
 | 原版规则考证 | [research/00-INDEX.md](../research/00-INDEX.md) |
 
 参考资料中的原版四人规则、历史假设和旧实现不自动等于本分支现状。遇到不一致，先核对相关决定、后续记录、当前源码和测试，把查明的差异写进本目录。
+
+## resilenceljp独立仓库开发
+
+新的娱乐、无尽与monitor目录工作见 [DEV-20261013-01](records/2026-10-13-01-entertainment-endless.md)。本地分支 feat/entertainment-endless，尚未部署到正式服务器。

@@ -1,3 +1,7 @@
+# 卫戍协议：盟约 · Stronghold Protocol: Alliance
+
+resilenceljp 独立分支 v0.2.5：娱乐、无尽与服主监视台；原版内容基线 v0.2.4。
+
 ## 卫戍协议20人版总结
 
 本分支项目由龙千尘基于作者上游原作者项目[sganggs/Stronghold-Protocol](https://github.com/sganggs/Stronghold-Protocol)，将其扩展为最大20人联机版本，并且做了相应网络优化，新功能添加与体验优化。目前同步至0.2.4版本，并修复缪尔赛思的转职球bug。
@@ -45,11 +49,11 @@
 
 后续此项目将大幅降低更新频率，并且不再大量开发新功能，祝玩的开心
 
-# 卫戍协议：盟约 · Stronghold Protocol: Alliance
+## 卫戍协议：盟约 · Stronghold Protocol: Alliance
 
 《明日方舟》季节性自走棋塔防玩法「卫戍协议：盟约」的**非官方同人复刻**：浏览器即开即玩，单人或最多 20 人联机合作。
 
-![version](https://img.shields.io/badge/version-0.2.4-2ea44f)
+![version](https://img.shields.io/badge/version-0.2.5-2ea44f)
 ![license](https://img.shields.io/badge/code%20license-GPL--3.0--or--later-blue)
 ![node](https://img.shields.io/badge/node-22%20%7C%2024-339933)
 
@@ -305,3 +309,9 @@ An **unofficial, non-commercial fan remake** of Arknights' seasonal auto-chess t
 - **Disclaimer:** not affiliated with or endorsed by Hypergryph or Yostar. All Arknights names, art, audio, text and data are © their respective owners and are **not** covered by this project's GPL licence. For study and personal non-commercial use only — no selling, paid distribution, paid servers or monetisation of any kind. Content will be removed on request of the rights holders. Provided "as is", without warranty.
 - **License:** code GPL-3.0-or-later ([LICENSE](LICENSE)); game assets excluded.
 - **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) (an English summary at its end); the code map is [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## 本仓库新增：娱乐与无尽
+
+本仓库 https://github.com/resilenceljp/Stronghold-Protocol-20p 保留龙千尘的20人分组合作，并加入独立娱乐/无尽房：建房前可启用无次数限制的休整期控制台，盟约上限9999，敌人逐回合增长10%，最终攻势后持续挑战。普通房沿用原玩法。启动页右侧展示项目公告，不阻挡「开始」。
+
+服主工具集中在 `monitor/`，游戏boot内置仅本机的只读接口；独立UI默认3010，`npm run monitor` 可启动。详情见 [娱乐与无尽说明](docs/ENTERTAINMENT.md) 与 [监视台说明](monitor/README.md)。

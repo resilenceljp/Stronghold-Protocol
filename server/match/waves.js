@@ -218,7 +218,7 @@ export function setupMatchWaves(gd, rng) {
 export function roundPick(gd, rng, factionsOrSetup, round) {
   const src = factionsOrSetup;
   const picks = src && !Array.isArray(src) && Array.isArray(src.picks) ? src.picks : (src && src.schedule && Array.isArray(src.schedule.picks) ? src.schedule.picks : null);
-  if (picks) return picks[round] ?? null;
+  if (picks) return picks[gd.ruleset === 'endless' && round > 14 ? 8 + ((round - 15) % 6) : round] ?? null;
   const factions = Array.isArray(src) ? src : (src && Array.isArray(src.factions) ? src.factions : []);
   const g = gen(gd);
   const types = gd.factions.types && typeof gd.factions.types === 'object' ? gd.factions.types : {};
@@ -237,6 +237,7 @@ export function scaleFor(gd, r) {
 /** The spawn mods of a round's scale for a non-leader enemy: HP / ATK / speed, plus `supplyHpMul` when the round has one. */
 export function roundMods(scale) {
   const m = { hpMul: scale.hpMul, atkMul: scale.atkMul, speedMul: scale.speedMul };
+  if (scale.defMul != null) m.defMul = scale.defMul;
   if (scale.supplyHpMul != null) m.supplyHpMul = scale.supplyHpMul;
   return m;
 }
@@ -336,7 +337,7 @@ function templateSpawns(gd, tpl, round, pick) {
       // enemy_exclude = enemy_9012_acloon): leader parts take them all; the leader takes ATK / speed but not HP — its HP
       // is the server pool, "领袖单位于服务器的生命值加成不受上述加成影响" (PRTS 下半). `supplyHpMul` (roundMods) rides along for
       // the 器物 hit-count units, which 补给线 / 补给线II leave out (archetypes.js `times`; also a 频次 enemy's death spawn)
-      mods: isBoss ? { atkMul: scale.atkMul, speedMul: scale.speedMul, slot } : { ...roundMods(scale), slot },
+      mods: isBoss ? { atkMul: scale.atkMul, speedMul: scale.speedMul, ...(scale.defMul != null ? { defMul: scale.defMul } : {}), slot } : { ...roundMods(scale), slot },
       actionIndex: i,
       preview: previewInfo(gd, key, routes[routeIndex], isBoss, leader),
     };

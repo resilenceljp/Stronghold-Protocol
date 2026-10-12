@@ -403,7 +403,7 @@ export function TopBar({ pub, priv, conn, hud, total, drawer, onExit, onDrawer, 
       <//>
       <div class="roundbox">
         <span class="roundbox__label">${t('回合')}</span>
-        <b class="roundbox__num num">${roundText}</b>
+        <b class="roundbox__num num">${roundText}</b>${pub?.endless ? html`<small>∞</small>` : null}
       </div>
       <${PhaseCapsule} pub=${pub} hud=${hud} miss=${!boss && Number.isFinite(live?.left) ? live.left : null} />
       <${LpTower} value=${lp} size="lg" tone=${lowLp ? 'danger' : boss ? 'team' : null} pending=${pending}

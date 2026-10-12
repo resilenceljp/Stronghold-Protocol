@@ -10,6 +10,8 @@ import { deriveSeed } from '../../sim/rng.js';
 import { OK, fail } from './common.js';
 import { onHumanEmote } from '../botEmotes.js';
 
+import { consoleIntent } from '../entertainment.js';
+
 export class MatchIntents {
   _handle(ps, msg) {
     switch (msg.t) {
@@ -24,6 +26,7 @@ export class MatchIntents {
       case 'g.bandSkip': return this.skipBand(ps, msg);
       // the strategy highlighted in the draft screen (what a timed-out turn takes, timeoutBand)
       case 'g.bandFocus': return this.bandFocus(ps, msg.bandId ?? null, msg);
+      case 'g.console': return consoleIntent(this, ps, msg);
       case 'g.buy': return ps.buy(msg.slot);
       case 'g.refresh': return ps.refresh();
       case 'g.freeze': return ps.freeze();

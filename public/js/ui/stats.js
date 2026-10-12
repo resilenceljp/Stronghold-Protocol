@@ -558,6 +558,7 @@ function storeRecord(rec) {
  * @returns {any|null}
  */
 export function recordResult(res, ctx = {}) {
+  if (res?.ruleset && res.ruleset !== 'standard') return null;
   return storeRecord(buildRecord(res, ctx));
 }
 
@@ -568,6 +569,7 @@ export function recordResult(res, ctx = {}) {
  * @returns {any|null}
  */
 export function recordQuit(state, ctx = {}) {
+  if (state?.match?.public?.ruleset && state.match.public.ruleset !== 'standard') return null;
   const live = ctx.live ?? liveMatch;
   const rec = storeRecord(buildQuitRecord(state, ctx));
   live.active = false; // one record per match

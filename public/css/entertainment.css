@@ -1,0 +1,36 @@
+/* Design units: one rem = 100 pixels at 1920-wide desktop. */
+.fun-mode-picker { display:flex; gap:.08rem; margin-bottom:.15rem; }
+.fun-mode,.console-tabs button { border:1px solid #42534f; padding:.1rem .16rem; color:#b8cec7; background:#101a18; cursor:pointer; }
+.fun-mode.is-selected,.console-tabs .is-selected { background:#69d6b6; color:#081512; }
+.fun-mode-notes { border:1px solid #8256cb; padding:.18rem; background:#171523; margin-bottom:.16rem; line-height:1.7; }
+.fun-mode-notes b { color:#b990ff; }.fun-mode-notes small { display:block; color:#a9bbb7; }
+.fun-mode-notes input { accent-color:#69d6b6; }.diff-list[hidden] { display:none; }
+.entertainment-console-entry { position:absolute; right:.24rem; top:1.1rem; z-index:35; }
+.entertainment-console .modal__body { min-height:0; }.console-note { color:#f6a329; margin:0 0 .12rem; }
+.console-tabs { display:flex; flex-wrap:wrap; gap:.08rem; margin-bottom:.16rem; }
+.console-search,.console-value { display:flex; align-items:center; gap:.15rem; margin-bottom:.15rem; }
+.console-search>input { flex:1; min-width:0; }.console-search input,.console-value input { padding:.1rem; border:1px solid #42534f; background:#080f0d; color:#c9e8dc; font-size:.18rem; }
+.console-search input[type=number],.console-value input { width:1.1rem; }
+.console-catalog { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.08rem; max-height:4.2rem; overflow:auto; }
+.console-card { display:flex; gap:.12rem; align-items:center; padding:.09rem; text-align:left; color:#d4e5df; background:#0d1512; border:1px solid #42534f; cursor:pointer; min-width:0; }
+.console-card.is-golden { border-color:#b89a3c; }.console-card img { width:.55rem; height:.55rem; object-fit:contain; }
+.console-card span { flex:1; min-width:0; }.console-card small { display:block; color:#849e95; font-size:.11rem; overflow-wrap:anywhere; }.console-card>b { color:#69d6b6; font-size:.26rem; }
+.project-notice { position:absolute; right:.55rem; top:26%; width:4rem; max-height:65%; overflow:auto; padding:.23rem; border:1px solid #406a5d; border-top:4px solid #69d6b6; color:#a9c2b9; background:rgba(12,24,20,.9); font-size:.14rem; line-height:1.7; z-index:2; }
+.project-notice h2 { font-size:.24rem; color:#d4efe3; margin:.1rem 0; }.project-notice a { display:block; color:#69d6b6; overflow-wrap:anywhere; }.project-notice small { display:block; font-size:.11rem; color:#809b90; }
+@media(min-width:1200px) { .title-main { transform:translateX(-1.8rem); } }
+@media(max-width:1199px) { .project-notice { right:.15rem; top:.85rem; width:2.75rem; max-height:35%; font-size:.12rem; padding:.12rem; } .project-notice p { margin:.07rem 0; } }
+@media(max-width:750px) { .project-notice { position:relative; top:auto; right:auto; margin:.2rem auto; width:90%; max-height:1.5rem; } .title-screen { overflow:auto; } .console-catalog { grid-template-columns:1fr; } }
+
+.entertainment-console { font-size:clamp(14px,.18rem,18px); }
+.entertainment-console .modal__title { font-size:clamp(20px,.28rem,28px); }
+.console-tabs button { padding:10px 14px; font-size:clamp(13px,.16rem,18px); min-height:40px; }
+.console-search input,.console-value input { font-size:clamp(14px,.18rem,18px); min-height:40px; }
+.console-catalog { max-height:50vh; gap:8px; }
+.console-card { min-height:65px; padding:8px; gap:12px; }.console-card img { width:48px; height:48px; }
+.console-card b { font-size:clamp(14px,.17rem,18px); }.console-card small { font-size:clamp(10px,.12rem,13px); }
+.project-notice { font-size:clamp(12px,.14rem,16px); }.project-notice small { font-size:clamp(10px,.11rem,12px); }
+.project-notice h2 { font-size:clamp(18px,.24rem,26px); }
+@media(min-width:751px) and (max-width:1199px) { .project-notice { width:220px; } }
+
+.fun-game-label { position:absolute; right:.24rem; top:.75rem; padding:.06rem .1rem; color:#b990ff; background:#171523; font-size:clamp(11px,.14rem,16px); }
+.entertainment-console .modal__actions .btn { min-height:40px; min-width:84px; font-size:14px; }

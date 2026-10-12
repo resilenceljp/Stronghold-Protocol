@@ -73,7 +73,7 @@ export const FOLDER = 'Stronghold-Protocol';
 /** Root files a player gets. */
 export const ROOT_FILES = ['package.json', 'package-lock.json', 'LICENSE', 'NOTICE.md', 'THIRD-PARTY-NOTICES.md', 'README.md', 'CHANGELOG.md'];
 /** The player docs. */
-export const PLAYER_DOCS = ['docs/PLAYING.md', 'docs/DEPLOY.md', 'docs/ANNOUNCEMENTS.md', 'docs/ASSET_CACHE.md', 'docs/SERVER_SETTINGS.md'];
+export const PLAYER_DOCS = ['docs/PLAYING.md', 'docs/DEPLOY.md', 'docs/ANNOUNCEMENTS.md', 'docs/ASSET_CACHE.md', 'docs/SERVER_SETTINGS.md', 'docs/ENTERTAINMENT.md'];
 /** Research tables read at run time: server/sim/nodeData.js (the Node sim's fallback) and tools/fetch-assets.mjs. */
 export const RUNTIME_RESEARCH = ['docs/research/03-operators.json', 'docs/research/05-enemies.json', 'docs/research/05-maps.json', 'docs/research/07-assets.json'];
 /** The start scripts (scripts/make-windows-bundle.mjs is the maintainer's Windows pack, docs/WINDOWS.md). */
@@ -84,15 +84,15 @@ export const PLAYER_TOOLS = ['tools/announcements.mjs', 'tools/asset-cache-pack.
 /** Whole tool directories: fetch-assets' modules, the local-client extraction setup runs. */
 export const PLAYER_TOOL_DIRS = ['tools/assets/', 'tools/asset-cache/', 'tools/local-extract/'];
 /** Whole runtime directories (their tracked files). */
-export const RUNTIME_DIRS = ['server/', 'shared/', 'data/', 'public/', 'packs/'];
+export const RUNTIME_DIRS = ['server/', 'shared/', 'data/', 'public/', 'packs/', 'monitor/'];
 /** Written into the stage, never taken from the checkout: the pack index of the shipped packs. */
 export const GENERATED_PACK_INDEX = 'packs/index.json';
 /** Whether shipped files include a content pack (then the stage gets GENERATED_PACK_INDEX). @param {string[]} files */
 export const shipsPacks = (files) => files.some((f) => /^public\/i18n\/[^/]+\.json$/.test(f) || /^packs\/[^/]+\/pack\.json$/.test(f));
 /** Never from the tracked list: the dev pages, and what only the art plan adds (or npm ci writes). */
-const NOT_TRACKED_SHIP = ['public/dev/', 'public/assets/', 'public/fonts/', 'public/vendor/'];
+const NOT_TRACKED_SHIP = ['monitor/data/', 'public/dev/', 'public/assets/', 'public/fonts/', 'public/vendor/'];
 /** The npm scripts a player runs: each `node <file>` of them must ship. */
-export const PLAYER_NPM_SCRIPTS = ['start', 'setup', 'doctor', 'launch', 'postinstall', 'vendor', 'assets', 'assets:pack'];
+export const PLAYER_NPM_SCRIPTS = ['start', 'setup', 'doctor', 'launch', 'postinstall', 'vendor', 'assets', 'assets:pack', 'monitor'];
 
 /**
  * THE SWITCH for the Japanese voice dub in the full zip (`audio.voiceJp` of data/assets.json: 2674 files under
@@ -284,6 +284,8 @@ export function entryProblems(pkg, files) {
   if (pkg?.main && !shipped.has(pkg.main)) out.push(`package.json main ${pkg.main} is not shipped`);
   for (const name of PLAYER_NPM_SCRIPTS) {
     const cmd = pkg?.scripts?.[name];
+    // Optional fork tool: validate it when declared, without requiring it in upstream/minimal packages.
+    if (name === 'monitor' && !cmd) continue;
     if (!cmd) { out.push(`npm script "${name}" is missing`); continue; }
     for (const m of cmd.matchAll(/\bnode\s+(?:--[\w-]+\s+)*([\w./-]+\.m?js)\b/g)) {
       if (!shipped.has(m[1])) out.push(`npm run ${name}: ${m[1]} is not shipped`);

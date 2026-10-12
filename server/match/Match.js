@@ -226,6 +226,8 @@ function dataSourceFor(data) {
   return ds;
 }
 
+import { configureEntertainment } from './entertainment.js';
+
 export class Match {
   /** @param {object} opts see MATCH INTERFACE above */
   constructor(opts) {
@@ -245,6 +247,9 @@ export class Match {
     this.onEndFn = opts.onEnd;
     this.data = opts.data && typeof opts.data === 'object' ? opts.data : {};
     this.gd = new GameData(this.data, this.modeId);
+    configureEntertainment(this.gd, opts.ruleset);
+    this.ruleset = this.gd.ruleset;
+    this.consoleEnabled = this.ruleset !== 'standard' && opts.consoleEnabled === true;
     if (!this.difficulty) this.difficulty = this.gd.difficulty;
     this.isSolo = this.mode === 'solo' || this.gd.isSolo;
     /** Co-op always keeps manual online players first (D004/D012); the upstream setting cannot disable that rule. */

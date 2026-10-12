@@ -248,6 +248,8 @@ export function LobbyScreen() {
   const me = useStore((s) => s.me, shallowEqual);
   const conn = useStore((s) => s.connection, shallowEqual);
   useData('config');
+  const [ruleset, setRuleset] = useState('standard');
+  const [consoleEnabled, setConsoleEnabled] = useState(false);
   const [roomMode, setRoomMode] = useState(() => (loadPref('lobby.mode', 'coop') === 'solo' ? 'solo' : 'coop'));
   const [difficulty, setDifficulty] = useState(() => {
     const d = loadPref('lobby.difficulty', 'FUNNY');
@@ -293,7 +295,7 @@ export function LobbyScreen() {
       if (alive.current) setBusy(null);
     }
   };
-  const create = () => run('create', () => net.request('room.create', { mode: roomMode, difficulty, ...(roomMode === 'coop' ? { capacity } : {}) }));
+  const create = () => run('create', () => net.request('room.create', { mode: roomMode, difficulty: ruleset === 'endless' ? 'NORMAL' : difficulty, ruleset, consoleEnabled: ruleset !== 'standard' && consoleEnabled, ...(roomMode === 'coop' ? { capacity } : {}) }));
   const quickMatch = () => run('quickMatch', () => net.request('lobby.quickMatch', matchCapacity ? { capacity: matchCapacity } : {}).catch((err) => {
     if (err?.code === ERR.ROOM_NOT_FOUND) { toast(t('暂无可加入的房间，请稍后重试或创建同盟。'), 'warn'); return; }
     throw err;
@@ -396,7 +398,18 @@ export function LobbyScreen() {
 
       <section class="lobby-right">
         <div class="section-label"><span class="section-label__idx num">02</span>${t('模拟难度')}<${MicroLabel}>DIFFICULTY<//></div>
-        <div class="diff-list">
+        <div class="fun-mode-picker" role="group" aria-label=${t('玩法模式')}>
+          ${[['standard', t('原版模式')], ['entertainment', t('娱乐模式')], ['endless', t('无尽模拟')]].map(([id, label]) => html`
+            <button type="button" class=${`fun-mode ${ruleset === id ? 'is-selected' : ''}`} aria-pressed=${ruleset === id}
+              onClick=${() => { setRuleset(id); if (id === 'standard') setConsoleEnabled(false); }}>${label}</button>`)}
+        </div>
+        ${ruleset !== 'standard' ? html`<div class="fun-mode-notes">
+          <b>${ruleset === 'endless' ? t('无尽模拟') : t('娱乐模式')}</b>
+          <p>${ruleset === 'endless' ? t('敌人生命、攻击、防御每回合复利增长10%；14回合最终攻势后继续无尽关卡，无隐秘核心。调度7级解锁特殊道具栏，随机8张战场。') : t('独立娱乐房间，保留所选难度；盟约层数上限9999，按原有增益规则叠加。')}</p>
+          <label><input type="checkbox" checked=${consoleEnabled} onChange=${(e) => setConsoleEnabled(e.target.checked)} /> ${t('启用休整期控制台（全房玩家可用，无次数限制）')}</label>
+          <small>${t('控制台只操作自己的阵容；娱乐房默认不参与快速匹配，使用同盟密钥邀请好友。')}</small>
+        </div>` : null}
+        <div class="diff-list" hidden=${ruleset === 'endless'}>
           ${DIFFICULTIES.map((d) => html`<${DifficultyCard} key=${d} roomMode=${roomMode} difficulty=${d} selected=${difficulty === d} onSelect=${pickDifficulty} />`)}
         </div>
         ${roomMode === 'coop' ? html`<div class="capacity-select">

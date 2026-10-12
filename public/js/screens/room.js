@@ -211,6 +211,7 @@ function InviteBox({ code, name, difficulty }) {
 }
 
 function DifficultyPicker({ room, isHost, busy, onPick }) {
+  if (room.ruleset === 'endless') return html`<div class="dpick dpick--ro"><b>AC-∞ · ${t('无尽模拟')}</b></div>`;
   if (!isHost) {
     return html`<div class="dpick dpick--ro">
       <${DifficultyTag} difficulty=${room.difficulty} size="lg" code=${difficultyInfo(room.mode, room.difficulty).code} />
@@ -289,7 +290,10 @@ export function RoomScreen() {
   const coop = room.mode !== 'solo';
   const facts = roomFacts(room, me.playerId);
   const myReady = !!facts.mine?.ready;
-  const info = difficultyInfo(room.mode, room.difficulty);
+  const info = { ...difficultyInfo(room.mode, room.difficulty), ...(room.ruleset === 'endless' ? {
+    code: 'AC-∞', desc: t('敌人生命、攻击、防御每回合复利增长10%；14回合最终攻势后继续无尽关卡，无隐秘核心。调度7级解锁特殊道具栏，随机8张战场。'),
+    effects: [], rounds: '∞', hidden: false,
+  } : {}) };
 
   const run = async (kind, fn) => {
     if (inFlight.current) return;
@@ -376,7 +380,7 @@ export function RoomScreen() {
       </div>
       <div class="topbar__center">
         <${MicroLabel} tone="mint">${coop ? 'ALLIANCE LOBBY' : 'SOLO SIMULATION'}<//>
-        <h1 class="topbar__title">${coop ? t('同盟模拟') : t('独立模拟')}<span class="topbar__sep"></span><${DifficultyTag} difficulty=${room.difficulty} size="lg" /></h1>
+        <h1 class="topbar__title">${room.ruleset === 'endless' ? t('无尽模拟') : room.ruleset === 'entertainment' ? t('娱乐模式') : coop ? t('同盟模拟') : t('独立模拟')}<span class="topbar__sep"></span><${DifficultyTag} difficulty=${room.difficulty} size="lg" /></h1>
       </div>
       <div class="topbar__right">
         ${coop ? html`<${InviteBox} code=${room.code} name=${me.name} difficulty=${room.difficulty} />` : html`<div class="solo-note"><${MicroLabel}>SINGLE OPERATOR<//><span>${t('仅限 1 名博士')}</span></div>`}
