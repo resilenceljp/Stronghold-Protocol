@@ -89,7 +89,8 @@ export class MatchPlatform {
       this.refreshDraftPriority(playerId);
       this.refreshUniteSkipVote();
       // A disconnected human's silence is never consent to a new setup.
-      this.cancelSetupVote();
+        this.cancelSetupVote();
+        if(this.endlessVote){this.resolveEndless(false);return;}
       // a paused solo battle resumes (the server takes the field over; nobody is left to resume it)
       this._resume();
       if (this.emergencyFrozen) this._emergencyLostAuthorities.add(playerId);
@@ -141,7 +142,8 @@ export class MatchPlatform {
     if (!ps || ps.isBot || ps.left || this.disposed) return;
     this.guard(() => {
       ps.left = true;
-      this.cancelSetupVote();
+        this.cancelSetupVote();
+        if(this.endlessVote){this.resolveEndless(false);return;}
       ps.connected = false;
       ps.autoplay = false;
       this.refreshUniteSkipVote();

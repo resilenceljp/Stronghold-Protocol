@@ -747,3 +747,7 @@ burn hammers 2 each; limited accelerator 1; shield drone and laser emitter 4 eac
 Ashlock 10, Fartooth 3. Rebuild `choices.json` offline; these weights do not exempt draws from shared availability.
 The runtime derives unlimited fixed-gift families from `SERVER_GAIN_EQUIP`; this is a grant-source exemption,
 not a zero-occupancy flag or a manually maintained second list in generated data.
+
+## 娱乐满练度独立数据
+
+`node tools/build-data.mjs --full-training [--offline]` 从官方缓存生成 `data/full-training.json`（chess/backups/tokens）。不重写标准模式数据；六星精二90，其他干员按最高精英阶段与该阶段最高等级，满信赖、潜能和可用最高技能/模组等级。服务器与浏览器BattleSpec的 `fullTraining` 标志选择同一数据视图；该选项只存在于娱乐准备页。浏览器仅需要时加载，失败时不使用旧数值冒充满练度。

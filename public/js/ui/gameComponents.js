@@ -6,6 +6,7 @@ import { html, Icon, TierChip, Tooltip } from './components.js';
 import { data, useData, localAsset } from '../data.js';
 import { parseRichText, rtClassName } from './richText.js';
 import { t as tr } from '../../../shared/i18n.js';
+import { useStore } from '../store.js';
 import {
   uiUrl, chessAvatarUrl, chessPortraitUrl, itemIconUrl, tokenAvatarUrl, enemyIconUrl, bondIconUrl, bandIconUrl,
 } from './assetUrls.js';
@@ -15,6 +16,7 @@ const cx = (...p) => p.flat().filter(Boolean).join(' ');
 /** Data files the in-match screens use (`backups`: the 补位 stand-ins' bodies — cards, the board model, the detail card). */
 export const GAME_FILES = ['config', 'assets', 'chess', 'bonds', 'items', 'bands', 'enemies', 'bosses', 'stages', 'tokens',
   'choices', 'effects', 'garrisons', 'factions', 'local', 'backups'];
+export const OPTIONAL_GAME_FILES = Object.freeze(['fullTraining']);
 
 /**
  * Load every in-match data file; returns lookups (sync, null until loaded).
@@ -23,9 +25,10 @@ export const GAME_FILES = ['config', 'assets', 'chess', 'bonds', 'items', 'bands
  *   effect: (id:string)=>any, garrison: (id:string)=>any, factions: any, choices: any, backups: any, list: (name:string)=>any[] }}
  */
 export function useGameData() {
-  const ready = useData(...GAME_FILES);
+  const fullTraining = useStore(s => s.match?.public?.funRules?.training === 'max');
+  const ready = useData(...GAME_FILES, ...(fullTraining ? OPTIONAL_GAME_FILES : []));
   // (config / factions / choices are read once per memo: a language switch reads them again in the new locale)
-  return useMemo(() => makeLookups(ready), [ready, data.locale()]);
+  return useMemo(() => makeLookups(ready, fullTraining), [ready, fullTraining, data.locale()]);
 }
 
 /** A 自选 operator's summon record (data/backups.json `tokens`, 0.2.0), or null. */
@@ -35,12 +38,13 @@ export function diyToken(id) {
 }
 
 /** Non-hook lookups (for event handlers). */
-export function makeLookups(ready = true) {
+export function makeLookups(ready = true, fullTraining = false) {
+  const full = fullTraining ? data.get('fullTraining') : null;
   return {
     ready,
     m: data.get('assets'),
     config: data.get('config'),
-    chess: (id) => data.lookup('chess', id),
+    chess: (id) => full?.chess && Object.hasOwn(full.chess, id) ? full.chess[id] : data.lookup('chess', id),
     bond: (id) => data.lookup('bonds', id),
     item: (id) => data.lookup('items', id),
     band: (id) => data.lookup('bands', id),
@@ -48,13 +52,13 @@ export function makeLookups(ready = true) {
     boss: (id) => data.lookup('bosses', id),
     stage: (id) => data.lookup('stages', id),
     // (a 自选 operator's summons are data/backups.json tokens — 0.2.0, the hand piece of a placeable one)
-    token: (id) => data.lookup('tokens', id) || diyToken(id),
+    token: (id) => full?.tokens && Object.hasOwn(full.tokens, id) ? full.tokens[id] : full?.backups?.tokens && Object.hasOwn(full.backups.tokens, id) ? full.backups.tokens[id] : data.lookup('tokens', id) || diyToken(id),
     effect: (id) => data.lookup('effects', id),
     garrison: (id) => data.lookup('garrisons', id),
     factions: data.get('factions'),
     choices: data.get('choices'),
-    backups: data.get('backups'),
-    list: (name) => data.list(name),
+    backups: full?.backups || data.get('backups'),
+    list: (name) => full?.[name] ? Object.values(full[name]) : data.list(name),
   };
 }
 

@@ -251,9 +251,10 @@ export class Match {
     this.gd = new GameData(this.data, this.modeId);
     configureEntertainment(this.gd, opts.ruleset);
     this.ruleset = this.gd.ruleset;
+    if(this.ruleset==='endless'){this.modeId=this.gd.modeId;this.difficulty=this.gd.difficulty;}
     this.consoleEnabled = this.ruleset !== 'standard' && opts.consoleEnabled === true;
     this._consoleWanted = this.consoleEnabled;
-    this.funRules = {...DEFAULT_FUN_RULES,consoleEnabled:this.consoleEnabled,relicIds:[...DEFAULT_FUN_RULES.relicIds]};
+    this.funRules = {...DEFAULT_FUN_RULES,endlessEnabled:this.ruleset==='endless',shopLevel7:this.ruleset==='endless',consoleEnabled:this.consoleEnabled,relicIds:[...DEFAULT_FUN_RULES.relicIds]};
     if (!this.difficulty) this.difficulty = this.gd.difficulty;
     this.isSolo = this.mode === 'solo' || this.gd.isSolo;
     /** Co-op always keeps manual online players first (D004/D012); the upstream setting cannot disable that rule. */

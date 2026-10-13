@@ -59,6 +59,7 @@ export function buildBattleSpec(o = {}) {
   const tl = Number(o.timeLimit);
   const spec = {
     v: SPEC_VERSION,
+    ...(o.fullTraining===true?{fullTraining:true}:{}),
     battleId: o.battleId ?? null,
     fieldId: o.fieldId ?? null,
     kind: o.kind ?? 'normal',
@@ -137,6 +138,11 @@ export { withUnitLoadouts };
 export function createBattleFromSpec(spec, dataSource, opts = {}) {
   if (!spec || typeof spec !== 'object') throw new TypeError('createBattleFromSpec: spec required');
   const s = jsonClone(spec);
+  if(s.fullTraining){
+    const ds=toDataSource(dataSource),full=ds.raw?.fullTraining;
+    if(!full?.chess||!full?.tokens||!full?.backups)throw new Error('full training data unavailable');
+    dataSource=toDataSource({...ds.raw,...full});
+  }
   const bossLike = s.kind === 'boss' || s.kind === 'hidden';
   let sharedBoss = opts.sharedBoss ?? null;
   if (!sharedBoss && bossLike && s.boss) sharedBoss = new LocalBossPool(s.boss.poolMax, s.boss.poolHp);

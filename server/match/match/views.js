@@ -69,6 +69,7 @@ export class MatchViews {
       lastRound: this.ruleset === 'endless' ? Math.max(14, this.round) : this.gd.lastRound,
       ...(this.ruleset !== 'standard' ? { ruleset: this.ruleset, consoleEnabled: this.consoleEnabled, layerCap: this.gd.layerCap, funRules: this.funRules, teamRelicShield:this.teamRelicShield||0 } : {}),
       ...(this.ruleset === 'endless' ? { endless: true, enemyGrowth: 0.1 } : {}),
+      ...(this.endlessVote?{endlessVote:this.endlessVote}:{}),
       deadline: this.deadline,
       serverNow: this.sched.now(),
       modeId: this.modeId,

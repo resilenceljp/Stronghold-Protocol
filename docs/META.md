@@ -986,3 +986,5 @@ room.funRules {rules,setupRevision}仅房主INFO_CHECK可用；g.relic {id,offer
 
 
 fun.3 布局、七级普通商店槽与手机精简素材说明见[手机与布局更新](FUN_MOBILE.md)。
+
+娱乐扩展fun.5的规则、来源与验证见[DEV-20261013-04](development/records/2026-10-13-04-fun5.md)。

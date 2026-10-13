@@ -2,6 +2,7 @@
 // Read-only telemetry. Keep match/simulation state untouched; failures never block combat.
 import fs from 'node:fs';
 import path from 'node:path';
+import { installTrafficLedger } from './traffic-ledger.js';
 const states = new WeakMap(), rosters = new WeakMap(), hooked = new WeakMap();
 const safe = (fn, fallback = null) => { try { return fn(); } catch { return fallback; } };
 const clone = v => safe(() => JSON.parse(JSON.stringify(v)), null);
@@ -50,6 +51,7 @@ export function playerExtra(match, ps) {
 }
 export function installMonitorV6(srv, root) {
   if (states.has(srv)) return;
+  const ledger=installTrafficLedger(srv,root);
   const manifest = safe(()=>JSON.parse(fs.readFileSync(path.join(root,'data','assets.json'),'utf8')),{});
   const proto = srv.lobby?.MatchClass?.prototype;
   const methods = hooked.get(proto) || [];
@@ -85,6 +87,27 @@ export function installMonitorV6(srv, root) {
   };
   const timer=setInterval(()=>{const n=current(),time=Date.now(),seconds=(time-previous.time)/1000;rates={receivedBytesPerSecond:Math.max(0,(n.receivedBytes-previous.receivedBytes)/seconds),sentBytesPerSecond:Math.max(0,(n.sentBytes-previous.sentBytes)/seconds)};previous={receivedBytes:n.receivedBytes,sentBytes:n.sentBytes,time};},1000);
   timer.unref();srv.server?.once('close',()=>clearInterval(timer));
-  states.set(srv,{snapshot:()=>({monitorVersion:6,monitorCapabilities:{rosterBoundary:methods.length===2,gameTraffic:!!srv.server,shopDetails:true},gameTraffic:{...current(),...rates,startedAt:bootAt,scope:'game TCP bytes; excludes tagged local monitor requests; not tunnel billing'}})});
+  states.set(srv,{ledger,snapshot:()=>({monitorVersion:8,monitorCapabilities:{rosterBoundary:methods.length===2,gameTraffic:!!srv.server,detailedTraffic:true,shopDetails:true},trafficLedger:ledger.snapshot(),gameTraffic:{...current(),...rates,startedAt:bootAt,scope:'game TCP bytes; excludes tagged local monitor requests; not tunnel billing'}})});
 }
 export function serverExtra(srv) { return states.get(srv)?.snapshot() || {}; }
+export function trafficLedgerFor(srv) { return states.get(srv)?.ledger || null; }
+
+// Explicit local administrator action; never inferred from a player's nickname.
+export function sendMonitorMessage(srv,command) {
+ if(!command||!['all','room'].includes(command.scope)||typeof command.text!=='string')throw new Error('invalid message');
+ const text=command.text.trim();
+ if(!text||[...text].length>200||/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/u.test(text))throw new Error('invalid message text');
+ const rooms=[...srv.lobby.rooms.values()].filter(r=>command.scope==='all'||r.code===command.roomCode);
+ if(command.scope==='room'&&!rooms.length)throw new Error('room unavailable');
+ const ids=new Set(rooms.flatMap(r=>[...r.seats,...(r.spectators||[])].filter(p=>p&&!p.left&&!p.isBot).map(p=>p.playerId)));
+ const recipients=[...srv.registry.all()].filter(s=>s.ws?.readyState===1&&(command.scope==='all'||ids.has(s.playerId)));
+ const toast=JSON.stringify({t:'m.toast',kind:'info',text:'服主通知：'+text});
+ for(const s of recipients)s.ws.send(toast);
+ for(const r of rooms){
+   const chat=r.matchCtx?.chat;if(!chat||chat.closed)continue;
+   const entry=Object.freeze({seq:++chat.seq,playerId:'server_monitor',name:'服主通知',seat:null,spectator:true,text,at:Date.now()});
+   chat.messages.push(entry);if(chat.messages.length>chat.historyLimit)chat.messages.shift();
+   srv.lobby.broadcastRoom(r,{t:'m.chat',matchId:chat.matchId,...entry});
+ }
+ return {ok:true,recipients:recipients.length,rooms:rooms.map(r=>r.code)};
+}

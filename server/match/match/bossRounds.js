@@ -564,11 +564,11 @@ export class MatchBoss {
           this.tickerText('隐秘核心已解锁', FLOW_TICKER_PRIORITY);
           this.startRound(this.gd.hiddenRound);
         } else {
-          this.finish({ victory, reason: victory ? 'victory' : 'defeat' });
+          this.offerEndless({ victory, reason: victory ? 'victory' : 'defeat' });
         }
       });
     } else {
-      this.later(this.scaled(DELAYS.SETTLE), () => this.finish({ victory: true, hiddenCleared: victory, reason: 'victory' }));
+      this.later(this.scaled(DELAYS.SETTLE), () => this.offerEndless({ victory: true, hiddenCleared: victory, reason: 'victory' }));
     }
   }
 }

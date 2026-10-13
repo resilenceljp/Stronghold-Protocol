@@ -2,16 +2,27 @@
 import { ERR } from '../../shared/constants.js';
 export const RULESETS = ['standard', 'entertainment', 'endless'];
 export function configureEntertainment(gd, ruleset = 'standard') {
+  gd._standardMode ||= gd.mode;
+  gd._standardModeId ||= gd.modeId;
+  gd.modeId = gd._standardModeId;
+  gd.mode = gd._standardMode;
   gd.ruleset = RULESETS.includes(ruleset) ? ruleset : 'standard';
   gd.layerCap = gd.ruleset === 'standard' ? 999 : 9999;
   if(gd.ruleset !== 'standard') gd.economy={...gd.economy,benchSize:22};
+  gd.inactiveEnemies=new Set(gd.mode.inactiveEnemyKeys||[]);
   if (gd.ruleset !== 'endless') return;
   // [ASSUMED] NORMAL supplies the 14-round campaign, all eight maps and the late normal-wave templates.
   const base = gd.config.modes?.[gd.isSolo ? 'mode_single_normal' : 'mode_multi_normal'] || gd.mode;
+  gd.modeId = gd.isSolo ? 'mode_single_normal' : 'mode_multi_normal';
   gd.mode = { ...base, lastRound: 14, bossRound: 14, hiddenRound: null, maxShopLevel: 7,
     stages: [...(base.stages || [])], shopSlots: { ...base.shopSlots, 7: { chess: (base.shopSlots?.[6]?.chess||5)+1, item: (base.shopSlots?.[6]?.item||1)+1 } },
     upgradePrices: [...(base.upgradePrices || [5, 7, 9, 11, 13]), 20] };
   gd.inactiveEnemies = new Set(gd.mode.inactiveEnemyKeys || []);
+}
+export function configureShop7(gd, enabled) {
+  if (!enabled) { if(gd.ruleset==='endless') gd.mode={...gd.mode,maxShopLevel:6}; return; }
+  const slots=gd.mode.shopSlots?.[6]||{chess:5,item:1};
+  gd.mode={...gd.mode,maxShopLevel:7,shopSlots:{...gd.mode.shopSlots,7:{chess:slots.chess+1,item:slots.item+1}},upgradePrices:[...gd.mode.upgradePrices.slice(0,5),20]};
 }
 export function endlessFactor(round) {
   // Numeric safety ceiling, reached only after ~290 rounds; no finite round-count limit.

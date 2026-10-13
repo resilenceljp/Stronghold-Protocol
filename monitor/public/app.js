@@ -5,7 +5,7 @@ const compact=v=>v==null?'—':Math.abs(v)>=1e6?(v/1e6).toFixed(2)+'M':Math.abs(
 const duration=sec=>{if(sec==null||!Number.isFinite(Number(sec)))return '—';sec=Math.max(0,Math.floor(sec));const h=Math.floor(sec/3600);return [h,Math.floor(sec%3600/60),sec%60].map(n=>String(n).padStart(2,'0')).join(':');};
 const clock=t=>t?new Date(t).toLocaleTimeString('zh-CN',{hour12:false}):'—';
 const phases={LOBBY:'等待中',INFO_CHECK:'确认本局信息',BAND_DRAFT:'选择策略',BATTLE_CHECK:'协议启动',ROUND_START:'回合开始',SP_DRAFT:'机变阶段',PREP:'休整期',COMBAT:'作战中',UNITE:'联防阶段',SETTLE:'结算',FINAL_ASSAULT:'最终攻势',HIDDEN_CORE:'隐秘核心',RESULT:'模拟结束'};
-const titles={overview:'实时总览',rooms:'房间与对局',users:'在线玩家',events:'事件记录',diagnostics:'运行诊断'};
+const titles={overview:'实时总览',rooms:'房间与对局',users:'在线玩家',traffic:'流量账本与历史',events:'事件记录',diagnostics:'运行诊断'};
 let snapshot=null,view='overview',fetching=false;
 const empty=text=>`<div class="empty">${esc(text)}</div>`;
 const badge=(text,color='')=>`<span class="badge ${color}">${esc(text)}</span>`;
@@ -108,7 +108,15 @@ function sakuraPanel(){const q=snapshot.sakura||{};const title=q.disabled?'未�
 }
 function trafficPanel(){const t=snapshot.traffic;const mb=v=>fmt(v/1048576)+' MiB';return `<section class="panel"><div class="panel-heading"><h2>游戏与穿透流量</h2></div>${t?kv('游戏接收 / 发送累计',mb(t.receivedBytes)+' / '+mb(t.sentBytes))+kv('游戏接收 / 发送速率',fmt(t.receivedBytesPerSecond/1024)+' / '+fmt(t.sentBytesPerSecond/1024)+' KiB/s')+kv('已识别 SakuraFRP 连接',mb(t.buckets.sakura.receivedBytes)+' / '+mb(t.buckets.sakura.sentBytes))+kv('Tailscale 地址候选',mb(t.buckets.tailscaleCandidate.receivedBytes)+' / '+mb(t.buckets.tailscaleCandidate.sentBytes))+kv('其他 / 未识别',mb(t.buckets.other.receivedBytes)+' / '+mb(t.buckets.other.sentBytes))+kv('统计起点',clock(t.startedAt)):'<p class="muted">等待 boot v6 游戏流量接口。</p>'}<p class="small muted">按游戏端口 TCP 字节统计，排除监视台的健康与图片请求。SakuraFRP 通过本机进程连接匹配，短连接可能漏识别；100.64/10 仅为 Tailscale 候选。未包含隧道封装、重传和平台计费规则，不能作为账户扣费依据。服务重启后累计清零。</p></section>`;}
 function diagnostics(){const d=snapshot.diagnostics||{},c=snapshot.config,h=snapshot.health||{},b=snapshot.admin?.build||{};$('diagnostic-content').innerHTML=`<div class="diagnostic-grid">${sakuraPanel()}${trafficPanel()}<section class="panel"><div class="panel-heading"><h2>接口与进程</h2></div>${kv('游戏健康检查',`127.0.0.1:${c.gamePort}/healthz`)}${kv('本地管理接口',`127.0.0.1:${c.adminPort}/admin/status.json`)}${kv('健康数据时间',clock(snapshot.healthAt))}${kv('管理数据时间',clock(snapshot.adminAt))}${kv('监听进程',d.pid?`${d.processName} / PID ${d.pid}`:'未获得监听进程')}${kv('CPU',d.pid&&d.cpuPercent!=null?fmt(d.cpuPercent)+'%':'—')}${kv('内存',d.pid?fmt(d.memoryMB)+' MB':'—')}${kv('TCP 已建立',fmt(d.established))}${kv('TCP 状态',(d.tcpStates||[]).map(x=>`${x.state}=${x.count}`).join(', ')||'—')}${kv('诊断采样时间',clock(d.time))}</section><section class="panel"><div class="panel-heading"><h2>版本与网络</h2></div>${kv('版本 / 最大席位',`${b.appVersion||h.app||'—'} / ${b.maxSeats??'—'}`)}${kv('仓库',b.repo||'无 Git 信息')}${kv('分支 / Commit',`${b.branch||'未知'} / ${b.commit||'未知'}`)}${kv('运行目录',b.installDir||'—')}${kv('采样网卡',d.adapter||'—')}${kv('下载 / 上传',`${fmt(d.downMbps)} / ${fmt(d.upMbps)} Mbps`)}${kv('当前流量折算',d.downMbps!=null?fmt((d.downMbps+d.upMbps)*3600/8/1000)+' GB/h':'—')}${kv('SakuraFRP 进程',d.available?(d.sakura?'已发现':'未发现'):'未采样')}${kv('Tailscale 进程',d.available?(d.tailscale?'已发现':'未发现'):'未采样')}<p class="small muted">流量为整张网卡的采样，包含其他应用。进程存在仅代表程序正在运行，不能证明外网通道可用。</p></section><section class="panel"><div class="panel-heading"><h2>状态判定与恢复</h2></div><div class="diagnosis">ONLINE：健康接口返回 ok=true。<br>HUNG：健康接口失败，但 TCP 端口仍可连接。<br>DOWN：健康接口失败，TCP 连接被拒绝。<br>UNKNOWN：健康检查和端口探测均无法确定。<br><br>若 CMD 标题显示“选择”，按 Esc 退出选择模式，并在控制台属性中关闭 QuickEdit。HUNG 也可能来自事件循环阻塞、过载或错误响应；请结合进程和日志判断。</div></section><section class="panel"><div class="panel-heading"><h2>数据与兼容性</h2></div><div class="diagnosis">${snapshot.features.matchDetail?'已发现 boot v5 对局字段。':'当前尚未发现 boot v5 对局字段；没有房间时暂时无法判断。'}<br>${snapshot.features.connectedAt?'在线时间字段可用。':'尚未发现 connectedAt，旧接口无法提供精确在线时长。'}<br>战场进度来自客户端上报，可能稍有延迟。<br>死亡、掉线、离开和托管分别读取独立状态。<br>完整日志保存于程序旁的 data 文件夹。<br>管理接口失败时，保留最后快照并明确标记为旧数据。</div>${snapshot.error?kv('健康检查错误',snapshot.error):''}${snapshot.adminError?kv('管理接口错误',snapshot.adminError):''}${d.error?kv('系统诊断错误',d.error):''}</section></div>`;}
-function renderContent(){if(view==='overview')overview();if(view==='rooms')rooms();if(view==='users')users();if(view==='events'){const q=$('event-search').value.toLowerCase();$('event-list').innerHTML=events(snapshot.events.filter(e=>(e.type+' '+e.detail).toLowerCase().includes(q)));}if(view==='diagnostics')diagnostics();}
+function renderChat(){
+ const selected=$('chat-room').value,rooms=snapshot.admin?.roomsDetail||[];
+ const options='<option value="">选择房间</option>'+rooms.map(r=>`<option value="${esc(r.code)}">${esc(r.code)}</option>`).join('');
+ if($('chat-room').innerHTML!==options){$('chat-room').innerHTML=options;$('chat-room').value=selected;}
+ const room=rooms.find(r=>r.code===selected),messages=room?.chat?.messages||[];
+ $('chat-messages').innerHTML=messages.map(m=>`<p><small>${clock(m.at)}</small> <b>${esc(m.name)}</b>：${esc(m.text)}</p>`).join('')||empty('当前没有聊天记录');
+ $('message-form').querySelector('button').disabled=!snapshot.adminFresh||!snapshot.admin?.monitorActions?.messages;
+}
+function renderContent(){renderChat();if(view==='traffic'){renderTrafficLive();if(!trafficHistory)loadTraffic();}if(view==='overview')overview();if(view==='rooms')rooms();if(view==='users')users();if(view==='events'){const q=$('event-search').value.toLowerCase();$('event-list').innerHTML=events(snapshot.events.filter(e=>(e.type+' '+e.detail).toLowerCase().includes(q)));}if(view==='diagnostics')diagnostics();}
 function render(){const labels={CHECKING:'正在检查',ONLINE:'服务器在线',HUNG:'服务器无响应',DOWN:'服务器已停止',UNKNOWN:'状态待确认'};$('server-status').textContent=labels[snapshot.status]||snapshot.status;$('status-dot').className='status-dot '+(snapshot.status==='ONLINE'?'online':'bad');$('server-subtitle').textContent=`游戏 :${snapshot.config.gamePort} · 管理 :${snapshot.config.adminPort} · 状态持续 ${duration((snapshot.now-snapshot.since)/1000)}`;const b=snapshot.admin?.build;$('build-label').textContent=b?`${b.variant} · v${b.appVersion} · ${b.maxSeats} 席位`:'等待版本信息';$('updated').textContent='已更新 '+clock(snapshot.now);$('monitor-uptime').textContent='监视台已运行 '+duration((snapshot.now-snapshot.startedAt)/1000);const warnings=[];if(snapshot.status==='HUNG')warnings.push('健康检查失败，游戏端口仍可连接。检查 CMD 是否进入“选择”模式，按 Esc 退出。');if(snapshot.status==='DOWN')warnings.push('游戏端口连接被拒绝。监视台继续运行，等待游戏服恢复。');if(snapshot.status==='UNKNOWN')warnings.push('端口探测超时，暂时无法确定游戏是否已停止。');if(snapshot.admin&&!snapshot.adminFresh)warnings.push('正在显示最后一次管理快照（'+clock(snapshot.adminAt)+'），当前玩家与房间数据尚未更新。');if(snapshot.adminError)warnings.push('管理接口暂不可用：'+snapshot.adminError);if(snapshot.admin?.roomsDetail?.length&&!snapshot.features.matchDetail)warnings.push('当前使用旧版 boot 接口：可以看房间和玩家，完整对局字段需要安装 boot v5 并重启游戏服。');if(snapshot.storageError)warnings.push('日志写入失败：'+snapshot.storageError);$('compatibility').hidden=!warnings.length;$('compatibility').textContent=warnings.join(' ');renderContent();}
 async function refresh(){if(fetching)return;fetching=true;try{const response=await fetch('/api/status',{signal:AbortSignal.timeout(5000)});if(!response.ok)throw Error('HTTP '+response.status);snapshot=await response.json();$('connection-error').hidden=true;render();}catch(e){$('connection-error').hidden=false;$('connection-error').textContent='监视台服务连接中断，页面数据暂停更新。请重新运行“启动监视台”。'+e.message;}finally{fetching=false;}}
 $('refresh').addEventListener('click',refresh);for(const id of ['room-search','playing-only','user-search','user-filter','event-search'])$(id).addEventListener('input',()=>{if(snapshot)renderContent();});
@@ -116,3 +124,61 @@ function openSettings(){if(!snapshot)return;const f=$('settings-form');for(const
 $('settings-open').addEventListener('click',openSettings);$('settings-mobile').addEventListener('click',openSettings);$('settings-close').addEventListener('click',()=>$('settings').close());
 $('settings-form').addEventListener('submit',async e=>{e.preventDefault();const c=Object.fromEntries(new FormData(e.target));for(const k of ['gamePort','adminPort','refreshSeconds','timeoutSeconds'])c[k]=Number(c[k]);try{const r=await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)});const result=await r.json();if(!r.ok)throw Error(result.error);$('settings').close();await refresh();}catch(err){$('settings-error').textContent=err.message;}});
 refresh();setInterval(()=>{if(!document.hidden)refresh();},2000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+
+$('chat-room').addEventListener('change',()=>{if(snapshot)renderChat();});
+$('message-form').addEventListener('submit',async e=>{
+ e.preventDefault();const button=e.target.querySelector('button');if(button.disabled)return;button.disabled=true;
+ try{const response=await fetch('/api/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scope:$('message-scope').value,roomCode:$('message-room').value.trim().toUpperCase(),text:$('message-text').value})});
+ const result=await response.json();if(!response.ok)throw new Error(result.error);
+ $('message-result').textContent=`已发送给 ${result.recipients} 位在线玩家`;$('message-text').value='';
+ }catch(error){$('message-result').textContent=error.message;}finally{button.disabled=!snapshot?.adminFresh||!snapshot?.admin?.monitorActions?.messages;}
+});
+
+const byteLabel=n=>n==null?'—':n>=1073741824?(n/1073741824).toFixed(3)+' GiB':n>=1048576?(n/1048576).toFixed(2)+' MiB':n>=1024?(n/1024).toFixed(2)+' KiB':Math.round(n)+' B';
+const routeNames={sakuraConfirmed:'FRP连接确认',tailscaleCandidate:'Tailscale候选',loopbackUnclassified:'本机 / 转发未分类',directOrOther:'直连 / 其他',unknown:'未识别来源'};
+const categoryNames={game:'游戏消息',data:'游戏数据',audio:'声音',model:'模型 / 动作',image:'图像 / 头像',code:'脚本 / 样式 / 字体',page:'页面 / 其他'};
+let trafficHistory=null,trafficNext=null,trafficBusy=false,trafficReport=null;
+const trafficTable=(headers,rows)=>`<table><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(row=>`<tr>${row.map(cell=>`<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+function renderTrafficLive(){
+ const ledger=snapshot.admin?.trafficLedger,totals=ledger?.totals;
+ if(!totals){$('traffic-live').innerHTML=empty('详细账本需要 boot v8，安装后重启游戏服开始记录。');return;}
+ const total=totals.receivedBytes+totals.sentBytes;
+ $('traffic-live').innerHTML=trafficTable(['范围','玩家上传 / 服务接收','玩家下载 / 服务发出','合计'],[
+ ['全部',byteLabel(totals.receivedBytes),byteLabel(totals.sentBytes),byteLabel(total)],
+ ['局内',byteLabel(totals.inMatch.receivedBytes),byteLabel(totals.inMatch.sentBytes),byteLabel(totals.inMatch.receivedBytes+totals.inMatch.sentBytes)],
+ ['局外',byteLabel(totals.outsideMatch.receivedBytes),byteLabel(totals.outsideMatch.sentBytes),byteLabel(totals.outsideMatch.receivedBytes+totals.outsideMatch.sentBytes)]]);
+ if(ledger.storageError)$('traffic-history-status').textContent='游戏账本写入错误：'+ledger.storageError;
+ if(snapshot.trafficJournal?.error)$('traffic-history-status').textContent='历史导入暂时失败，已有记录保留：'+snapshot.trafficJournal.error;
+}
+function renderTrafficReport(){
+ if(!trafficReport)return;const report=trafficReport;
+ const sections=[['按房间',report.byRoom],['按玩家（可关联的流量）',report.byPlayer],['按素材 / 消息类型',report.byKind],['按连接来源',report.byRoute.map(r=>({...r,label:routeNames[r.key]||r.label}))]];
+ $('traffic-report').innerHTML=`<section class="panel"><h2>当天已落盘合计 ${byteLabel(report.total.receivedBytes+report.total.sentBytes)}</h2><p class="muted">${fmt(report.records)} 条记录 · 最近落盘 ${clock(report.lastAt)} · 包含同日服务器重启前后记录</p></section>`+sections.map(([label,rows])=>`<section class="panel"><h2>${label}</h2><div class="traffic-scroll">${trafficTable(['对象','局内','局外','玩家上传','玩家下载','合计'],rows.map(r=>[esc(r.label),byteLabel(r.inMatchBytes),byteLabel(r.outsideMatchBytes),byteLabel(r.receivedBytes),byteLabel(r.sentBytes),byteLabel(r.receivedBytes+r.sentBytes)]))}</div></section>`).join('');
+}
+function renderTrafficHistory(){
+ const kind=$('traffic-kind').value,rows=trafficHistory||[];
+ if(!rows.length){$('traffic-history').innerHTML=empty('当天暂无该类型记录');return;}
+ if(kind==='usage')$('traffic-history').innerHTML=trafficTable(['采样区间','房间 / 局','玩家','局内外 / 阶段','传输内容','玩家上传','玩家下载','合计','来源 / 归属'],rows.map(r=>[
+ esc(clock(r.from)+' – '+clock(r.to)),esc((r.roomCode||'未进房')+(r.matchNo?' / #'+r.matchNo:'')),esc((r.name||'未识别')+(r.playerId?' / '+r.playerId:'')),esc((r.situation==='inMatch'?'局内':'局外')+(r.phase?' · '+(phases[r.phase]||r.phase)+' R'+(r.round||0):'')),esc((r.channel==='http'?'HTTP / ':'WS / ')+(categoryNames[r.category]||r.category)),byteLabel(r.receivedBytes),byteLabel(r.sentBytes),byteLabel(r.receivedBytes+r.sentBytes),esc((routeNames[r.route]||'未分类')+' / '+({identifiedSocket:'游戏身份',browserLinked:'浏览器关联',unidentified:'未识别'}[r.attribution]||r.attribution))]));
+ if(kind==='rooms')$('traffic-history').innerHTML=trafficTable(['时间','房间记录','事件','局数 / 回合','模式','结果','玩家记录'],rows.map(r=>[
+ esc(clock(r.time)),esc(r.code+' / '+r.roomKey),esc({ROOM_CREATED:'房间创建',MATCH_STARTED:'对局开始',MATCH_ENDED:'对局结束',ROOM_CLOSED:'房间关闭'}[r.event]||r.event),esc('#'+(r.matchNo||0)+' / R'+(r.round||0)),esc(r.ruleset+' / '+r.difficulty),r.outcome?(r.outcome.victory?'胜利':'失败'):'—',`<details><summary>${r.players?.length||0} 位玩家</summary>${trafficTable(['玩家','生命','资金','存活','伤害','击杀'],(r.players||[]).map(p=>[esc(p.name),fmt(p.lp),fmt(p.funds),p.alive==null?'—':p.alive?'存活':'淘汰',compact(p.stats?.dmgDealt),fmt(p.stats?.kills)]))}</details>`]));
+ if(kind==='sakura')$('traffic-history').innerHTML=trafficTable(['观测时间','账户今日已用','账户剩余','区间用量变化','剩余净变化','状态'],rows.map(r=>[
+ esc(clock(r.time)),byteLabel(r.dailyUsedBytes),byteLabel(r.remainingBytes),r.observedUsedBytes==null?'无法跨重置计算':byteLabel(r.observedUsedBytes),r.remainingChangeBytes==null?'—':(r.remainingChangeBytes>=0?'+':'−')+byteLabel(Math.abs(r.remainingChangeBytes)),r.baseline?'首次基线':r.counterReset?'日切 / 重置 / 账户变化':r.remainingChangeBytes>0?'流量补充 / 增加':'正常观测']));
+ $('traffic-more').hidden=trafficNext==null;
+}
+async function loadTraffic(more=false){
+ if(trafficBusy)return;trafficBusy=true;
+ const day=$('traffic-day').value||new Date(Date.now()+8*3600000).toISOString().slice(0,10),kind=$('traffic-kind').value;const query=new URLSearchParams({day,kind,cursor:String(more?trafficNext||0:0)});
+ $('traffic-history-status').textContent='正在读取本机账本…';
+ try{
+  const [historyResponse,reportResponse]=await Promise.all([fetch('/api/traffic-history?'+query),more?Promise.resolve(null):fetch('/api/traffic-report?day='+encodeURIComponent(day))]);
+  const history=await historyResponse.json();if(!historyResponse.ok)throw Error(history.error);
+  trafficHistory=more?[...(trafficHistory||[]),...history.entries]:history.entries;trafficNext=history.nextCursor;
+  if(reportResponse){trafficReport=await reportResponse.json();if(!reportResponse.ok)throw Error(trafficReport.error);renderTrafficReport();}
+  $('traffic-history-status').textContent='日期 '+day+' · 已展示 '+trafficHistory.length+' 条 · 记录保存在本机，不随关服清除';
+  $('traffic-export').href='/api/traffic-export?'+new URLSearchParams({day,kind});renderTrafficHistory();
+ }catch(error){$('traffic-history-status').textContent='账本读取失败：'+error.message;}finally{trafficBusy=false;}
+}
+$('traffic-day').value=new Date(Date.now()+8*3600000).toISOString().slice(0,10);
+$('traffic-query').addEventListener('click',()=>loadTraffic(false));$('traffic-more').addEventListener('click',()=>loadTraffic(true));
+$('traffic-kind').addEventListener('change',()=>loadTraffic(false));$('traffic-day').addEventListener('change',()=>loadTraffic(false));

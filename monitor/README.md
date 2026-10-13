@@ -1,3 +1,17 @@
+# UI 1.9 · 房间与玩家流量账本
+
+进入「流量账本与历史」，按日期查询：局内/局外、房间/每局/玩家、HTTP素材与WebSocket消息；每项列出玩家上传、玩家下载与合计。素材细分图像、模型、声音、游戏数据、脚本样式与页面。另有房间生命周期和最终玩家LP/资金/战绩，以及SakuraFRP账户用量、剩余变化、补充和重置记录。可以下载当天NDJSON明细。
+
+服务器每秒采样实际TCP负载字节，约30秒落盘到游戏 `runtime/monitor-traffic/`；监视台镜像到 `data/traffic-日期.ndjson`、`rooms-日期.ndjson`、`sakura-日期.ndjson`。关闭游戏后，监视台仍可从已识别的本机账本目录导入和查询。不会自动删除历史；文件随着使用增长。
+
+流量包含压缩后的HTTP/WS内容与协议框架，不含TCP/IP/TLS及FRP额外开销；不能当成平台账单。HTTP通过非敏感浏览器编号关联玩家；无法关联时保留未识别，不以IP猜测个人。FRP来源确认依赖本机进程连接匹配，Tailscale仅地址候选。账户级SakuraFRP用量不可准确分摊到房间或个人。
+
+# UI 1.9 / boot v8 · 服主消息与聊天
+
+新增：向指定房间或全服在线玩家发送200字以内的服主通知；查看指定房间当前对局最近200条聊天。需新boot生效后才能发送，旧boot仍可读取原有监控数据。游戏更新后重启；监视台更新后单独重启监视台，再刷新页面。
+
+安装：运行 `Install-Boot-v8.ps1 -GameRoot D:\Stronghold-Protocol\Stronghold-Protocol-diy`。脚本备份旧boot及辅助模块。最新boot依赖 `monitor-v6.js` 和 `traffic-ledger.js`，三者必须一起复制。管理接口只供本机，消息不通过公网管理端口发送。每次更新运行 `Package-Update.ps1 -Version 1.9`，同步到D:\Stronghold-Protocol。
+
 # Stronghold Monitor UI 1.4 + boot v6
 
 本机独立运行的 Stronghold-Protocol 服务器监视台。纯 Node.js + HTML/CSS/JavaScript，无 npm 安装、无前端构建、无云端服务。界面默认监听 `127.0.0.1:3010`，通过独立进程读取游戏 `3000/healthz` 与管理 `3001/admin/status.json`。

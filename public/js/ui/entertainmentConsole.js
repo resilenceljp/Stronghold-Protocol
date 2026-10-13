@@ -31,6 +31,7 @@ export function EntertainmentConsole({ priv, editable }) {
     <${Modal} open=${open && editable} title=${t('娱乐控制台')} micro="ENTERTAINMENT CONSOLE" tone="red" width="min(1000px,92vw)"
       onClose=${() => setOpen(false)} class="entertainment-console"
       actions=${html`<${Button} variant="secondary" onClick=${() => setOpen(false)}>${t('关闭')}<//>`}>
+      <p class="console-warning">${t('该功能将极大降低游戏体验和乐趣。')}</p>
       <p class="console-note">${t('休整期可用 · 无次数限制 · 仅修改自己的数据')}</p>
       <nav class="console-tabs">${Object.entries(titles).map(([id, label]) => html`<button type="button"
         class=${tab === id ? 'is-selected' : ''} aria-pressed=${tab === id}

@@ -95,7 +95,7 @@ export function BriefingScreen() {
         <${MatchInfo} model=${info} />
       </section>
     </main>`}
-    ${!pub.ruleset||pub.ruleset==='standard'||(pub.rerollVote&&page===1)?html`<${SetupReroll} pub=${pub} />`:null}
+    ${page===1?html`<${SetupReroll} pub=${pub} />`:null}
     <footer class="brief__foot">
       <${MatchChatButton} class="mchat-brief-entry" />
       <${LoadoutButton} from="briefing" size="lg" class="brief-loadout" />

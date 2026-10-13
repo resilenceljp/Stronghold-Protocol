@@ -439,6 +439,7 @@ export const C2S = {
 
   // match
   'g.infoReady': { setupRevision: (v) => isInt(v, 0, 2 ** 31), $optional: ['setupRevision'] },
+  'g.endlessVote': { voteId: (v) => isInt(v, 1, 2 ** 31), agree: isBool },
   'g.rerollVote': { voteId: (v) => isInt(v, 1, 2 ** 31), agree: isBool },
   'g.band': { bandId: isId, ...draftScope, $optional: draftScopeOptional },
   'g.bandSkip': { ...draftScope, $optional: draftScopeOptional },

@@ -102,7 +102,7 @@ export class PlayerViews {
       loadout: this.loadout,
       // 0.2.2: the effective per-operator 潜能 / 练度 ({ [charId]: { potential, cultivate } }; operators not listed: 潜能 6,
       // 精英2 Lv.60) — the client's cards compose the numbers from it (shared/potential.js)
-      ops: this.ops,
+      ops: this.m.ruleset!=='standard'&&this.m.funRules.training==='max'?Object.fromEntries(Object.values(this.gd.raw.chess||{}).filter(c=>c.charId).map(c=>[c.charId,{potential:6,cultivate:3}])):this.ops,
       // 0.2.0 补位: the base chess ids this player fields as their stand-ins in this match (the not-owned list the seat had
       // at the match start; [] = every operator owned) — the client shows these as their stand-ins (cards, pieces, the
       // detail card, with a small 「替补」 mark)

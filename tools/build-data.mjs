@@ -60,7 +60,7 @@ function parseArgs(argv) {
     refresh: false, offline: false, quiet: false, noResearch: false, force: false,
     out: join(ROOT, 'data'), cache: join(ROOT, '.cache', 'gamedata'), report: join(ROOT, '.cache', 'build-data-report.json'),
   };
-  const flags = { '--refresh': 'refresh', '--offline': 'offline', '--quiet': 'quiet', '--no-research': 'noResearch', '--force': 'force' };
+  const flags = { '--refresh': 'refresh', '--offline': 'offline', '--quiet': 'quiet', '--no-research': 'noResearch', '--force': 'force', '--full-training': 'fullTraining' };
   const dirs = { '--out': 'out', '--cache': 'cache', '--report': 'report' };
   for (let i = 0; i < argv.length; i++) {
     const [name, inline] = argv[i].includes('=') ? [argv[i].slice(0, argv[i].indexOf('=')), argv[i].slice(argv[i].indexOf('=') + 1)] : [argv[i], null];
@@ -1227,6 +1227,7 @@ function buildUnitHead(ctx, charId) {
 function buildUnitForm(ctx, charId, status, { chessId = null, skillIndex = null } = {}) {
   const { charTable, uniequip, battleEquip } = ctx;
   const char = charTable[charId];
+  if(ctx.fullTraining&&char?.phases?.length){const phase=char.phases.length-1;status={phase,level:char.phases[phase].maxLevel,skillLevel:phase>=2?10:7,equipLevel:phase>=2?3:0};}
   const { phase, level, skillLevel, equipLevel } = status;
   const label = chessId ? `chess ${chessId}` : `unit ${charId}@${statusKey(status)}`;
   const attrs = withPotential(char, interpolateAttrs(char, phase, level), ctx.potRank, label);
@@ -4067,6 +4068,25 @@ function validateAll(f) {
 async function main() {
   const t0 = Date.now();
   const ctx = await loadContext();
+  if(OPTS.fullTraining){
+    const act=structuredClone(ctx.act),charTable=structuredClone(ctx.charTable);
+    // Full trust is an explicit entertainment override; standard generated records remain trust-zero.
+    for(const char of Object.values(charTable)){const bonus=char.favorKeyFrames?.at(-1)?.data||{};
+      for(const phase of char.phases||[])for(const frame of phase.attributesKeyFrames||[])for(const [key,value] of Object.entries(bonus))
+        if(typeof value==='number'&&value&&typeof frame.data?.[key]==='number')frame.data[key]+=value;
+    }
+    for(const [id,row] of Object.entries(act.charChessDataDict)){
+      const base=act.chessNormalIdLookupDict[id]||id,char=ctx.charTable[act.charShopChessDatas[base]?.charId];
+      if(!char?.phases?.length)continue;
+      const phase=char.phases.length-1;row.status={...row.status,evolvePhase:phase,charLevel:char.phases[phase].maxLevel,skillLevel:phase>=2?10:7,equipLevel:phase>=2?3:0};
+    }
+    const fctx={...ctx,act,charTable,potRank:FULL_RANK,fullTraining:true};
+    const built=buildChess(fctx),enemies=buildEnemies(ctx);
+    const full={chess:built.chess,backups:buildBackups(fctx,built.chess),tokens:buildTokens(fctx,built.chess,built.tokenOwners,enemies)};
+    if(Object.values(full.chess).some(c=>!c.isDiy&&c.charId&&(!c.stats||!c.status)))throw new Error('incomplete full-training data');
+    await mkdir(OPTS.out,{recursive:true});await writeFile(join(OPTS.out,'full-training.json'),JSON.stringify(full));
+    log('Full training: '+Object.keys(full.chess).length+' chess records');return;
+  }
   log('building…');
   // one pass of the operator builders per potential rank (潜能 1–6, ctx.potRank): the full-potential pass is the data,
   // annotated below with what every lower rank changes (attachPotential)

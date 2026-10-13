@@ -737,7 +737,7 @@ function DeviceDetail({ device, snapHp = null, live = null }) {
  *   unit carrying `diy`, and a teammate's bond popup 自选 row that hands its unit's pick on (`target.diy`, 0.2.1) —
  *   resolve to the composed 自选 record (`chess`, the operator) with `diy` = the pick
  */
-export function resolveDetail(target, pieces, { priv = null, backups = data.get('backups') } = {}) {
+export function resolveDetail(target, pieces, { priv = null, backups = data.get('backups'), fullTraining = false } = {}) {
   if (!target) return null;
   // a special terrain tile (issue #184): the screen resolved the stage's own numbers already (gameLogic.terrainInfo)
   if (target.kind === 'terrain') return target.terrain && typeof target.terrain === 'object' ? { type: 'terrain', terrain: target.terrain } : null;
@@ -747,8 +747,10 @@ export function resolveDetail(target, pieces, { priv = null, backups = data.get(
     const device = target.device && typeof target.device === 'object' ? target.device : null;
     return device ? { type: 'device', device, ...(Number.isInteger(device.unitId) ? { unitId: device.unitId } : {}) } : null;
   }
+  const full=fullTraining?data.get('fullTraining'):null;
+  const lookup=(name,id)=>full?.[name]&&Object.hasOwn(full[name],id)?full[name][id]:data.lookup(name,id);
   const ownSi = (c) => ownStandIn(c, priv, backups);
-  const dd = { chess: data.get('chess'), backups };
+  const dd = { chess: full?.chess||data.get('chess'), backups };
   /** the own card of chess `c`: its 自选 record and pick when the player filled that DIY slot */
   const ownDiy = (c) => {
     const rec = c ? ownDiyRecord(c, priv, dd) : null;
@@ -758,16 +760,16 @@ export function resolveDetail(target, pieces, { priv = null, backups = data.get(
     const e = pieces?.get(target.uid);
     if (!e) return null;
     const p = e.piece;
-    if (p.kind === 'item') { const it = data.lookup('items', p.id); return it ? { type: 'item', item: it, piece: p } : null; }
-    if (p.kind === 'token') { const t = data.lookup('tokens', p.id) || diyToken(p.id); return t ? { type: 'token', token: t, piece: p, ownerId: tokenOwnerId(p, pieces) } : null; }
-    const c = data.lookup('chess', p.id);
+    if (p.kind === 'item') { const it = lookup('items', p.id); return it ? { type: 'item', item: it, piece: p } : null; }
+    if (p.kind === 'token') { const t = lookup('tokens', p.id) || diyToken(p.id); return t ? { type: 'token', token: t, piece: p, ownerId: tokenOwnerId(p, pieces) } : null; }
+    const c = lookup('chess', p.id);
     const d = ownDiy(c);
     if (d) return { type: 'chess', chess: d.chess, piece: p, standIn: null, diy: d.diy };
     return c ? { type: 'chess', chess: c, piece: p, standIn: ownSi(c) } : null;
   }
   if (target.kind === 'chess') {
     // a bond popup's 变形同构体 row hands the wearer's item ids on (bondStrip onMember): the card shows the pair and the chip
-    const c = data.lookup('chess', target.id);
+    const c = lookup('chess', target.id);
     const items = Array.isArray(target.items) ? target.items.filter((x) => typeof x === 'string') : [];
     // (a bond popup's member card of a teammate's strip — `owner` another player — and the mode's banned list (`foreign`)
     // do not read the viewer's 补位 list: a teammate's row shows the stand-in only when its unit says it is one —
@@ -785,16 +787,16 @@ export function resolveDetail(target, pieces, { priv = null, backups = data.get(
     const si = !c ? null : foreign ? (typeof target.standInFor === 'string' && target.standInFor ? standInOf(c, backups) : null) : ownSi(c);
     return c ? { type: 'chess', chess: c, hint: target.hint || null, standIn: si, ...(items.length ? { unitItems: items } : {}), ...(cv ? { cultOpts: cv } : {}), ...tap } : null;
   }
-  if (target.kind === 'item') { const it = data.lookup('items', target.id); return it ? { type: 'item', item: it } : null; }
-  if (target.kind === 'enemy') { const en = data.lookup('enemies', target.id); return en ? { type: 'enemy', enemy: en, count: target.count } : null; }
-  if (target.kind === 'token') { const t = data.lookup('tokens', target.id) || diyToken(target.id); return t ? { type: 'token', token: t } : null; }
+  if (target.kind === 'item') { const it = lookup('items', target.id); return it ? { type: 'item', item: it } : null; }
+  if (target.kind === 'enemy') { const en = lookup('enemies', target.id); return en ? { type: 'enemy', enemy: en, count: target.count } : null; }
+  if (target.kind === 'token') { const t = lookup('tokens', target.id) || diyToken(target.id); return t ? { type: 'token', token: t } : null; }
   if (target.kind === 'unit') {
     const u = target.unit || {};
     const own = Number.isInteger(u.uid) ? pieces?.get(u.uid) : null;
-    if (u.side === 'enemy') { const en = data.lookup('enemies', u.defId); return en ? { type: 'enemy', enemy: en, unitId: u.id } : null; }
+    if (u.side === 'enemy') { const en = lookup('enemies', u.defId); return en ? { type: 'enemy', enemy: en, unitId: u.id } : null; }
     // a hand item on a scouted prep board (m.field units, kind 'item'): the item's own card
-    if (u.kind === 'item') { const it = data.lookup('items', u.defId); return it ? { type: 'item', item: it } : null; }
-    const c = data.lookup('chess', u.defId);
+    if (u.kind === 'item') { const it = lookup('items', u.defId); return it ? { type: 'item', item: it } : null; }
+    const c = lookup('chess', u.defId);
     // a unit says itself whether it is a stand-in (UnitInfo standInFor: the sim's, prep scouting's); an own piece's unit
     // follows m.private.standIns like the piece
     let si = null;
@@ -809,9 +811,9 @@ export function resolveDetail(target, pieces, { priv = null, backups = data.get(
     const cv = own?.piece ? null : { cultOpts: { cultivation: unitCultivation(u) } };
     if (dr) return { type: 'chess', chess: dr, piece: own?.piece || null, unitId: u.id, unitItems: Array.isArray(u.items) ? u.items : null, standIn: null, diy: pick, ...cv };
     if (c) return { type: 'chess', chess: c, piece: own?.piece || null, unitId: u.id, unitItems: Array.isArray(u.items) ? u.items : null, standIn: si, ...cv };
-    const t = data.lookup('tokens', u.defId) || diyToken(u.defId);
+    const t = lookup('tokens', u.defId) || diyToken(u.defId);
     if (t) return { type: 'token', token: t, unitId: u.id, ownerId: tokenOwnerId(own?.piece, pieces) };
-    const en = data.lookup('enemies', u.defId);
+    const en = lookup('enemies', u.defId);
     return en ? { type: 'enemy', enemy: en, unitId: u.id } : null;
   }
   return null;

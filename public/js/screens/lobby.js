@@ -399,7 +399,7 @@ export function LobbyScreen() {
       <section class="lobby-right">
         <div class="fun-difficulty-head"><div class="section-label"><span class="section-label__idx num">02</span>${t('模拟难度')}<${MicroLabel}>DIFFICULTY<//></div>
         <div class="fun-mode-picker" role="group" aria-label=${t('玩法模式')}>
-          ${[['standard', t('原版模式')], ['entertainment', t('娱乐模式')], ['endless', t('无尽模拟')]].map(([id, label]) => html`
+          ${[['standard', t('原版模式')], ['entertainment', t('娱乐模式')]].map(([id, label]) => html`
             <button type="button" class=${`fun-mode ${ruleset === id ? 'is-selected' : ''}`} aria-pressed=${ruleset === id}
               onClick=${() => { setRuleset(id);  }}>${label}</button>`)}
         </div>

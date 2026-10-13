@@ -1,8 +1,8 @@
-// Universal local monitor boot.js v6 for Stronghold-Protocol variants.
+// Universal local monitor boot.js v8 for Stronghold-Protocol variants.
 // Compatible with the current sganggs/Stronghold-Protocol and LongQianChen/Stronghold-Protocol
 // layouts that expose { lobby, network, registry } from startServer().
 //
-// Adds a LOCAL-ONLY read-only monitor endpoint:
+// Adds LOCAL-ONLY monitoring and explicit administrator messaging:
 //   http://127.0.0.1:<game-port+1>/admin/status.json
 // Example: game :3000 -> monitor :3001
 //
@@ -12,7 +12,8 @@
 //
 // No reconnect tokens are exposed. Local administrators can inspect game inventories.
 
-import { installMonitorV6, playerExtra, serverExtra } from './monitor-v6.js';
+import { installMonitorV6, playerExtra, serverExtra, sendMonitorMessage, trafficLedgerFor } from './monitor-v6.js';
+import { readTrafficHistory } from './traffic-ledger.js';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -599,6 +600,7 @@ function adminSnapshot(srv) {
     matchStartedAt,
     matchUptimeSec: matchStartedAt == null ? null : Math.max(0, Math.round((now - matchStartedAt) / 1000)),
     matchDetail: monitorMatchSnapshot(room, now),
+    chat: room.matchCtx?.chat?.snapshot?.()||null,
     players: room.seats
       .filter((seat) => seat && !seat.left)
       .map((seat) => ({
@@ -662,6 +664,7 @@ function adminSnapshot(srv) {
     roomOnline: onlineSessions.filter((s) => !!s.roomCode).length,
     sessions: srv.registry.size,
     ...base,
+    monitorActions:{messages:true,chat:true},
     onlineSessions,
     roomsDetail: rooms,
     ...serverExtra(srv),
@@ -683,9 +686,13 @@ async function startAdminServer(srv) {
 
   if (port === 0) return null;
 
-  const admin = http.createServer((req, res) => {
+  let lastMessage=0;
+  const admin = http.createServer(async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
+    if(![`127.0.0.1:${port}`,`localhost:${port}`].includes(req.headers.host)){
+      res.writeHead(403,{'Content-Type':'text/plain; charset=utf-8'});res.end('Invalid host');return;
+    }
 
     let pathname = '/';
 
@@ -697,6 +704,15 @@ async function startAdminServer(srv) {
       return;
     }
 
+    if(pathname==='/admin/message'&&req.method==='POST'){
+      const reply=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
+      if(req.headers.host!==`127.0.0.1:${port}`||req.headers.origin||req.headers['x-stronghold-command']!=='local-monitor-message'||!req.headers['content-type']?.startsWith('application/json'))return reply(403,{error:'local monitor required'});
+      try{
+        let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>4096)return reply(413,{error:'message too large'});}
+        if(Date.now()-lastMessage<1000)return reply(429,{error:'please wait before sending again'});
+        const result=sendMonitorMessage(srv,JSON.parse(body));lastMessage=Date.now();return reply(200,result);
+      }catch(error){return reply(400,{error:error.message});}
+    }
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       res.writeHead(405, {
         'Content-Type': 'text/plain; charset=utf-8',
@@ -706,6 +722,13 @@ async function startAdminServer(srv) {
       return;
     }
 
+    if(pathname==='/admin/traffic-history'&&req.method==='GET'){
+      const reply=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
+      try{const ledger=trafficLedgerFor(srv);if(!ledger)return reply(409,{error:'traffic ledger unavailable'});ledger.flush();
+        const q=new URL(req.url,'http://127.0.0.1').searchParams;
+        return reply(200,await readTrafficHistory(ledger.directory,{day:q.get('day')||undefined,kind:q.get('kind')||'usage',cursor:Number(q.get('cursor')||0),limit:Number(q.get('limit')||200)}));
+      }catch(error){return reply(400,{error:error.message});}
+    }
     if (pathname === '/admin/status.json') {
       const body = JSON.stringify(adminSnapshot(srv));
 

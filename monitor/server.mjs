@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { createSakuraMonitor } from './sakura.mjs';
+import { createTrafficJournal } from './ledger.mjs';
+import { readTrafficHistory } from './compat/traffic-ledger.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const run = promisify(execFile);
@@ -19,6 +21,11 @@ const uiPort = Number(process.env.MONITOR_UI_PORT || 3010);
 const startedAt = Date.now();
 const sakuraMonitor=createSakuraMonitor({disabled:process.env.MONITOR_SAKURA_DISABLED==='1'});
 let state = {status:'CHECKING', since:startedAt, health:null, admin:null, healthAt:null, adminAt:null, error:null, adminError:null, diagnostics:null, history:[], events:[]};
+const trafficJournal=createTrafficJournal({dataDir,fetchHistory:async query=>{
+  if(state.status==='ONLINE'){try{return await json(config.adminPort,'/admin/traffic-history?'+new URLSearchParams(query));}catch{}}
+  const source=trafficJournal.source();if(!source?.directory)throw Error('游戏历史目录尚未识别');
+  return readTrafficHistory(source.directory,query);
+}});
 let busy = false, previous = null, nextProbe = 0, lastFaultAt = 0, netPrevious = null, configRevision = 0;
 const number = value => Number.isFinite(Number(value)) ? Number(value) : null;
 function validate(c) {
@@ -96,6 +103,7 @@ async function poll() {
       try {
         const admin=await json(config.adminPort,'/admin/status.json');
         if(revision!==configRevision)return;
+        trafficJournal.observe(admin,state.diagnostics,sakuraMonitor.snapshot());trafficJournal.sync(admin,state.diagnostics).catch(e=>{state.storageError=e.message;});
         compare(previous,admin);previous=admin;state.admin=admin;state.adminAt=Date.now();state.adminError=null;
       } catch(e) {if(revision!==configRevision)return;state.adminError=e.message;}
     }
@@ -105,6 +113,7 @@ async function poll() {
     if(['HUNG','DOWN','UNKNOWN'].includes(status) && Date.now()-lastFaultAt>=30000) {
       lastFaultAt=Date.now();append('stronghold-monitor-faults.log',JSON.stringify({time:Date.now(),status,error:state.error,diagnostics:state.diagnostics}));
     }
+    if(state.admin?.trafficLedger||trafficJournal.source())trafficJournal.sync(state.admin||{trafficLedger:trafficJournal.source()},state.diagnostics).catch(e=>{state.storageError=e.message;});
     nextProbe=Date.now()+(status==='ONLINE'?config.refreshSeconds:Math.max(config.refreshSeconds,5))*1000;
   } finally {busy=false;}
 }
@@ -143,7 +152,7 @@ function trafficSummary() {
 }
 function snapshot() {
   const now=Date.now();
-  return {...state,sakura:sakuraMonitor.snapshot(),traffic:trafficSummary(),config,startedAt,now,healthFresh:state.status==='ONLINE' && now-state.healthAt<Math.max(15000,config.refreshSeconds*3000),adminFresh:state.status==='ONLINE' && !state.adminError && now-state.adminAt<Math.max(15000,config.refreshSeconds*3000),features:{rosterBoundary:!!state.admin?.monitorCapabilities?.rosterBoundary,matchDetail:state.admin?.monitorVersion>=5 || !!state.admin?.roomsDetail?.some(r=>'matchDetail' in r),connectedAt:state.admin?.monitorVersion>=6 || !!state.admin?.onlineSessions?.some(s=>'connectedAt' in s)},url:`http://127.0.0.1:${uiPort}`};
+  return {...state,trafficJournal:trafficJournal.snapshot(),sakura:sakuraMonitor.snapshot(),traffic:trafficSummary(),config,startedAt,now,healthFresh:state.status==='ONLINE' && now-state.healthAt<Math.max(15000,config.refreshSeconds*3000),adminFresh:state.status==='ONLINE' && !state.adminError && now-state.adminAt<Math.max(15000,config.refreshSeconds*3000),features:{rosterBoundary:!!state.admin?.monitorCapabilities?.rosterBoundary,matchDetail:state.admin?.monitorVersion>=5 || !!state.admin?.roomsDetail?.some(r=>'matchDetail' in r),connectedAt:state.admin?.monitorVersion>=6 || !!state.admin?.onlineSessions?.some(s=>'connectedAt' in s)},url:`http://127.0.0.1:${uiPort}`};
 }
 const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8'};
 const imageCache=new Map();let imageCacheBytes=0;
@@ -155,6 +164,14 @@ const server=http.createServer(async(req,res)=>{
   const route=new URL(req.url,'http://127.0.0.1').pathname;
   const send=(code,body)=>{res.writeHead(code,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(body));};
   try {
+    if(req.method==='GET'&&['/api/traffic-history','/api/traffic-report','/api/traffic-export'].includes(route)){
+      const q=new URL(req.url,'http://127.0.0.1').searchParams,day=q.get('day')||trafficJournal.snapshot().day,kind=q.get('kind')||'usage';
+      if(route==='/api/traffic-report')return send(200,await trafficJournal.report(day));
+      const result=await trafficJournal.read({day,kind,cursor:Number(q.get('cursor')||0),limit:Number(q.get('limit')||200)});
+      if(route==='/api/traffic-history')return send(200,result);
+      const filename=trafficJournal.filename(kind,day);if(!fs.existsSync(filename))return send(404,{error:'当天尚无记录'});
+      res.setHeader('Content-Disposition',`attachment; filename="${kind}-${day}.ndjson"`);res.writeHead(200,{'Content-Type':'application/x-ndjson; charset=utf-8'});fs.createReadStream(filename).pipe(res);return;
+    }
     if(req.method==='GET' && route==='/api/game-image') {
       const asset=new URL(req.url,'http://127.0.0.1').searchParams.get('path') || '';
       if(!/^\/assets\/[a-zA-Z0-9_./-]+\.(png|webp|jpg|jpeg)$/i.test(asset) || asset.includes('..'))return send(400,{error:'图片路径无效'});
@@ -176,6 +193,13 @@ const server=http.createServer(async(req,res)=>{
     if(req.method==='GET' && route==='/api/export') {
       res.setHeader('Content-Disposition','attachment; filename="stronghold-snapshot.json"');return send(200,snapshot());
     }
+    if(req.method==='POST' && route==='/api/message'){
+      if(req.headers.origin!==`http://${req.headers.host}`||!req.headers['content-type']?.startsWith('application/json'))return send(403,{error:'请求来源无效'});
+      if(!state.admin?.monitorActions?.messages)return send(409,{error:'当前游戏启动器不支持消息，请安装新版 boot 并重启游戏服。'});
+      let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>4096)return send(413,{error:'消息过大'});}
+      const response=await fetch(`http://127.0.0.1:${config.adminPort}/admin/message`,{method:'POST',headers:{'Content-Type':'application/json','X-Stronghold-Command':'local-monitor-message'},body,redirect:'error',signal:AbortSignal.timeout(4000)});
+      const result=await response.json();if(response.ok)event('OWNER_MESSAGE',`发送服主消息：${result.recipients} 位在线玩家`);return send(response.status,result);
+    }
     if(req.method==='POST' && route==='/api/settings') {
       if(req.headers.origin!==`http://${req.headers.host}` || !req.headers['content-type']?.startsWith('application/json'))return send(403,{error:'请求来源无效'});
       let body='';for await(const chunk of req){body+=chunk;if(body.length>4096)return send(413,{error:'请求过大'});}
@@ -195,6 +219,6 @@ server.listen(uiPort,'127.0.0.1',()=>{fs.writeFileSync(path.join(dataDir,'monito
 server.on('error',e=>{console.error(e.message);process.exit(1);});
 const pollTimer=setInterval(()=>poll().catch(e=>{state.error=e.message;}),500);
 let diagBusy=false;const diagTimer=setInterval(async()=>{if(diagBusy)return;diagBusy=true;try{await diagnostics();}finally{diagBusy=false;}},10000);
-const sakuraTimer=setInterval(()=>sakuraMonitor.refresh(),1000);sakuraMonitor.refresh();
+const sakuraTimer=setInterval(()=>{sakuraMonitor.refresh();trafficJournal.observe(state.admin,state.diagnostics,sakuraMonitor.snapshot());},1000);sakuraMonitor.refresh();
 function stop(){clearInterval(pollTimer);clearInterval(diagTimer);clearInterval(sakuraTimer);server.close(()=>process.exit(0));setTimeout(()=>process.exit(0),1500).unref();}
 process.on('SIGINT',stop);process.on('SIGTERM',stop);

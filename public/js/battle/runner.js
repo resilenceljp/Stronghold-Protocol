@@ -713,6 +713,12 @@ export function createBattleRunner(deps) {
       if (!wanted()) return;
       let battle;
       try {
+        if(e.spec.fullTraining&&!sim.ds.raw.fullTraining){
+          const response=await fetch(runtimeURL('/data/full-training.json'),{cache:'force-cache'});
+          if(!response.ok)throw new Error('full training data unavailable');
+          sim.ds.raw.fullTraining=deepFreeze(await response.json());
+          if(!wanted())return;
+        }
         battle = sim.spec.createBattleFromSpec(e.spec, sim.ds, { logger });
       } catch (err) {
         console.warn('[runner] battle construction failed', err);

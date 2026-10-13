@@ -22,6 +22,7 @@ export class MatchIntents {
         if ((msg.setupRevision ?? 0) !== this.setupRevision) return fail(ERR.BAD_TARGET, 'setup changed; confirm the current revision');
         if (!ps.infoReady) { ps.infoReady = true; this.markPublic(); this.maybeEndInfo(); }
         return OK;
+      case 'g.endlessVote': return this.voteEndless(ps,msg.voteId,msg.agree);
       case 'g.rerollVote': return this.voteSetupReroll(ps, msg.voteId, msg.agree);
       case 'g.band': return this.pickBand(ps, msg.bandId, msg);
       case 'g.bandSkip': return this.skipBand(ps, msg);

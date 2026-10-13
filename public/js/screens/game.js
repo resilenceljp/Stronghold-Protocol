@@ -72,6 +72,7 @@ import { useFieldView } from '../ui/fieldHost.js';
 import { TopBar, liveLp, ownLeaks, uniteRemaining, tempInfo, tempReadyReason } from '../ui/hud.js';
 import { BondStrip, BondPopup } from '../ui/bondStrip.js';
 import { TeamPanel } from '../ui/teamPanel.js';
+import { EndlessVote } from '../ui/endlessVote.js';
 import { EntertainmentConsole } from '../ui/entertainmentConsole.js';
 import { ShopBar } from '../ui/shopBar.js';
 import { DetailPanel, resolveDetail } from '../ui/detailPanel.js';
@@ -295,14 +296,14 @@ function MatchScreen() {
   const deployField = deployFieldOf(pub, myId);
   // the own pieces' records: a DIY slot the player filled is its 自选 operator (0.2.0, m.private.diy — position, range,
   // name; gameLogic/diy.js), every other chess its data record
-  const ownChess = (id) => { const c = gd.chess(id); return ownDiyRecord(c, live.current.priv, { chess: data.get('chess'), backups: data.get('backups') }) || c; };
+  const ownChess = (id) => { const c = gd.chess(id); return ownDiyRecord(c, live.current.priv, { chess: data.get('chess'), backups: gd.backups }) || c; };
   // what the own pieces show (names and art of the facing wheel, the underframe, the equip-replace dialog): a chess the
   // player does not own is its stand-in (0.2.0 补位 — the owner's recall of the official mode, 2026-10-06); rules keep
   // ownChess (the composed record carries the chess's identity anyway)
-  const ownShown = (id) => { const c = ownChess(id); return ownStandIn(c, live.current.priv, data.get('backups')) || c; };
+  const ownShown = (id) => { const c = ownChess(id); return ownStandIn(c, live.current.priv, gd.backups) || c; };
   const placeCtx = useMemo(() => placementContext({
     priv, stage: gd.stage(pub?.stageId), editable, field: deployField,
-    getChess: (id) => { const c = gd.chess(id); return ownDiyRecord(c, priv, { chess: data.get('chess'), backups: data.get('backups') }) || c; },
+    getChess: (id) => { const c = gd.chess(id); return ownDiyRecord(c, priv, { chess: data.get('chess'), backups: gd.backups }) || c; },
     getToken: gd.token, getItem: gd.item, getEffect: gd.effect, backups: gd.backups,
   }), [priv, pub?.stageId, editable, gd.ready, deployField]);
   live.current = { pub, priv, field, editable, hasPersonalChoice, placeCtx, watching, watchWho, home, myId, alive, spectator, detail, drawer, bondOpen, emoteOpen, settingsOpen, exitOpen, drag, facing, sel, selBusy, pen, collapsedNow: collapsed, localDone: false, canPause: false, paused };
@@ -1204,7 +1205,7 @@ function MatchScreen() {
     const u = (Array.isArray(field?.units) ? field.units : []).find((x) => x && x.id === detail.unitId);
     return u ? { ...detail, unit: u } : detail;
   }, [detail, field]);
-  const resolved = useMemo(() => resolveDetail(detailTarget, placeCtx.pieces, { priv, backups: gd.backups }), [detailTarget, placeCtx, gd.ready, data.locale()]);
+  const resolved = useMemo(() => resolveDetail(detailTarget, placeCtx.pieces, { priv, backups: gd.backups, fullTraining:pub?.funRules?.training==='max' }), [detailTarget, placeCtx, gd.ready, data.locale()]);
   useEffect(() => { if (detail && !resolved && detail.kind === 'piece') setDetail(null); }, [resolved]);
   const snapHp = (() => {
     const id = resolved?.unitId;
@@ -1450,7 +1451,7 @@ function MatchScreen() {
     <div class="gm__vignette" aria-hidden="true"></div>
     ${tempNotice ? html`<${TempRowNotice} view=${view} count=${temp.count} items=${temp.items} label=${!drag && !facing}
       ready=${phase === PHASE.PREP && !!priv?.ready} />` : null}
-    ${showPrep && view && viewKind !== 'loading' && priv && !pen ? html`<${StandInTags} view=${view} priv=${priv} getChess=${gd.chess} backups=${gd.backups} diyData=${{ chess: data.get('chess'), backups: data.get('backups') }} />` : null}
+    ${showPrep && view && viewKind !== 'loading' && priv && !pen ? html`<${StandInTags} view=${view} priv=${priv} getChess=${gd.chess} backups=${gd.backups} diyData=${{ chess: data.get('chess'), backups: gd.backups }} />` : null}
 
     <div class="gm__hud" ref=${hudElRef}>
       <${TopBar} pub=${clockPub} priv=${priv} conn=${conn} hud=${hud} total=${total} drawer=${drawer}
@@ -1492,7 +1493,7 @@ function MatchScreen() {
       </div>` : null}
 
       ${pub?.ruleset && pub.ruleset !== 'standard' ? html`<div class="fun-game-label">${pub.endless ? t('无尽模拟') : t('娱乐模式')} · ${t('层数上限')} ${pub.layerCap}</div>` : null}
-      <${EntertainmentConsole} priv=${priv} editable=${editable && !spectator} />
+
       ${showShop ? html`<${ShopBar} priv=${priv} editable=${editable} collapsed=${collapsed} refreshBusy=${refreshBusy} onCollapse=${setCollapsed}
         barRef=${barRef} offBonds=${offBonds}
         onBuy=${buy} onLevel=${() => actions.levelUp()} onRefresh=${() => actions.refresh()} onFreeze=${() => actions.freeze()}
@@ -1521,6 +1522,7 @@ function MatchScreen() {
         <button type="button" class="gm__gear" aria-label=${t('设置')} title=${t('设置')} onClick=${() => setSettingsOpen(true)}><${GIcon} name="gear" /></button>
         <button type="button" class="gm__gear gm__guide" aria-label=${t('玩法说明')} title=${t('玩法说明')} onClick=${() => openGuide(0)}><${Icon} name="book" /></button>
         <${FullscreenButton} class="gm__gear gm__fs" />
+        <${EntertainmentConsole} priv=${priv} editable=${editable && !spectator} />
       </div>
 
       ${drawer ? html`<${EnemyDrawer} tab=${drawer} onTab=${setDrawer} pub=${pub} priv=${priv} onClose=${() => setDrawer(null)}
@@ -1542,6 +1544,7 @@ function MatchScreen() {
         onRetreat=${retreatSel} onSell=${sellSel} onDestroy=${sellSel} />` : null}
     </div>
 
+    <${EndlessVote} pub=${pub} />
     ${sp ? html`<${ChoiceOverlay} pub=${pub} sp=${sp} myId=${myId} solo=${solo} busyToken=${spBusy} total=${total}
       onPick=${async (i, opts = {}) => {
         const token = { idx: i, draftId: opts.draftId, groupId: opts.groupId };

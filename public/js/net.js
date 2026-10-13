@@ -237,6 +237,14 @@ export class Net {
     const url = this.url || defaultWsUrl();
     let ws;
     try {
+      // A non-secret correlation id links this browser's HTTP downloads with its game socket.
+      // Cookie restrictions must never stop a player from connecting.
+      try {
+        if(typeof document!=='undefined'&&!/(?:^|;\s*)sp_monitor_client=[a-f0-9]{32}(?:;|$)/.test(document.cookie)){
+          const bytes=new Uint8Array(16);globalThis.crypto.getRandomValues(bytes);
+          document.cookie='sp_monitor_client='+Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('')+'; Path=/; SameSite=Strict; Max-Age=31536000'+(globalThis.location?.protocol==='https:'?'; Secure':'');
+        }
+      } catch { /* Optional attribution is unavailable in some restricted browser contexts. */ }
       ws = new WS(url);
     } catch (err) {
       console.warn('[net] cannot create WebSocket', err);
