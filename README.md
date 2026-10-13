@@ -1,3 +1,15 @@
+# Stronghold-Protocol-20p · resilenceljp 娱乐扩展
+
+本仓库是非商业独立扩展，来源依次为 [sganggs 原始复刻](https://github.com/sganggs/Stronghold-Protocol) → [LongQianChen 20人分支](https://github.com/LongQianChen/Stronghold-Protocol/tree/feat/IncreasePlayerCapacity) → resilenceljp 娱乐扩展。上游当前基础版本0.2.4。
+
+娱乐、无尽、藏品、22格整备区与独立监视台源码请查看 [feat/entertainment-endless](https://github.com/resilenceljp/Stronghold-Protocol-20p/tree/feat/entertainment-endless)，扩展版本0.2.4-20p-fun.2。当前默认分支保留20人核心，仅增加来源说明与同步工作流。
+
+## 同步原版20p
+
+在 Actions 打开「同步原版20p到独立分支」，点击 Run workflow；工作流也会每日检查。原样更新到 `upstream/20p` 并保留 `upstream20/v版本-SHA` 快照，娱乐分支不会自动覆盖。代码合并后才更新扩展的基础版本。
+
+以下保留来源分支原有说明与署名。
+
 ## 卫戍协议20人版总结
 
 本分支项目由龙千尘基于作者上游原作者项目[sganggs/Stronghold-Protocol](https://github.com/sganggs/Stronghold-Protocol)，将其扩展为最大20人联机版本，并且做了相应网络优化，新功能添加与体验优化。目前同步至0.2.4版本，并修复缪尔赛思的转职球bug。
