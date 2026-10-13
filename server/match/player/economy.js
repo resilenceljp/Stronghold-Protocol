@@ -67,15 +67,6 @@ export class PlayerEconomy {
   }
 
   _rollItemSlot() {
-    // [ASSUMED] The second level-7 slot draws special non-shop consumables / equipment.
-    if (this.gd.ruleset === 'endless' && this.shop.level === 7 && this._specialShopSlot) {
-      const ids = Object.keys(this.gd.raw.items || {}).filter((key) => {
-        const it = this.gd.item(key);
-        return it && !it.isHidden && !it.isGolden && (it.itemType === 'ART' || it.kind?.startsWith('consume_on_equip') || this.gd.isTraitFixedItem(key));
-      }).sort();
-      const id = ids.length ? ids[Math.floor(this.m.rngShop() * ids.length)] : null;
-      if (id) return { kind: 'item', id, basePrice: this.gd.itemPrice(id), frozen: false, sold: false, special: true };
-    }
     const id = this.pool.rollItem(this.m.rngShop, this.shop.level, this.m.itemPoolFor(this));
     return id ? { kind: 'item', id, basePrice: this.gd.itemPrice(id), frozen: false, sold: false } : null;
   }
@@ -95,7 +86,6 @@ export class PlayerEconomy {
     const slots = [];
     for (let i = 0; i < nChess; i++) slots.push(keep(oldChess[i], 'chess') ?? this._rollChessSlot());
     for (let i = 0; i < nItem; i++) {
-      this._specialShopSlot = i === 1;
       slots.push(keep(oldItems[i], 'item') ?? this._rollItemSlot());
     }
     this._specialShopSlot = false;

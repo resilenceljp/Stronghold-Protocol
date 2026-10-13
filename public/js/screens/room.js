@@ -291,7 +291,7 @@ export function RoomScreen() {
   const facts = roomFacts(room, me.playerId);
   const myReady = !!facts.mine?.ready;
   const info = { ...difficultyInfo(room.mode, room.difficulty), ...(room.ruleset === 'endless' ? {
-    code: 'AC-∞', desc: t('敌人生命、攻击、防御每回合复利增长10%；14回合最终攻势后继续无尽关卡，无隐秘核心。调度7级解锁特殊道具栏，随机8张战场。'),
+    code: 'AC-∞', desc: t('敌人生命、攻击、防御每回合复利增长10%；14回合最终攻势后继续无尽关卡，无隐秘核心。调度7级增加一个干员槽和一个装备槽，随机8张战场。'),
     effects: [], rounds: '∞', hidden: false,
   } : {}) };
 

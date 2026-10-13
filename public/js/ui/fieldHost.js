@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from '../../vendor/hooks.module.js';
 import { createFallbackView } from './fallbackField.js';
 import { data } from '../data.js';
 import { audio } from '../audio.js';
+import { loadPref } from '../store.js';
 import { settingsStore } from './settings.js';
 
 const LOAD_TIMEOUT_MS = 12000;
@@ -128,6 +129,7 @@ function renderPref() {
     const q = new URLSearchParams(globalThis.location?.search || '').get('render');
     if (q === 'fallback' || q === 'engine') return q;
   } catch { /* ignore */ }
+  if(loadPref('mobileLite',false)) return 'fallback';
   return globalThis.__SP_RENDER__ === 'fallback' ? 'fallback' : 'auto';
 }
 

@@ -1,8 +1,8 @@
 # 卫戍协议：盟约 · Stronghold Protocol: Alliance
 
-> 来源：sganggs 原始复刻 → LongQianChen 20人分支 → resilenceljp 娱乐扩展。基础版本0.2.4，扩展版0.2.4-20p-fun.2；上游同步入口见文末。
+> 来源：sganggs 原始复刻 → LongQianChen 20人分支 → resilenceljp 娱乐扩展。基础版本0.2.4，扩展版0.2.4-20p-fun.3；上游同步入口见文末。
 
-resilenceljp 独立分支 v0.2.4-20p-fun.2：娱乐、无尽与服主监视台；原版内容基线 v0.2.4。
+resilenceljp 独立分支 v0.2.4-20p-fun.3：娱乐、无尽与服主监视台；原版内容基线 v0.2.4。
 
 ## 卫戍协议20人版总结
 
@@ -55,7 +55,7 @@ resilenceljp 独立分支 v0.2.4-20p-fun.2：娱乐、无尽与服主监视台�
 
 《明日方舟》季节性自走棋塔防玩法「卫戍协议：盟约」的**非官方同人复刻**：浏览器即开即玩，单人或最多 20 人联机合作。
 
-![version](https://img.shields.io/badge/version-0.2.4--20p--fun.2-2ea44f)
+![version](https://img.shields.io/badge/version-0.2.4--20p--fun.3-2ea44f)
 ![license](https://img.shields.io/badge/code%20license-GPL--3.0--or--later-blue)
 ![node](https://img.shields.io/badge/node-22%20%7C%2024-339933)
 
@@ -325,9 +325,12 @@ An **unofficial, non-commercial fan remake** of Arknights' seasonal auto-chess t
 - 原始复刻：[sganggs/Stronghold-Protocol](https://github.com/sganggs/Stronghold-Protocol)。
 - 20人核心：[LongQianChen 的 feat/IncreasePlayerCapacity 分支](https://github.com/LongQianChen/Stronghold-Protocol/tree/feat/IncreasePlayerCapacity)，保留分组卡池、20人和既有修复。
 - 本地扩展：娱乐控制台、无尽模拟、藏品、可选规则和 monitor 监视台。
-- 当前上游基础版本 **0.2.4**，扩展版本 **0.2.4-20p-fun.2**；基线 SHA 见 `UPSTREAM.json`。之前独立编号0.2.5改用来源明确的版本号。
+- 当前上游基础版本 **0.2.4**，扩展版本 **0.2.4-20p-fun.3**；基线 SHA 见 `UPSTREAM.json`。之前独立编号0.2.5改用来源明确的版本号。
 
 GitHub Actions 的「同步原版20p到独立分支」可手动运行，也会每日检查。原样保存到 `upstream/20p`，每个新提交保留 `upstream20/v版本-SHA` 快照。不会自动覆盖娱乐分支或重启服务器。
 本地 `npm run sync:upstream`；需要推送同步分支时 `npm run sync:upstream -- --push`。人工审查并合并上游后，再 `npm run sync:upstream -- --apply-version` 更新基线版本。扩展修订号独立递增。
 
 本次设置集中于开局信息的下一页：控制台、练度、部署位、额外起始资金、藏品开关及候选池。娱乐和无尽都支持；普通模式保持原规则。藏品三选一在下一回合休整时完成，满练度只使用现有游戏数据支持的练度、技能和模组，不虚构缺失等级。
+
+
+手机精简包、布局更新与本地安装说明：[fun.3说明](docs/FUN_MOBILE.md)。

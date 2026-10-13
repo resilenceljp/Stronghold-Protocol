@@ -59,9 +59,14 @@ async function readBaseCatalog(value) {
 }
 
 /** Both package kinds embed the exact current full catalog; only resource bodies differ. */
-export async function planAssetCachePack({ catalog, delta = false, baseCatalog } = {}) {
+export async function planAssetCachePack({ catalog, delta = false, lite = false, baseCatalog } = {}) {
   const manifest = assetCachePackManifest(catalog);
   if (!delta && baseCatalog !== undefined && baseCatalog !== '') throw new Error('--base-catalog 只能与 --delta 一起使用');
+  if (lite) {
+    if (delta || baseCatalog) throw new Error('--lite 不能与增量模式同时使用');
+    const files=manifest.files.filter(f=>!f.url.match(/\/(?:audio|spine|guide|portrait|loading|settle)\//i)&&!f.url.match(/\.(?:skel|atlas|mp3|ogg|wav|m4a)$/i));
+    return {manifest,files,lite:true,delta:false,baseVersion:null,packedFiles:files.length,packedBytes:files.reduce((n,f)=>n+f.bytes,0)};
+  }
   if (!delta) return { manifest, files: manifest.files, delta: false, baseVersion: null,
     packedFiles: manifest.totalFiles, packedBytes: manifest.totalBytes };
   if (!baseCatalog) throw new Error('--delta 需要 --base-catalog 指定旧完整目录 JSON');
@@ -81,10 +86,10 @@ export async function planAssetCachePack({ catalog, delta = false, baseCatalog }
 }
 
 /** No staging copy or archiver dependency: stream/hash/deflate one resource at a time. */
-export async function packAssetCache({ root = REPO, out, catalog, delta = false, baseCatalog, onProgress = () => {} } = {}) {
+export async function packAssetCache({ root = REPO, out, catalog, delta = false, lite = false, baseCatalog, onProgress = () => {} } = {}) {
   const publicDir = path.join(root, 'public');
   const source = catalog || await createAssetCacheCatalog({ publicDir, dataDir: path.join(root, 'data') });
-  const plan = await planAssetCachePack({ catalog: source, delta, baseCatalog });
+  const plan = await planAssetCachePack({ catalog: source, delta, lite, baseCatalog });
   const { manifest } = plan;
   const destination = path.resolve(out || path.join(root, '.cache', 'asset-cache-pack'));
   const stat = await fsp.lstat(destination).catch((error) => {
@@ -93,7 +98,7 @@ export async function packAssetCache({ root = REPO, out, catalog, delta = false,
   });
   if (stat?.isSymbolicLink() || (stat && !stat.isDirectory())) throw new Error('输出位置必须为普通目录');
   await fsp.mkdir(destination, { recursive: true });
-  const fileName = delta ? `Stronghold-Protocol-assets-delta-${plan.baseVersion.slice(0, 12)}-to-${source.version.slice(0, 12)}.zip`
+  const fileName = lite ? `Stronghold-Protocol-assets-mobile-lite-${source.version.slice(0,12)}.zip` : delta ? `Stronghold-Protocol-assets-delta-${plan.baseVersion.slice(0, 12)}-to-${source.version.slice(0, 12)}.zip`
     : `Stronghold-Protocol-assets-${source.version.slice(0, 12)}.zip`;
   const zipPath = path.join(destination, fileName);
   // Exclusive creation refuses accidental replacement; a different content version gets a different name.
@@ -156,11 +161,12 @@ export async function exportAssetCacheCatalog({ root = REPO, out, catalog } = {}
 }
 
 export function parseAssetCachePackArgs(argv) {
-  const options = { root: REPO, out: '', dryRun: false, catalogOnly: false, delta: false, baseCatalog: '', help: false };
+  const options = { root: REPO, out: '', dryRun: false, catalogOnly: false, lite:false, delta: false, baseCatalog: '', help: false };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--dry-run') options.dryRun = true;
     else if (arg === '--catalog-only') options.catalogOnly = true;
+    else if (arg === '--lite') options.lite = true;
     else if (arg === '--delta') options.delta = true;
     else if (arg === '--help' || arg === '-h') options.help = true;
     else if (arg === '--root' || arg === '--out' || arg === '--base-catalog') {
@@ -170,6 +176,7 @@ export function parseAssetCachePackArgs(argv) {
     } else throw new Error(`未知参数：${arg}`);
   }
   if (!options.help) {
+    if(options.lite && (options.delta||options.catalogOnly||options.baseCatalog)) throw new Error('--lite 不能与增量或单独目录模式同时使用');
     if (options.delta && options.catalogOnly) throw new Error('--delta 与 --catalog-only 不能同时使用');
     if (options.delta && !options.baseCatalog) throw new Error('--delta 需要 --base-catalog 指定旧完整目录 JSON');
     if (options.baseCatalog && !options.delta) throw new Error('--base-catalog 只能与 --delta 一起使用');
@@ -186,16 +193,17 @@ export async function main(argv) {
   try {
     const options = parseAssetCachePackArgs(argv);
     if (options.help) {
-      console.log('用法：node tools/asset-cache-pack.mjs [--dry-run | --catalog-only | --delta --base-catalog 旧目录.json] [--out 输出目录] [--root 项目目录]');
+      console.log('用法：node tools/asset-cache-pack.mjs [--lite | --dry-run | --catalog-only | --delta --base-catalog 旧目录.json] [--out 输出目录] [--root 项目目录]');
       console.log('完整包和增量包均内置当前完整 manifest.json；增量只含旧完整目录中不存在的素材内容，新玩家仍需基础素材。');
       return 0;
     }
     console.log('读取素材清单并计算逐文件 SHA-256…');
     const catalog = await createAssetCacheCatalog({ publicDir: path.join(options.root, 'public'), dataDir: path.join(options.root, 'data') });
     console.log(`素材：${catalog.totalFiles} 个文件，${MiB(catalog.totalBytes)}，版本 ${catalog.version.slice(0, 12)}`);
-    const plan = await planAssetCachePack({ catalog, delta: options.delta, baseCatalog: options.baseCatalog });
+    const plan = await planAssetCachePack({ catalog, delta: options.delta, lite:options.lite, baseCatalog: options.baseCatalog });
     for (const warning of catalog.warnings || []) console.log(`提示（不影响完整性）：${warning.url}：${warning.reason}`);
     if (options.delta) console.log(`增量：${plan.packedFiles} 个素材内容，${MiB(plan.packedBytes)}；包含当前完整目录，基线 ${plan.baseVersion.slice(0, 12)}`);
+    if(options.lite) console.log(`手机精简包：${plan.packedFiles} 个文件，${MiB(plan.packedBytes)}；不包含模型和音频，保留头像与图片；这是部分缓存，请关闭严格完整预缓存准入。`);
     if (options.dryRun) { console.log('清单完整；仅核对，未生成文件。'); return 0; }
     if (options.catalogOnly) {
       const result = await exportAssetCacheCatalog({ ...options, catalog });
@@ -205,7 +213,7 @@ export async function main(argv) {
     const result = await packAssetCache({ ...options, catalog, onProgress: ({ done, total }) => {
       if (done % 500 === 0 || done === total) console.log(`打包进度：${done}/${total}`);
     } });
-    console.log(`${options.delta ? '增量包' : '完整包'}：${result.zipPath}\n压缩后：${MiB(result.zipBytes)}；仅素材及当前完整校验目录，不含服务器程序或私人数据。`);
+    console.log(`${options.lite ? '手机精简包' : options.delta ? '增量包' : '完整包'}：${result.zipPath}\n压缩后：${MiB(result.zipBytes)}；仅素材及当前完整校验目录，不含服务器程序或私人数据。`);
     return 0;
   } catch (error) { console.error(`素材打包失败：${error.message}`); return 1; }
 }

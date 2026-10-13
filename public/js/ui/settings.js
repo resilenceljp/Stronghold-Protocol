@@ -238,6 +238,7 @@ function DiagSection() {
  */
 export function SettingsModal({ open, onClose }) {
   const s = useSettings();
+  const [mobileLite,setMobileLite]=useState(()=>loadPref('mobileLite',false));
   const [tested, setTested] = useState(false);
   const [touchUi] = useState(() => detectFeatures().coarse && !detectFeatures().fine);
   const mtNote = machineTranslationNote(); // a pack marked as machine translation says so under the switch
@@ -245,6 +246,7 @@ export function SettingsModal({ open, onClose }) {
                         actions=${html`<${Button} variant="secondary" icon="book" class="set-guide" onClick=${() => openGuide(0)}>${t('玩法说明')}<//>
                         <${Button} variant="primary" icon="check" onClick=${onClose}>${t('完成')}<//>`}>
     <div class="set-list">
+      <${Toggle} label=${t('手机精简画面（头像代替模型，重进对局生效）')} micro="MOBILE LITE" value=${mobileLite} onChange=${v=>{setMobileLite(v);savePref('mobileLite',v);if(v)updateSettings({muted:true});}} />
       <div class="set-row">
         <span class="set-row__label">${t('语言')}<${MicroLabel}>LANGUAGE<//></span>
         <${LangToggle} class="set-lang" />

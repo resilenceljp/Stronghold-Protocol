@@ -61,7 +61,7 @@ test('endless uses14-round boss, no hidden,8maps,level7 extra slot and 10% compo
  assert.equal(m.gd.mode.stages.length,8);assert.equal(m.gd.maxShopLevel,7);
  assert.equal(m.gd.enemyScale(1).hpMul,1);assert.ok(Math.abs(m.gd.enemyScale(15).atkMul-1.1**14)<1e-8);
  assert.equal(intent(m,'level',null,7).ok,true);p.rollShop();assert.equal(p.shop.layout.item,2);
- assert.equal(p.shop.slots.at(-1).special,true);assert.equal(p.shop.slots.length,7);
+ assert.equal(p.shop.slots.at(-1).special,undefined);assert.equal(p.shop.layout.chess,6);assert.equal(p.shop.slots.length,8);
  m.startRound(15);assert.ok(m.wave.spawns.length>0);assert.ok(m.wave.spawns.every(s=>s.mods.defMul>1));
  m.startRound(99);assert.ok(m.wave.spawns.length>0);assert.ok(Number.isFinite(m.gd.enemyScale(10000).hpMul));
  m.dispose();

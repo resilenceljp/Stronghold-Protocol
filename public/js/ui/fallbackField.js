@@ -1,3 +1,4 @@
+import { benchGeo } from '../../../shared/bench.js';
 // DOM fallback for the Pixi field view (DESIGN §9 API). Used when public/js/render/app.js is missing or
 // fails to initialise, so the match stays playable: a flat tile board + 整备区, pieces as avatars with
 // tier chips, pointer drag & drop (same events as the render engine), and a simple battle view (units as
@@ -119,7 +120,7 @@ export function createFallbackView(host, opts = {}) {
 
   const tilePos = (L, row, col) => ({ x: (col - st.rect.c0) * L.tile, y: (st.rect.r1 - row) * L.tile });
   const handPos = (L, idx) => ({ x: (idx % (st.priv?.hand?.length===22?11:10)) * L.tile, y: (L.rows + 0.6 + (st.priv?.hand?.length===22?Math.floor(idx/11):0)) * L.tile });
-  const tempPos = (L, idx) => ({ x: (GEO.TEMP_C0 + idx) * L.tile, y: (L.rows + (st.priv?.hand?.length===22?2.72:1.72)) * L.tile });
+  const tempPos = (L, idx) => ({ x: ((st.priv?.hand?.length===22?0:GEO.TEMP_C0) + idx) * L.tile, y: (L.rows + (st.priv?.hand?.length===22?2.72:1.72)) * L.tile });
 
   // ---- pieces (prep) ---------------------------------------------------------------------------------------
   function pieceArt(p) {
@@ -504,8 +505,8 @@ export function createFallbackView(host, opts = {}) {
       const br = root.querySelector('.ff-board')?.getBoundingClientRect();
       if (!br) return null;
       let p = null;
-      if (row === GEO.HAND_ROW && col >= 0 && col < (st.priv?.hand?.length||GEO.HAND_SIZE) && st.mode === 'prep') p = handPos(L, col);
-      else if (row === GEO.TEMP_ROW && col >= GEO.TEMP_C0 && col < GEO.TEMP_C0 + GEO.TEMP_SIZE && st.mode === 'prep') p = tempPos(L, col - GEO.TEMP_C0);
+      if (st.mode === 'prep' && row >= GEO.HAND_ROW && row <= GEO.HAND_ROW+(st.priv?.hand?.length===22?1:0) && col >=0 && col < (st.priv?.hand?.length===22?11:10)) p=handPos(L,col+(row-GEO.HAND_ROW)*11);
+      else if (row === benchGeo(st.priv?.hand?.length).TEMP_ROW && col >= benchGeo(st.priv?.hand?.length).TEMP_C0 && col < benchGeo(st.priv?.hand?.length).TEMP_C0 + GEO.TEMP_SIZE && st.mode === 'prep') p = tempPos(L, col - benchGeo(st.priv?.hand?.length).TEMP_C0);
       else if (row >= st.rect.r0 && row <= st.rect.r1 && col >= st.rect.c0 && col <= st.rect.c1) p = tilePos(L, row, col);
       if (!p) return null;
       const x0 = br.left + p.x, y0 = br.top + p.y, s = L.tile;

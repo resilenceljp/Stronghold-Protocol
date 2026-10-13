@@ -961,3 +961,6 @@ item selection probabilities and explicit grant weights remain unchanged.
 ## 娱乐规则扩展（fun.2）
 
 room.funRules {rules,setupRevision}仅房主INFO_CHECK可用；g.relic {id,offerId}仅本人PREP待选奖励可用；room.rerollSetup可带kind:battlefield只刷新地图。全部使用v1既有JSON回退或扩展。规则、收藏、护盾及offer保留于服务端私有状态，参考[娱乐说明](ENTERTAINMENT.md)。
+
+
+fun.3 布局、七级普通商店槽与手机精简素材说明见[手机与布局更新](FUN_MOBILE.md)。
