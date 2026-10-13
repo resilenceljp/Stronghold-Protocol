@@ -94,7 +94,7 @@ export const PLAYER_TOOLS = ['tools/crop-board-atlas.mjs', 'tools/doctor.mjs', '
 /** Whole tool directories: fetch-assets' modules, the local-client extraction setup runs. */
 export const PLAYER_TOOL_DIRS = ['tools/assets/', 'tools/local-extract/'];
 /** Whole runtime directories (their tracked files). */
-export const RUNTIME_DIRS = ['server/', 'shared/', 'data/', 'public/', 'packs/'];
+export const RUNTIME_DIRS = ['server/', 'shared/', 'data/', 'public/', 'packs/', 'monitor/'];
 /** Written into the stage, never taken from the checkout: the pack index of the shipped packs. */
 export const GENERATED_PACK_INDEX = 'packs/index.json';
 /** Whether shipped files include a content pack (then the stage gets GENERATED_PACK_INDEX). @param {string[]} files */
@@ -127,7 +127,7 @@ const SCENE_ART_PREFIX = 'public/assets/local/scene/';
  * what 0.2.0 leaves out on purpose. A path is refused when it is one of these or lies under one.
  */
 export const REFUSE = ['pv', '3，9，11回合情况', 'review', 'docs/research/10-networking-hosting.md', '.cache', '.claude', '.git',
-  'logs', 'test/e2e/out', 'scripts/service.env.cmd', '.env', 'handoff',
+  'runtime/monitor-traffic', 'monitor/data', 'monitor/settings.json', 'logs', 'test/e2e/out', 'scripts/service.env.cmd', '.env', 'handoff',
   'test', '.github', 'AGENTS.md', 'public/dev', 'node_modules/.cache'];
 
 /** Home-directory paths: macOS / Linux (case as the OS writes them) and Windows (any case; / or \, JSON-escaped too). */

@@ -59,6 +59,7 @@ export {
  *   ratePerSec?: number, rateBurst?: number, maxConnections?: number, maxRooms?: number,
  *   maxConnectionsPerAddr?: number, maxRoomsPerAddr?: number, maxMatchesPerAddr?: number, resyncMinGapMs?: number,
  *   heavyPerSec?: number, heavyBurst?: number, trustProxy?: 'auto' | boolean, soloReconnectWindowMs?: number,
+ *   localMonitor?: boolean, adminPort?: number,
  *   assetIndex?: boolean | { cacheFile?: string | null, delayMs?: number },
  * }} [opts]
  *   assetIndex: the content-hash index (default on; false or SP_ASSET_INDEX=0: off — config.js assetIndexOptionsFrom)
@@ -152,7 +153,15 @@ export async function startServer(opts = {}) {
     return closing;
   }
 
-  return { port: actualPort, host: boundHost, url, server, wss, lobby, network, registry, packs, traffic, assetIndex, views, close };
+  const srv = { port: actualPort, host: boundHost, url, server, wss, lobby, network, registry, packs, traffic, assetIndex, views, close };
+  if (opts.localMonitor === true || (opts.localMonitor !== false && process.env.SP_MONITOR === '1')) {
+    try {
+      const { startLocalMonitor } = await import('./http/localMonitor.js');
+      const admin = await startLocalMonitor(srv, { port: opts.adminPort });
+      if (admin) srv.close = async () => { await admin.close(); await close(); };
+    } catch (error) { log.warn('[monitor] ' + error.message); }
+  }
+  return srv;
 }
 
 // `node server/index.js` / npm start: listen, print the banner, stop on SIGINT / SIGTERM (http/boot.js).

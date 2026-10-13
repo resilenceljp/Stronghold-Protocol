@@ -44,6 +44,8 @@ const APPROXIMATED_MATH = ['acos', 'acosh', 'asin', 'asinh', 'atan', 'atanh', 'a
   'expm1', 'hypot', 'log', 'log1p', 'log10', 'log2', 'pow', 'sin', 'sinh', 'tan', 'tanh'];
 
 const nodeFiles = [
+  'monitor/**/*.mjs',
+  'monitor/compat/**/*.js',
   'server/**/*.js',
   'shared/**/*.js',
   'tools/**/*.js',
@@ -75,7 +77,7 @@ export default [
     rules,
   },
   {
-    files: ['public/js/**/*.js'],
+    files: ['public/js/**/*.js', 'monitor/public/**/*.js'],
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: 'module',
