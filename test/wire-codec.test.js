@@ -19,11 +19,11 @@ const nameOf = (f) => typeof f === 'string' ? f : f[0];
 // explicit: adding a business field must not silently weaken coverage or renumber the fixed catalog.
 const V1_EXTENSIONS = Object.freeze({
   'room.create': ['assetCache', 'ruleset', 'consoleEnabled'], 'room.join': ['assetCache'],
-  'lobby.quickMatch': ['assetCache'], 'room.spectate': ['assetCache'],
+  'room.rerollSetup':['kind'], 'lobby.quickMatch': ['assetCache'], 'room.spectate': ['assetCache'],
 });
 // Published v1 has no new numeric IDs: these post-v1 business types deliberately use its JSON fallback.
 const V1_JSON_FALLBACK = Object.freeze({
-  c2s: ['g.console', 'room.chat', 'room.setMatchmaking', 'lobby.join', 'lobby.spectate'],
+  c2s: ['g.console', 'g.relic', 'room.funRules', 'room.chat', 'room.setMatchmaking', 'lobby.join', 'lobby.spectate'],
   s2c: ['m.chat', 'm.chatState', 'm.emergency'],
 });
 

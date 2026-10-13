@@ -41,7 +41,7 @@ function extraTables(p){const shop=p.shopDetail;const slots=(shop?.slots||[]).ma
   const effects=(p.effectsDetail||[]).map(e=>[e.name||e.id,`${e.desc||''}${e.counterText?' · '+e.counterText:e.counter!=null?' · 剩余 '+e.counter:''}`]);
   const bonds=(p.bondsDetail||[]).map(b=>[b.name||b.bondId||b.id||'羁绊',`${b.off?'本局禁用':b.active?'已激活':'未激活'} · 数量 ${fmt(b.count)} · 等级 ${fmt(b.tier)} · 层数 ${fmt(b.layers)} · 阈值 ${(b.thresholds||[]).join('/')||'—'}${b.countsHand?' · 计入手牌':''}`]);
   const enemies=(p.nextEnemiesDetail||[]).map(e=>[e.name||e.enemyKey||'敌人',`${fmt(e.count)} 个 · ${e.gate==='upper'?'上路':'下路'} · ${fmt(e.t)} 秒${e.fly?' · 飞行':''}${e.elite?' · 精英':''}${e.boss?' · Boss':''}${e.source==='bounty'?' · 悬赏':''}`]);
-  return `<div class="detail-tables">${detailTable('商店当前商品',slots.length?slots:[['商品','暂无 / 此版本未提供']])}${detailTable('羁绊明细',bonds.length?bonds:[['羁绊','暂无']])}${detailTable('策略、效果与悬赏',effects.length?effects:[['效果','暂无']])}${detailTable('下一波敌人',enemies.length?enemies:[['敌人','暂无预览']])}${p.personalChoice?detailTable('待选择奖励',[['奖励',describe(p.personalChoice)]]):''}</div>`;
+  return `<div class="detail-tables">${p.relics?detailTable('本局藏品',[['已获得',(p.relics||[]).map(x=>`${x.id}（第${x.round}回合）`).join('、')||'暂无'],['LP护盾',fmt(p.relicShield)],['待选择',p.relicOffer?'是':'否']]):''}${detailTable('商店当前商品',slots.length?slots:[['商品','暂无 / 此版本未提供']])}${detailTable('羁绊明细',bonds.length?bonds:[['羁绊','暂无']])}${detailTable('策略、效果与悬赏',effects.length?effects:[['效果','暂无']])}${detailTable('下一波敌人',enemies.length?enemies:[['敌人','暂无预览']])}${p.personalChoice?detailTable('待选择奖励',[['奖励',describe(p.personalChoice)]]):''}</div>`;
 }
 function playerMetrics(p){
   const r=p.roundStats||{},s=p.stats||{},last=p.lastCombat;

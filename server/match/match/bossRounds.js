@@ -6,6 +6,7 @@
 // Installed on Match.prototype by server/match/Match.js (a method container: never instantiated; `this` is the match).
 
 import { PHASE, GEO } from '../../../shared/constants.js';
+import { awardRelic } from '../relics.js';
 import { deriveSeed } from '../../sim/rng.js';
 import { buildBossWave, bountySpawns } from '../waves.js';
 import { pairPlayers, bossPoolHp, SharedBossPool, CreditPool, hiddenEligible, BOSS_HIT_STEPS } from '../finalAssault.js';
@@ -42,9 +43,11 @@ export class MatchBoss {
     this.phase = hidden ? PHASE.HIDDEN_CORE : PHASE.FINAL_ASSAULT;
     this.lastResults = new Map();
     if (!hidden) {
+      this.teamRelicShield=this.ruleset!=='standard'?alive.reduce((s,p)=>s+(p.relicShield||0),0):0;
+      for(const p of alive) p.relicShield=0;
       this.teamLp = alive.reduce((s, p) => s + Math.max(0, p.lp), 0);
       for (const ps of alive) ps.lpAtFinal = Math.max(0, ps.lp);
-    }
+    } else this.teamRelicShield=0;
     const bossId = hidden ? this.hiddenBossId : this.bossId;
     // BOSS_HIT tickers ("对敌方领袖造成的伤害超过20% / 50% / 80%"): the player's damage to THIS leader over its pool —
     // the pool's own per-player tally, one pool per boss round. stats.bossDamage (the result's 领袖伤害) adds up both
@@ -430,8 +433,9 @@ export class MatchBoss {
   }
 
   _teamLpLoss(amount) {
-    const n = Number(amount);
+    let n = Number(amount);
     if (this.teamLp == null || !Number.isFinite(n) || !(n > 0)) return;
+    if(this.ruleset!=='standard'&&this.teamRelicShield>0) {const absorbed=Math.min(n,this.teamRelicShield);this.teamRelicShield-=absorbed;n-=absorbed;}
     this.teamLp = Math.max(0, this.teamLp - n);
     if (this._bossLazyPublic()) { this._bossPublic(); return; }
     this._syncTeamLp();
@@ -533,6 +537,7 @@ export class MatchBoss {
           const perfect = victory && !res.synthetic && pp.perfect === true && !(pp.leaked || []).some((l) => l && l.counted !== false)
             && this._bossLeaksAgree(f, res, pid);
           this._settleBossBounties(ps, pp, perfect);
+          if(victory&&!res.synthetic) awardRelic(this,ps,(pp.leaked||[]).filter(l=>l&&l.counted!==false).length);
         }
         if (pp && ps) this.dispatch(ps, 'onBattleResult', { result: pp, lpLoss: 0, perfect: !!pp.perfect, boss: true });
       }

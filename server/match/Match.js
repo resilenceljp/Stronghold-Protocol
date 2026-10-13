@@ -227,6 +227,8 @@ function dataSourceFor(data) {
 }
 
 import { configureEntertainment } from './entertainment.js';
+import { DEFAULT_FUN_RULES } from '../../shared/entertainmentRules.js';
+import { MatchFunRules } from './match/funRules.js';
 
 export class Match {
   /** @param {object} opts see MATCH INTERFACE above */
@@ -250,6 +252,8 @@ export class Match {
     configureEntertainment(this.gd, opts.ruleset);
     this.ruleset = this.gd.ruleset;
     this.consoleEnabled = this.ruleset !== 'standard' && opts.consoleEnabled === true;
+    this._consoleWanted = this.consoleEnabled;
+    this.funRules = {...DEFAULT_FUN_RULES,consoleEnabled:this.consoleEnabled,relicIds:[...DEFAULT_FUN_RULES.relicIds]};
     if (!this.difficulty) this.difficulty = this.gd.difficulty;
     this.isSolo = this.mode === 'solo' || this.gd.isSolo;
     /** Co-op always keeps manual online players first (D004/D012); the upstream setting cannot disable that rule. */
@@ -309,6 +313,7 @@ export class Match {
     this.rngDraft = rng('draft');
     this.rngBots = rng('bots');
     this.rngMeta = rng('meta');
+    this.rngRelics = rng('relics');
 
     /** @type {Map<string, PlayerState>} */
     this.players = new Map();
@@ -426,7 +431,7 @@ export class Match {
 }
 
 // the method modules, in this order (a name defined twice is an error, never a silent override)
-for (const part of [MatchPlatform, MatchInfra, MatchMessaging, MatchViews, MatchWatch, MatchIntents, MatchPause, MatchPhases, MatchSetupVote, MatchSpDraft, MatchPrep, MatchCombat, MatchClientCombat, MatchReports, MatchUnite, MatchBoss, MatchSettle]) {
+for (const part of [MatchPlatform, MatchInfra, MatchMessaging, MatchViews, MatchWatch, MatchIntents, MatchPause, MatchPhases, MatchSetupVote, MatchFunRules, MatchSpDraft, MatchPrep, MatchCombat, MatchClientCombat, MatchReports, MatchUnite, MatchBoss, MatchSettle]) {
   for (const key of Reflect.ownKeys(part.prototype)) {
     if (key === 'constructor') continue;
     if (Object.prototype.hasOwnProperty.call(Match.prototype, key)) throw new Error(`Match.${String(key)} is defined twice`);

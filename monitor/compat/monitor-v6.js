@@ -40,6 +40,7 @@ export function captureRoster(match, manifest = {}) {
 export function playerExtra(match, ps) {
   const pv = safe(()=>ps.privateView());
   return {rosterSnapshot:rosters.get(match)?.players.get(ps.playerId) || null,
+    relics:clone(pv?.relics), relicShield:pv?.relicShield??null, relicOffer:clone(pv?.relicOffer),
     monitorDetailError:pv?null:'此版本无法读取玩家明细',
     shopDetail:pv ? {...pv.shop, slots:(pv.shop?.slots || []).map(s=>s?{...s,name:safe(()=>s.kind==='item'?ps.gd.item(s.id)?.name:ps.gd.chess(s.id)?.name,s.id)||s.id}:null)} : null,
     effectsDetail:clone(pv?.effects), bondsDetail:clone(pv?.bonds?.map(b=>({...b,name:safe(()=>ps.gd.bond(b.bondId)?.name,b.bondId)||b.bondId}))),

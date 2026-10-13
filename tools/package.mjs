@@ -71,16 +71,16 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const FOLDER = 'Stronghold-Protocol';
 
 /** Root files a player gets. */
-export const ROOT_FILES = ['package.json', 'package-lock.json', 'LICENSE', 'NOTICE.md', 'THIRD-PARTY-NOTICES.md', 'README.md', 'CHANGELOG.md'];
+export const ROOT_FILES = ['UPSTREAM.json', 'package.json', 'package-lock.json', 'LICENSE', 'NOTICE.md', 'THIRD-PARTY-NOTICES.md', 'README.md', 'CHANGELOG.md'];
 /** The player docs. */
-export const PLAYER_DOCS = ['docs/PLAYING.md', 'docs/DEPLOY.md', 'docs/ANNOUNCEMENTS.md', 'docs/ASSET_CACHE.md', 'docs/SERVER_SETTINGS.md', 'docs/ENTERTAINMENT.md'];
+export const PLAYER_DOCS = ['docs/FUN_RELEASE.md', 'docs/PLAYING.md', 'docs/DEPLOY.md', 'docs/ANNOUNCEMENTS.md', 'docs/ASSET_CACHE.md', 'docs/SERVER_SETTINGS.md', 'docs/ENTERTAINMENT.md'];
 /** Research tables read at run time: server/sim/nodeData.js (the Node sim's fallback) and tools/fetch-assets.mjs. */
 export const RUNTIME_RESEARCH = ['docs/research/03-operators.json', 'docs/research/05-enemies.json', 'docs/research/05-maps.json', 'docs/research/07-assets.json'];
 /** The start scripts (scripts/make-windows-bundle.mjs is the maintainer's Windows pack, docs/WINDOWS.md). */
 export const PLAYER_SCRIPTS = ['scripts/install-service-windows.ps1', 'scripts/launch.mjs', 'scripts/open-browser.mjs',
   'scripts/run-server.cmd', 'scripts/start-windows.bat', 'scripts/start-windows.ps1', 'scripts/start.sh'];
 /** The tools a player runs (npm run setup / doctor / assets, the postinstall) and the ones setup starts. */
-export const PLAYER_TOOLS = ['tools/announcements.mjs', 'tools/asset-cache-pack.mjs', 'tools/crop-board-atlas.mjs', 'tools/doctor.mjs', 'tools/fetch-assets.mjs', 'tools/server-settings.mjs', 'tools/setup.mjs', 'tools/vendor.mjs'];
+export const PLAYER_TOOLS = ['tools/sync-upstream-20p.mjs', 'tools/announcements.mjs', 'tools/asset-cache-pack.mjs', 'tools/crop-board-atlas.mjs', 'tools/doctor.mjs', 'tools/fetch-assets.mjs', 'tools/server-settings.mjs', 'tools/setup.mjs', 'tools/vendor.mjs'];
 /** Whole tool directories: fetch-assets' modules, the local-client extraction setup runs. */
 export const PLAYER_TOOL_DIRS = ['tools/assets/', 'tools/asset-cache/', 'tools/local-extract/'];
 /** Whole runtime directories (their tracked files). */
@@ -92,7 +92,7 @@ export const shipsPacks = (files) => files.some((f) => /^public\/i18n\/[^/]+\.js
 /** Never from the tracked list: the dev pages, and what only the art plan adds (or npm ci writes). */
 const NOT_TRACKED_SHIP = ['monitor/data/', 'public/dev/', 'public/assets/', 'public/fonts/', 'public/vendor/'];
 /** The npm scripts a player runs: each `node <file>` of them must ship. */
-export const PLAYER_NPM_SCRIPTS = ['start', 'setup', 'doctor', 'launch', 'postinstall', 'vendor', 'assets', 'assets:pack', 'monitor'];
+export const PLAYER_NPM_SCRIPTS = ['start', 'setup', 'doctor', 'launch', 'postinstall', 'vendor', 'assets', 'assets:pack', 'monitor', 'sync:upstream'];
 
 /**
  * THE SWITCH for the Japanese voice dub in the full zip (`audio.voiceJp` of data/assets.json: 2674 files under
@@ -285,7 +285,7 @@ export function entryProblems(pkg, files) {
   for (const name of PLAYER_NPM_SCRIPTS) {
     const cmd = pkg?.scripts?.[name];
     // Optional fork tool: validate it when declared, without requiring it in upstream/minimal packages.
-    if (name === 'monitor' && !cmd) continue;
+    if (['monitor','sync:upstream'].includes(name) && !cmd) continue;
     if (!cmd) { out.push(`npm script "${name}" is missing`); continue; }
     for (const m of cmd.matchAll(/\bnode\s+(?:--[\w-]+\s+)*([\w./-]+\.m?js)\b/g)) {
       if (!shipped.has(m[1])) out.push(`npm run ${name}: ${m[1]} is not shipped`);

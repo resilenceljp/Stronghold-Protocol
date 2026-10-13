@@ -69,3 +69,7 @@ Windows 上解释器名称依实际环境选择。镜像、代理、素材补齐
 记录合并来源、合并提交、后续适配提交、验证结果和未完成事项，再更新本目录基线及索引。功能提交、素材状态与部署状态分开写。
 
 多人服务器正在使用时，记录真实部署版本、时间、是否重启、已有房间如何处理及可用的回退版本；这些操作须在任务授权内。没有实际部署证据时填写「未部署」或「未验证」，不把本地提交或用户推送成功当成已上线的证明。
+
+## resilenceljp独立仓库的同步入口
+
+当前origin为resilenceljp/Stronghold-Protocol-20p；20人上游为LongQianChen的feat/IncreasePlayerCapacity，原作者为sganggs。此节是独立仓库维护口径，前面的LongQianChen历史记录保留。GitHub手动/每日工作流同步到upstream/20p并保存快照，不自动合并玩法。`npm run sync:upstream`可本地读取，`-- --push`推送镜像。审查合并后`-- --apply-version`更新基线，工具检查上游已是当前HEAD祖先。详见[本次记录](records/2026-10-13-02-fun-rules-relics.md)。

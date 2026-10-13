@@ -4,6 +4,7 @@
 // coming enemies; in a boss round's prep on the player's half of the boss field).
 // Installed on Match.prototype by server/match/Match.js (a method container: never instantiated; `this` is the match).
 
+import { benchGeo,handTile } from '../../../shared/bench.js';
 import { PHASE, GEO } from '../../../shared/constants.js';
 import { boardOrder, pieceDir } from '../board.js';
 import { bondList, offBondCounts } from '../bondsMeta.js';
@@ -66,7 +67,7 @@ export class MatchViews {
       phase: this.phase,
       round: this.round,
       lastRound: this.ruleset === 'endless' ? Math.max(14, this.round) : this.gd.lastRound,
-      ...(this.ruleset !== 'standard' ? { ruleset: this.ruleset, consoleEnabled: this.consoleEnabled, layerCap: this.gd.layerCap } : {}),
+      ...(this.ruleset !== 'standard' ? { ruleset: this.ruleset, consoleEnabled: this.consoleEnabled, layerCap: this.gd.layerCap, funRules: this.funRules, teamRelicShield:this.teamRelicShield||0 } : {}),
       ...(this.ruleset === 'endless' ? { endless: true, enemyGrowth: 0.1 } : {}),
       deadline: this.deadline,
       serverNow: this.sched.now(),
@@ -76,6 +77,7 @@ export class MatchViews {
       setupRevision: this.setupRevision,
       rerollVote: this.setupVote ? {
         id: this.setupVote.id,
+        ...(this.setupVote.kind ? {kind:this.setupVote.kind} : {}),
         proposerId: this.setupVote.proposerId,
         voters: this.setupVote.voters.slice(),
         agreed: [...this.setupVote.agreed],
@@ -388,10 +390,10 @@ export class MatchViews {
       });
     };
     for (let i = 0; i < ps.hand.length; i++) {
-      if (ps.hand[i]) benchUnit(ps.hand[i], i, GEO.HAND_ROW, 'hand');
+      if(ps.hand[i]) {const tile=handTile(i,benchGeo(ps.hand.length));benchUnit(ps.hand[i],tile.col,tile.row,'hand');}
     }
     for (let i = 0; i < ps.temp.length; i++) {
-      if (ps.temp[i]) benchUnit(ps.temp[i], GEO.TEMP_C0 + i, GEO.TEMP_ROW, 'temp');
+      if (ps.temp[i]) benchUnit(ps.temp[i], GEO.TEMP_C0 + i, benchGeo(ps.hand.length,this.round===this.gd.bossRound||this.round===this.gd.hiddenRound).TEMP_ROW, 'temp');
     }
     // `nextEnemies`: the scouted player's coming enemies — their preview pen shows on the scouting board too (research 09
     // §2.2 "Teammates"; render/app.js enterBattle({ prep: true, nextEnemies }))

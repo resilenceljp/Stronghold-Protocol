@@ -46,7 +46,7 @@ export function bossPrepField(side) {
     kind: 'bossPrep', side: R ? 'R' : 'L', mirror: R,
     toDisp: (row, col) => ({ row: row + BOSS_ROW_SHIFT, col: R ? MAX_COL - col : col }),
     toBoard: (row, col) => {
-      if (!Number.isInteger(row) || !Number.isInteger(col) || row < 0 || row > 5 || col < lo || col > hi) return null;
+      if (!Number.isInteger(row) || !Number.isInteger(col) || row < 0 || row > 6 || col < lo || col > hi) return null;
       return { row: row - BOSS_ROW_SHIFT, col: R ? MAX_COL - col : col };
     },
     dirToDisp: (d) => (R ? mirrorDir(d) : d),

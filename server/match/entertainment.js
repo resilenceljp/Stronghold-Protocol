@@ -4,6 +4,7 @@ export const RULESETS = ['standard', 'entertainment', 'endless'];
 export function configureEntertainment(gd, ruleset = 'standard') {
   gd.ruleset = RULESETS.includes(ruleset) ? ruleset : 'standard';
   gd.layerCap = gd.ruleset === 'standard' ? 999 : 9999;
+  if(gd.ruleset !== 'standard') gd.economy={...gd.economy,benchSize:22};
   if (gd.ruleset !== 'endless') return;
   // [ASSUMED] NORMAL supplies the 14-round campaign, all eight maps and the late normal-wave templates.
   const base = gd.config.modes?.[gd.isSolo ? 'mode_single_normal' : 'mode_multi_normal'] || gd.mode;

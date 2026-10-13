@@ -26,13 +26,14 @@
 //   pieceDrop      { uid, piece, from, target }
 //   pieceDragEnd   { uid, piece, dropped, cancelled }
 
+import { handTile } from '../../../shared/bench.js';
 import { GEO } from '../../../shared/constants.js';
 
 /** Where a piece currently sits, as a tile. `piece.area` 'board' uses row/col; 'hand'/'temp' use idx. */
-export function pieceTile(piece) {
+export function pieceTile(piece,geo=GEO) {
   if (!piece || typeof piece !== 'object') return null;
-  if (piece.area === 'hand' && Number.isInteger(piece.idx)) return { row: GEO.HAND_ROW, col: piece.idx };
-  if (piece.area === 'temp' && Number.isInteger(piece.idx)) return { row: GEO.TEMP_ROW, col: GEO.TEMP_C0 + piece.idx };
+  if (piece.area === 'hand' && Number.isInteger(piece.idx)) return handTile(piece.idx,geo);
+  if (piece.area === 'temp' && Number.isInteger(piece.idx)) return { row: geo.TEMP_ROW, col: geo.TEMP_C0 + piece.idx };
   if (Number.isInteger(piece.row) && Number.isInteger(piece.col)) return { row: piece.row, col: piece.col };
   return null;
 }
@@ -53,7 +54,8 @@ export function pieceSlot(piece) {
 export function tileSlot(tile, geo = GEO) {
   if (!tile || !Number.isInteger(tile.row) || !Number.isInteger(tile.col)) return null;
   const { row, col } = tile;
-  if (row === geo.HAND_ROW && col >= 0 && col < geo.HAND_SIZE) return { area: 'hand', idx: col };
+  const cols=geo.HAND_COLS||geo.HAND_SIZE;
+  if(row>=geo.HAND_ROW&&row<geo.HAND_ROW+Math.ceil(geo.HAND_SIZE/cols)&&col>=0&&col<cols) return {area:'hand',idx:(row-geo.HAND_ROW)*cols+col};
   if (row === geo.TEMP_ROW && col >= geo.TEMP_C0 && col < geo.TEMP_C0 + geo.TEMP_SIZE) return { area: 'temp', idx: col - geo.TEMP_C0 };
   const F = geo.FIELD;
   if (row >= F.r0 && row <= F.r1 && col >= F.c0 && col <= F.c1) return { area: 'board', row, col };
@@ -93,7 +95,7 @@ export function dragStandTile(move, geo = GEO) {
   const t = move && move.legal === true ? move.target : null;
   if (!t) return null;
   if (t.area === 'board' && Number.isInteger(t.row) && Number.isInteger(t.col)) return { row: t.row, col: t.col, bench: false };
-  if (t.area === 'hand' && Number.isInteger(t.idx)) return { row: geo.HAND_ROW, col: t.idx, bench: true };
+  if (t.area === 'hand' && Number.isInteger(t.idx)) return { ...handTile(t.idx,geo), bench:true };
   return null;
 }
 
@@ -132,12 +134,13 @@ export function createDragController(hooks) {
 
   const emit = (name, payload) => { try { h.emit(name, payload); } catch (err) { console.error('[drag] listener failed', err); } };
   const draggable = (piece) => !!piece && piece.draggable !== false && piece.uid != null;
+  const geo=()=>h.geo?.()||GEO;
   const tileAt = (x, y) => { try { return h.pickTile(x, y); } catch { return null; } };
   const pieceAt = (x, y) => { try { return h.hitPiece(x, y); } catch { return null; } };
   const overCanvas = (cx, cy) => { try { return h.isOverCanvas ? h.isOverCanvas(cx, cy) !== false : true; } catch { return true; } };
 
   function setHoverTile(tile) {
-    const slot = tile ? tileSlot(tile) : null;
+    const slot = tile ? tileSlot(tile,geo()) : null;
     const key = tile ? `${tile.row},${tile.col}` : '';
     if (key === hoverTileKey) return;
     hoverTileKey = key;
@@ -164,7 +167,7 @@ export function createDragController(hooks) {
   function moveDrag(e) {
     const tile = tileAt(e.x, e.y);
     const over = overCanvas(e.clientX, e.clientY);
-    const slot = over && tile ? tileSlot(tile) : null;
+    const slot = over && tile ? tileSlot(tile,geo()) : null;
     const legal = !!slot && slot.area !== 'temp' && (slot.area === 'board' || !sameSlot(slot, st.from)) && isLegal(canPlace, st.piece, slot);
     setHoverTile(over ? tile : null);
     emit('pieceDragMove', { uid: st.piece.uid, piece: st.piece, x: e.x, y: e.y, clientX: e.clientX, clientY: e.clientY, target: slot, legal });
@@ -177,7 +180,7 @@ export function createDragController(hooks) {
     let dropped = false;
     if (!cancelled) {
       const tile = tileAt(e.x, e.y);
-      const d = resolveDrop({ piece: s.piece, from: s.from, tile, overCanvas: overCanvas(e.clientX, e.clientY), clientX: e.clientX, clientY: e.clientY, canPlace });
+      const d = resolveDrop({ piece: s.piece, from: s.from, tile, overCanvas: overCanvas(e.clientX, e.clientY), clientX: e.clientX, clientY: e.clientY, canPlace, geo:geo() });
       if (d.kind === 'drop') {
         dropped = true;
         emit('pieceDrop', { uid: s.piece.uid, piece: s.piece, from: s.from, target: d.target });

@@ -103,7 +103,7 @@ export function createFallbackView(host, opts = {}) {
     const cols = r.c1 - r.c0 + 1;
     const prep = st.mode === 'prep';
     const hasTemp = prep && Array.isArray(st.priv?.temp) && st.priv.temp.some(Boolean);
-    const rows = r.r1 - r.r0 + 1 + (prep ? 2.6 + (hasTemp ? 1.2 : 0) : 0); // + gap + hand (+ temp) rows
+    const rows = r.r1 - r.r0 + 1 + (prep ? (st.priv?.hand?.length===22?3.6:2.6) + (hasTemp ? 1.2 : 0) : 0); // + gap + hand (+ temp) rows
     // keep clear of the HUD: top bar + bond strip above, shop bar (prep) / switcher (combat) below
     const top0 = rem * 2.0;
     const bottom0 = h - rem * (prep ? 3.3 : 1.1);
@@ -118,8 +118,8 @@ export function createFallbackView(host, opts = {}) {
   }
 
   const tilePos = (L, row, col) => ({ x: (col - st.rect.c0) * L.tile, y: (st.rect.r1 - row) * L.tile });
-  const handPos = (L, idx) => ({ x: idx * L.tile, y: (L.rows + 0.6) * L.tile });
-  const tempPos = (L, idx) => ({ x: (GEO.TEMP_C0 + idx) * L.tile, y: (L.rows + 1.72) * L.tile });
+  const handPos = (L, idx) => ({ x: (idx % (st.priv?.hand?.length===22?11:10)) * L.tile, y: (L.rows + 0.6 + (st.priv?.hand?.length===22?Math.floor(idx/11):0)) * L.tile });
+  const tempPos = (L, idx) => ({ x: (GEO.TEMP_C0 + idx) * L.tile, y: (L.rows + (st.priv?.hand?.length===22?2.72:1.72)) * L.tile });
 
   // ---- pieces (prep) ---------------------------------------------------------------------------------------
   function pieceArt(p) {
@@ -347,7 +347,7 @@ export function createFallbackView(host, opts = {}) {
         const pos = heldPos(p) || tilePos(L, p.row, p.col);
         pieces.push(html`<${Piece} key=${p.uid} p=${p} x=${pos.x} y=${pos.y} L=${L} area="board" />`);
       }
-      for (let i = 0; i < GEO.HAND_SIZE; i++) {
+      for (let i = 0; i < (st.priv?.hand?.length||GEO.HAND_SIZE); i++) {
         const pos = handPos(L, i);
         const hov = st.hoverTarget?.area === 'hand' && st.hoverTarget.idx === i ? dropState(st.hoverTarget) : null;
         hand.push(html`<div key=${`h${i}`} class=${cx('ff-slot', hov && `is-hover-${hov}`)} data-drop="hand" data-idx=${i}
@@ -504,7 +504,7 @@ export function createFallbackView(host, opts = {}) {
       const br = root.querySelector('.ff-board')?.getBoundingClientRect();
       if (!br) return null;
       let p = null;
-      if (row === GEO.HAND_ROW && col >= 0 && col < GEO.HAND_SIZE && st.mode === 'prep') p = handPos(L, col);
+      if (row === GEO.HAND_ROW && col >= 0 && col < (st.priv?.hand?.length||GEO.HAND_SIZE) && st.mode === 'prep') p = handPos(L, col);
       else if (row === GEO.TEMP_ROW && col >= GEO.TEMP_C0 && col < GEO.TEMP_C0 + GEO.TEMP_SIZE && st.mode === 'prep') p = tempPos(L, col - GEO.TEMP_C0);
       else if (row >= st.rect.r0 && row <= st.rect.r1 && col >= st.rect.c0 && col <= st.rect.c1) p = tilePos(L, row, col);
       if (!p) return null;

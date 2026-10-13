@@ -534,7 +534,7 @@ function monitorMatchSnapshot(room, now) {
   };
 
   return {
-    ruleset: match.ruleset || 'standard', consoleEnabled: !!match.consoleEnabled, endless: match.ruleset === 'endless',
+    funRules: match.funRules || null, ruleset: match.ruleset || 'standard', consoleEnabled: !!match.consoleEnabled, endless: match.ruleset === 'endless',
     phase: publicView?.phase || match.phase || null,
     round: monitorNumber(publicView?.round, monitorNumber(match.round, 0)),
     lastRound: monitorNumber(publicView?.lastRound, monitorNumber(match.gd?.lastRound)),

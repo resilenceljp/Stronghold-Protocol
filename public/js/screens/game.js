@@ -105,6 +105,8 @@ import {
   mergeTarget, modeOffBonds, readyFundsPrompt, readyShopFold, ownerBandId, ownDiyRecord, ownStandIn,
 } from '../ui/gameLogic.js';
 import { toast } from '../ui/toasts.js';
+import { benchStage } from '../../../shared/bench.js';
+import { RelicPanel } from '../ui/relicPanel.js';
 import { BriefingScreen } from './briefing.js';
 import { BandDraftScreen } from './bandDraft.js';
 import { ResultScreen } from './result.js';
@@ -404,8 +406,8 @@ function MatchScreen() {
   useEffect(() => {
     if (!view) return;
     const st = ownView ? ownStage : baseStage;
-    if (st) view.setStage(st);
-  }, [view, ownView, ownStage, baseStage]);
+    if (st) view.setStage(benchStage(st,priv?.hand?.length));
+  }, [view, ownView, ownStage, baseStage, priv?.hand?.length]);
   // the stage behind the board ON SCREEN — the own one (机变 overrides applied) or, while watching a teammate, the plain
   // one — and how a tapped BOARD tile maps to it (GitHub issue #184: tileClick → gameLogic.terrainInfo). Everywhere but a
   // boss-prep board the two spaces are the same: a 最终攻势 / 隐秘核心 battle renders the stage's own rows (GEO.BOSS_RECT),
@@ -1484,7 +1486,7 @@ function MatchScreen() {
       </div>` : null}
 
       ${pub?.ruleset && pub.ruleset !== 'standard' ? html`<div class="fun-game-label">${pub.endless ? t('无尽模拟') : t('娱乐模式')} · ${t('层数上限')} ${pub.layerCap}</div>` : null}
-      <${EntertainmentConsole} priv=${priv} editable=${editable && !spectator} />
+      <${RelicPanel}/><${EntertainmentConsole} priv=${priv} editable=${editable && !spectator} />
       ${showShop ? html`<${ShopBar} priv=${priv} editable=${editable} collapsed=${collapsed} onCollapse=${setCollapsed}
         barRef=${barRef} offBonds=${offBonds}
         onBuy=${buy} onLevel=${() => actions.levelUp()} onRefresh=${() => actions.refresh()} onFreeze=${() => actions.freeze()}

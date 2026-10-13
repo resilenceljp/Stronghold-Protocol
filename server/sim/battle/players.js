@@ -2,6 +2,7 @@
 // from the PlayerBattleInput, token defs for an owner's loadout, and the kit / profile / skill setup of a unit.
 // Installed on Battle.prototype by server/sim/Battle.js (a method container: never instantiated; `this` is the battle).
 
+import { relicMods } from '../../../shared/relics.js';
 import { COLS, BOSS_ROW_OFFSET } from '../constants.js';
 import { GEO } from '../../../shared/constants.js';
 import { Unit } from '../units.js';
@@ -160,6 +161,8 @@ export class BattlePlayers {
     const u = this._makeAlly(ps, def, 'op', r, c, { uid: inp.uid, dir });
     u.items = [...(inp.items ?? [])];
     u.carry = inp.carryState ?? null;
+    const ids=Array.isArray(ps.input?.relicIds)?ps.input.relicIds:[];
+    if(ids.length) {this.addBuff(u,{key:'entertainment:relics',allowDead:true,persist:true,mods:relicMods(ids)});u.hp=u.maxHp;}
     // 练度 (自持有, 0.2.2): the owned operator's ×ATK / ×DEF / ×max HP (units.js Πmul) — never a 补位 stand-in's nor a
     // prototype 自选 pick's (another character than the one the player owns)
     if (isCultivate(inp.cultivate) && !def.standInFor && !def.raw?.diyProto) {

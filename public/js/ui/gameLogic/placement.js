@@ -325,7 +325,7 @@ export function canPlace(ctx, uid, target) {
 
   if (target.area === 'hand') {
     const idx = target.idx;
-    if (!Number.isInteger(idx) || idx < 0 || idx >= GEO.HAND_SIZE) return no('BAD_TILE', t('无法放置在该位置'));
+    if (!Number.isInteger(idx) || idx < 0 || idx >= (ctx.priv?.hand?.length||GEO.HAND_SIZE)) return no('BAD_TILE', t('无法放置在该位置'));
     if (src.area === 'hand' && src.idx === idx) return no('ALREADY', t('位置未变化'));
     const occ = ctx.handAt.get(idx);
     if (!occ) return { ok: true, action: 'move' };
@@ -340,7 +340,7 @@ export function canPlace(ctx, uid, target) {
         return { ok: true, action: 'swap' };
       }
       // Withdrawal removes the operator's own summon stacks, freeing their hand slots too.
-      const free = [...Array(GEO.HAND_SIZE).keys()].some((i) => {
+      const free = [...Array(ctx.priv?.hand?.length||GEO.HAND_SIZE).keys()].some((i) => {
         const p = ctx.handAt.get(i)?.piece;
         return !p || (p.kind === 'token' && p.ownerUid === piece.uid);
       });

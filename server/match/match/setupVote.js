@@ -9,7 +9,7 @@ import { drawDisabledBonds, createPoolGroups } from '../pool.js';
 import { OK, fail } from './common.js';
 
 export class MatchSetupVote {
-  requestSetupReroll(playerId, revision) {
+  requestSetupReroll(playerId, revision, kind=null) {
     if (this.emergencyFrozen) return fail(ERR.SERVER_EMERGENCY);
     if (this.disposed || this.ended || this.phase !== PHASE.INFO_CHECK) return fail(ERR.WRONG_PHASE);
     const ps = this.players.get(playerId);
@@ -21,7 +21,8 @@ export class MatchSetupVote {
     const now = this.sched.now();
     if (now - this._lastSetupVoteAt < 300) return fail(ERR.RATE);
     this._lastSetupVoteAt = now;
-    this.setupVote = {
+    if(kind && (kind!=='battlefield'||this.ruleset==='standard')) return fail(ERR.BAD_TARGET);
+    this.setupVote = {kind,
       id: ++this._setupVoteSeq,
       proposerId: playerId,
       voters: humans.map((p) => p.playerId),
@@ -79,6 +80,16 @@ export class MatchSetupVote {
   }
 
   completeSetupReroll() {
+    if(this.setupVote?.kind==='battlefield') {
+      const candidates=(this.gd.config.modes?.[this.gd.isSolo?'mode_single_normal':'mode_multi_normal']?.stages||this.gd.mode.stages||[]).filter(id=>id!==this.stageId&&this.gd.stage(id));
+      if(candidates.length) {
+        const rng=createRng(deriveSeed(this.seed,`reroll-field:${this.setupRevision+1}`));
+        this.stageId=candidates[Math.floor(rng()*candidates.length)];this.stage=this.gd.stage(this.stageId);
+      }
+      this.setupRevision++;this.setupVote=null;this._botPath=null;
+      for(const ps of this.order) {ps.invalidateDeployMap();ps.infoReady=ps.botControlled;}
+      this.enterInfoCheck();return OK;
+    }
     let prepared;
     try {
       const rng = createRng(deriveSeed(this.seed, `reroll-setup:${this.setupRevision + 1}`));

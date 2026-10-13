@@ -957,3 +957,7 @@ item selection probabilities and explicit grant weights remain unchanged.
 ## 分支娱乐扩展
 
 `room.create {ruleset?, consoleEnabled?}` 选择标准/娱乐/无尽；`g.console {kind,id?,amount?}` 为仅本房休整期的本人操作。新增字段走wire v1 extension，新增类型走JSON fallback，既有紧凑协议位置不变。规则及假设见 [ENTERTAINMENT.md](ENTERTAINMENT.md)。
+
+## 娱乐规则扩展（fun.2）
+
+room.funRules {rules,setupRevision}仅房主INFO_CHECK可用；g.relic {id,offerId}仅本人PREP待选奖励可用；room.rerollSetup可带kind:battlefield只刷新地图。全部使用v1既有JSON回退或扩展。规则、收藏、护盾及offer保留于服务端私有状态，参考[娱乐说明](ENTERTAINMENT.md)。

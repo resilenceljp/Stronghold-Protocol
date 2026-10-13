@@ -11,6 +11,7 @@ import { useGameData, Img, RichText } from '../ui/gameComponents.js';
 import { StepHeader, ExitModal } from '../ui/matchChrome.js';
 import { MatchInfo, matchInfoModel } from '../ui/matchInfo.js';
 import { LoadoutButton } from './loadout.js';
+import { FunRules } from '../ui/funRules.js';
 import { SetupReroll } from '../ui/setupReroll.js';
 import { MatchChatButton } from '../ui/matchChat.js';
 import { actions } from '../ui/gameActions.js';
@@ -30,6 +31,7 @@ export function BriefingScreen() {
   const solo = useStore((s) => s.room?.mode === 'solo') || String(pub?.modeId || '').includes('single');
   const gd = useGameData();
   const [exit, setExit] = useState(false);
+  const [page,setPage]=useState(1);
   const [busy, setBusy] = useState(false);
   if (!pub) return null;
 
@@ -58,9 +60,9 @@ export function BriefingScreen() {
 
   return html`<div class="screen brief">
     <div class="brief__bg" aria-hidden="true"></div>
-    <${StepHeader} step=${1} of=${2} title=${t('确认本局信息')} micro="BRIEFING // INFO CHECK" pub=${pub}
+    <${StepHeader} step=${page} of=${2} title=${t(page===2?'本局娱乐规则':'确认本局信息')} micro="BRIEFING // INFO CHECK" pub=${pub}
       total=${phaseTotalSeconds(pub, gd.config)} onExit=${() => setExit(true)} />
-    <main class="brief__main">
+    ${page===2?html`<${FunRules} pub=${pub}/>`:html`<main class="brief__main">
       <section class="brief__left">
         <div class="brief-boss brackets">
           <${MicroLabel} tone="gold">${t('ENEMY LEADER // 敌方领袖')}</${MicroLabel}>
@@ -92,8 +94,8 @@ export function BriefingScreen() {
       <section class="brief__right">
         <${MatchInfo} model=${info} />
       </section>
-    </main>
-    <${SetupReroll} pub=${pub} />
+    </main>`}
+    ${!pub.ruleset||pub.ruleset==='standard'||(pub.rerollVote&&page===1)?html`<${SetupReroll} pub=${pub} />`:null}
     <footer class="brief__foot">
       <${MatchChatButton} class="mchat-brief-entry" />
       <${LoadoutButton} from="briefing" size="lg" class="brief-loadout" />
@@ -101,8 +103,9 @@ export function BriefingScreen() {
         <span class="brief-ready__txt">${t('已就绪')} <b class="num">${readyN}</b><span class="num">/${players.length}</span></span>
         <span class=${cx('brief-ready__pips', players.length > 8 && 'is-many')}>${players.map((p) => html`<i key=${p.playerId} class=${cx(p.ready && 'on', p.playerId === myId && 'me')} title=${p.name}><${Icon} name="user" /></i>`)}</span>
       </div>
+      ${pub.ruleset&&pub.ruleset!=='standard'?html`<${Button} size="lg" onClick=${()=>setPage(page===1?2:1)}>${t(page===1?'下一页：本局规则':'上一页：本局信息')}<//>`:null}
       <${Button} variant="primary" size="xl" icon=${me?.ready ? 'check' : me ? 'play' : 'eye'} active=${!!me?.ready} loading=${busy}
-        disabled=${!!me?.ready || !me || !!pub.rerollVote} onClick=${ready}>${me?.ready ? t('已就绪') : me ? t('准备就绪') : t('观战中')}<//>
+        disabled=${!!me?.ready || !me || !!pub.rerollVote || (!!pub.ruleset&&pub.ruleset!=='standard'&&page!==2)} onClick=${ready}>${me?.ready ? t('已就绪') : me ? t('准备就绪') : t('观战中')}<//>
     </footer>
     <${ExitModal} open=${exit} onClose=${() => setExit(false)} solo=${solo} />
   </div>`;

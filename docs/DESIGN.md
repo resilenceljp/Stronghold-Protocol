@@ -47,3 +47,5 @@ normative lines it rewrote).
 分支新增的娱乐与无尽规则与原版模式隔离：见 [娱乐与无尽](ENTERTAINMENT.md)。
 
 分支规则补充：[DESIGN §30 — 娱乐与无尽](design/entertainment.md)。
+
+娱乐第二页规则、藏品和上游派生版本：参见[ENTERTAINMENT](ENTERTAINMENT.md)及[DEV-20261013-02](development/records/2026-10-13-02-fun-rules-relics.md)。

@@ -120,6 +120,7 @@ import { SnapshotBuffer, frameTime } from './interp.js';
 import { TileField } from './tiles.js';
 import { UnitView, ItemView, DeviceView, FORMS, syncView } from './units.js';
 import { FxSystem, ensureDamageFonts } from './fx.js';
+import { benchGeo,handTile } from '../../../shared/bench.js';
 import { createDragController, pieceTile, dragStandTile } from './drag.js';
 import { backdropTextures, shadowTexture, refreshTierChips, refreshDownLabels, silhouetteTexture } from './textures.js';
 import { TILE_H, TIER_COLORS, COLORS } from './style.js';
@@ -701,10 +702,11 @@ export async function createFieldView(host, options = {}) {
     return b ? { ...t, row: b.row, col: b.col } : { row: -1, col: -1, x: t.x, y: t.y };
   }
 
+  const currentGeo=()=>benchGeo(lastPrep?.ps?.hand?.length,prepXf.kind==='bossPrep');
   function slotWorld(p) {
     const h = held.get(p.uid);
     if (h) return h;
-    const t = pieceTile(p);
+    const t = pieceTile(p,currentGeo());
     if (!t) return null;
     return boardWorld(t.row, t.col, p.area === 'hand' || p.area === 'temp');
   }
@@ -1017,6 +1019,7 @@ export async function createFieldView(host, options = {}) {
   }
 
   const drag = createDragController({
+    geo:currentGeo,
     hitPiece: (x, y) => pieceAt(x, y),
     pickTile: (x, y) => pickBoardTile(x, y),
     isOverCanvas: (cx, cy) => {
@@ -1077,8 +1080,8 @@ export async function createFieldView(host, options = {}) {
     for (let r = F.r0; r <= F.r1; r++) for (let c = F.c0; c <= F.c1; c++) {
       try { if (fn(piece, r, c, { area: 'board', row: r, col: c })) out.push([r, c]); } catch { /* illegal */ }
     }
-    for (let i = 0; i < GEO.HAND_SIZE; i++) {
-      try { if (fn(piece, GEO.HAND_ROW, i, { area: 'hand', idx: i })) out.push([GEO.HAND_ROW, i]); } catch { /* illegal */ }
+    for (let i = 0; i < currentGeo().HAND_SIZE; i++) {
+      try { if (fn(piece, GEO.HAND_ROW, i, { area: 'hand', idx: i })) out.push(Object.values(handTile(i,currentGeo()))); } catch { /* illegal */ }
     }
     return out;
   }
@@ -1090,7 +1093,7 @@ export async function createFieldView(host, options = {}) {
     dragState = { uid: p.uid, key, view: v, from: p.from, home: v._home || { x: v.x, y: v.y, z: v.z } };
     v.lift = 0.3;
     v._tween = null;
-    const t = pieceTile(p.piece);
+    const t = pieceTile(p.piece,currentGeo());
     if (t) drawHighlight([[t.row, t.col]], 'hover', 'dragFrom');
     drawHighlight(legalTiles(p.piece), 'legal', 'legal');
   }
@@ -1102,7 +1105,7 @@ export async function createFieldView(host, options = {}) {
     // a unit over a legal drop target — the tile under the pointer, on the board or the bench (render/drag.js
     // dragStandTile) — stands on it, lifted, as in the official deploy drag (the owner's recording of 2026-10-09): the
     // world point the drop tween goes to (boardWorld, the prep field transform applied), set at once, no tween
-    const stand = item ? null : dragStandTile(p);
+    const stand = item ? null : dragStandTile(p,currentGeo());
     if (stand) {
       const w = boardWorld(stand.row, stand.col, stand.bench);
       v.x = w.x; v.y = w.y; v.z = w.z;
@@ -1126,8 +1129,8 @@ export async function createFieldView(host, options = {}) {
     }
     // the drop target (p.target, highlighted) is the tile under the pointer
     if (p.target && p.target.area !== 'temp') {
-      const r = p.target.area === 'board' ? p.target.row : GEO.HAND_ROW;
-      const c = p.target.area === 'board' ? p.target.col : p.target.idx;
+      const r = p.target.area === 'board' ? p.target.row : handTile(p.target.idx,currentGeo()).row;
+      const c = p.target.area === 'board' ? p.target.col : handTile(p.target.idx,currentGeo()).col;
       drawHighlight([[r, c]], p.legal ? 'target' : 'illegal', 'dragTarget');
     } else clearHl('dragTarget');
   }
@@ -1137,7 +1140,8 @@ export async function createFieldView(host, options = {}) {
     const v = dragState.view;
     const t = p.target;
     if (t && (t.area === 'board' || t.area === 'hand')) {
-      const row = t.area === 'board' ? t.row : GEO.HAND_ROW, col = t.area === 'board' ? t.col : t.idx;
+      const tile=t.area==='board'?{row:t.row,col:t.col}:handTile(t.idx,currentGeo());
+      const {row,col}=tile;
       const w = boardWorld(row, col, t.area === 'hand');
       v._tween = { fx: v.x, fy: v.y, fz: v.z, tx: w.x, ty: w.y, tz: w.z, t: 0 };
       pending.set(dragState.key, { t: performance.now(), view: v, board: t.area === 'board' ? { row, col } : null });

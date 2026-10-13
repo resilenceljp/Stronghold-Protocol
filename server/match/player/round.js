@@ -6,11 +6,18 @@
 // Installed on PlayerState.prototype by server/match/PlayerState.js (a method container: never instantiated; `this` is
 // the player state).
 
+import { RELICS } from '../../../shared/relics.js';
 import { boardOrder, pieceDir } from '../board.js';
 import { computeBonds, bondSnapshot, activatedLayers, bondsWithGains } from '../bondsMeta.js';
 
 export class PlayerRound {
   startRound(r) {
+    if(this.m.ruleset !== 'standard') {
+      if(this.botControlled&&this.relicOffer) {this.relics.push({id:this.relicOffer.choices[0],round:this.relicOffer.round});this.relicOffer=null;}
+      this.relicShield=this.nextRelicShield;this.nextRelicShield=0;
+      if(r===1) this.addFunds(this.m.funRules.startingFunds,{reason:'startingFunds'});
+      this.addFunds(this.relics.reduce((n,x)=>n+(RELICS.find(y=>y.id===x.id)?.income||0),0),{reason:'relic'});
+    }
     this.round = { refreshes: 0, buys: 0, sells: 0, spent: 0, gainedChess: 0, arts: 0 };
     this.pendingLayerGains = null; // settled (or lapsed) at the last SETTLE
     if (r > 1) this.shop.upgradePrice = Math.max(0, this.shop.upgradePrice - 1);
@@ -38,6 +45,7 @@ export class PlayerRound {
    * resolved; what overflowed after Ready or during onPrepEnd stays for the next prep, which `prepsEnded` now names.
    */
   endPrep() {
+    if(this.relicOffer) {this.relics.push({id:this.relicOffer.choices[0],round:this.relicOffer.round});this.relicOffer=null;}
     this.resolveTemp();
     this.prepsEnded++;
     for (const uid of [...this._tempDue.keys()]) if (!this.temp.some((p) => p && p.uid === uid)) this._tempDue.delete(uid);
@@ -65,7 +73,7 @@ export class PlayerRound {
     this._tempDue.clear();
     this.offers = [];
     this.bounties = [];
-    this.personalChoice = null;
+    this.personalChoice = null;this.relicOffer=null;this.relicShield=0;this.nextRelicShield=0;
     this.shop.slots = [];
     this.funds = 0;
     this.pendingFunds = 0;
@@ -132,6 +140,7 @@ export class PlayerRound {
       }
     }
     return {
+      ...(this.m.ruleset !== 'standard' && this.m.funRules.relicsEnabled ? {relicIds:this.relics.map(x=>x.id)} : {}),
       playerId: this.playerId,
       seat: this.seat,
       side,

@@ -1,3 +1,4 @@
+import { validFunRules } from './entertainmentRules.js';
 // Normative message catalogue (DESIGN §8). Used by server (validation) and client (building requests).
 // Every client→server message is `{ t, rid?, ...fields }`. Unknown `t` or invalid fields ⇒ ERR.BAD_MSG.
 
@@ -378,7 +379,7 @@ const isDir = (v) => DIRS.includes(v);
 const target = (v) => {
   if (!v || typeof v !== 'object') return false;
   if (v.area === 'board') return isInt(v.row, 0, GEO.ROWS - 1) && isInt(v.col, 0, GEO.COLS - 1);
-  if (v.area === 'hand') return isInt(v.idx, 0, GEO.HAND_SIZE - 1);
+  if (v.area === 'hand') return isInt(v.idx, 0, 21);
   return false;
 };
 
@@ -417,7 +418,9 @@ export const C2S = {
   // Transfer names a current human, never a position that may have changed while the dialog was open.
   'room.transferHost': { playerId: isId },
   'room.start': {},
-  'room.rerollSetup': { setupRevision: (v) => isInt(v, 0, 2 ** 31) },
+  'room.funRules': {rules:validFunRules,setupRevision:(v)=>isInt(v,0,2**31)},
+  'g.relic': {id:(v)=>isStr(v,64),offerId:(v)=>isStr(v,96)},
+  'room.rerollSetup': { setupRevision: (v) => isInt(v, 0, 2 ** 31), kind:(v)=>v==='battlefield', $optional:['kind'] },
   'room.cancelReroll': { voteId: (v) => isInt(v, 1, 2 ** 31) },
   // operator loadout (DESIGN §16): stored per session/seat; accepted until the match leaves INFO_CHECK — `ops` (0.2.2):
   // the per-operator 潜能 / 练度 (absent = none set: every operator at 潜能 6, 精英2 Lv.60)

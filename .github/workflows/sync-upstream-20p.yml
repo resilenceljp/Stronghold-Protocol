@@ -1,0 +1,34 @@
+name: 同步原版20p到独立分支
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: sync-upstream-20p
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Preserve latest upstream and an immutable source snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch https://github.com/LongQianChen/Stronghold-Protocol.git feat/IncreasePlayerCapacity
+          source_sha=$(git rev-parse FETCH_HEAD)
+          version=$(git show "$source_sha:package.json" | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])')
+          target=upstream/20p
+          if git show-ref --verify --quiet "refs/remotes/origin/$target"; then
+            git merge-base --is-ancestor "origin/$target" "$source_sha"
+          fi
+          git push origin "$source_sha:refs/heads/$target"
+          snapshot="upstream20/v$version-${source_sha:0:12}"
+          if ! git ls-remote --exit-code --heads origin "$snapshot" >/dev/null 2>&1; then
+            git push origin "$source_sha:refs/heads/$snapshot"
+          fi
+          printf 'Upstream version: %s\nCommit: %s\nTracking: %s\nEntertainment branch is unchanged.\n' "$version" "$source_sha" "$target" >> "$GITHUB_STEP_SUMMARY"

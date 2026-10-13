@@ -34,3 +34,7 @@
 
 .fun-game-label { position:absolute; right:.24rem; top:.75rem; padding:.06rem .1rem; color:#b990ff; background:#171523; font-size:clamp(11px,.14rem,16px); }
 .entertainment-console .modal__actions .btn { min-height:40px; min-width:84px; font-size:14px; }
+
+.fun-rules{overflow:auto;flex:1;padding:20px 5vw;font-size:16px;line-height:1.6;background:#101c18;min-height:0}
+.fun-rules h2{font-size:24px}.fun-rule{display:flex;align-items:center;gap:14px;padding:12px;border-bottom:1px solid #345047}.fun-rule>div{flex:1}.fun-rule small{display:block;color:#9eb8ad}.fun-rule .btn,.fun-rule input{font-size:16px;min-height:40px}.fun-rule input[type=number]{width:100px;background:#09120f;color:#fff;border:1px solid #4c8070;padding:6px}
+.relic-pool{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0}.relic-card{padding:14px;border:1px solid #426255;border-left:4px solid #aaa;background:#101c18;font-size:16px;line-height:1.6}.relic-card b{font-size:18px}.relic-card small{display:block}.relic-card input{margin-right:8px}.relic-card p{color:#bdcfc7}.tier-2{border-left-color:#62dba6}.tier-3{border-left-color:#72cef6}.tier-4{border-left-color:#c091ed}.tier-5{border-left-color:#ffd05a}.relic-entry{position:absolute;right:16px;top:155px;z-index:25}.relic-entry .btn{font-size:14px;min-height:32px}

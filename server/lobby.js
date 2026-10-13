@@ -430,6 +430,7 @@ export class Lobby {
       case 'room.kick': return this.kick(session, msg);
       case 'room.transferHost': return this.transferHost(session, msg);
       case 'room.start': return this.start(session);
+      case 'room.funRules': return this.funRules(session,msg);
       case 'room.rerollSetup': return this.rerollSetup(session, msg);
       case 'room.cancelReroll': return this.rerollSetup(session, msg, true);
       case 'room.loadout': return this.loadout(session, msg);
@@ -792,6 +793,13 @@ export class Lobby {
     return this.startMatch(room, key);
   }
 
+  funRules(session,msg) {
+    const room=this.roomOf(session);
+    if(!room) return fail(ERR.NOT_IN_ROOM);
+    if(room.hostId!==session.playerId) return fail(ERR.NOT_HOST);
+    if(!room.match) return fail(ERR.WRONG_PHASE);
+    return this.callMatch(room,'setFunRules',session.playerId,msg.rules,msg.setupRevision)||fail(ERR.INTERNAL);
+  }
   /** Host authorization stays in the lobby; the match owns the vote and setup. */
   rerollSetup(session, msg, cancel = false) {
     const room = this.roomOf(session);
@@ -800,7 +808,7 @@ export class Lobby {
     if (room.hostId !== session.playerId) return fail(ERR.NOT_HOST);
     const method = cancel ? 'cancelSetupReroll' : 'requestSetupReroll';
     if (!room.match || typeof room.match[method] !== 'function') return fail(ERR.WRONG_PHASE);
-    return this.callMatch(room, method, session.playerId, cancel ? msg.voteId : msg.setupRevision) || fail(ERR.INTERNAL);
+    return this.callMatch(room, method, session.playerId, cancel ? msg.voteId : msg.setupRevision, msg.kind) || fail(ERR.INTERNAL);
   }
 
   /**

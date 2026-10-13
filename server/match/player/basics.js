@@ -28,7 +28,7 @@ export class PlayerBasics {
   /** The engine acts for this seat (AI teammate or "AI 托管"; a departed human is eliminated, so nothing is left to do). */
   get botControlled() { return this.isBot || this.left || this.autoplay; }
 
-  get deployCap() { return Math.max(1, this.gd.deployCap + this.deployCapBonus, this.deployCapMin); }
+  get deployCap() { return Math.max(1, (this.m.ruleset !== 'standard' ? this.m.funRules.deployCap : this.gd.deployCap) + this.deployCapBonus, this.deployCapMin); }
   get deployCount() { let n = 0; for (const p of this.board.values()) if (p.kind === 'chess') n++; return n; }
   get tempEmpty() { return this.temp.every((x) => x == null); }
 
@@ -122,7 +122,7 @@ export class PlayerBasics {
   cultivationFor(chessRecord) {
     if (!chessRecord || this.fieldsStandIn(chessRecord)) return null;
     const rec = chessRecord.isDiy && typeof chessRecord.chessId === 'string' ? this.gd.chess(chessRecord.chessId) || chessRecord : chessRecord;
-    return cultivationOf(rec, this.ops);
+    return this.m.ruleset !== 'standard' && this.m.funRules.training === 'max' ? {potential:6,cultivate:3} : cultivationOf(rec, this.ops);
   }
 
   /**
@@ -136,6 +136,11 @@ export class PlayerBasics {
       return { ...resolveLoadout(null, this.gd.standIn(chessRecord.chessId), (id) => this.gd.standIn(id) || this.gd.chess(id)), potential: null, cultivate: null };
     }
     const rec = chessRecord && chessRecord.isDiy && typeof chessRecord.chessId === 'string' ? this.gd.chess(chessRecord.chessId) || chessRecord : chessRecord;
+    if(this.m.ruleset !== 'standard' && this.m.funRules.training==='max' && rec?.isGolden) {
+      const current=this.loadout[rec.baseId||rec.chessId];
+      const module=rec.modules?.find(x=>x.uniEquipId===current?.module)||rec.modules?.find(x=>x.level>=3)||rec.modules?.[0];
+      if(module) return {...resolveLoadout({[rec.baseId||rec.chessId]:{skill:current?.skill??rec.defaultSkill??0,module:module.uniEquipId}},rec,(id)=>this.gd.chess(id)),potential:6,cultivate:3};
+    }
     // 0.2.2: with the operator's potential / 练度 (null for a prototype 自选 pick) — the 自选 summons' hand count reads it
     const cv = this.cultivationFor(chessRecord);
     return { ...resolveLoadout(this.loadout, rec, (id) => this.gd.chess(id)), potential: cv ? cv.potential : null, cultivate: cv ? cv.cultivate : null };

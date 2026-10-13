@@ -1,8 +1,8 @@
 {
   "name": "stronghold-protocol-alliance",
-  "version": "0.2.5",
+  "version": "0.2.4-20p-fun.2",
   "private": true,
-  "description": "明日方舟「卫戍协议：盟约」非官方同人联机网页复刻（最多 20 人合作，Node.js 服务器 + 浏览器客户端）",
+  "description": "基于 sganggs 原版与 LongQianChen 20人分支的非商业扩展：娱乐控制台、无尽模拟、藏品和独立监视台",
   "license": "GPL-3.0-or-later",
   "homepage": "https://github.com/resilenceljp/Stronghold-Protocol-20p",
   "repository": {
@@ -42,7 +42,8 @@
     "package": "node tools/package.mjs",
     "package:lite": "node tools/package.mjs --lite",
     "assets:pack": "node tools/asset-cache-pack.mjs",
-    "monitor": "node monitor/server.mjs"
+    "monitor": "node monitor/server.mjs",
+    "sync:upstream": "node tools/sync-upstream-20p.mjs"
   },
   "engines": {
     "node": ">=22"

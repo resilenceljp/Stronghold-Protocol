@@ -152,6 +152,7 @@ export class PlayerState {
     this.lp = 0;
     this.bandId = null;
     this.funds = 0;
+    this.relics=[];this.relicOffer=null;this.relicLeakStreak=0;this.relicShield=0;this.nextRelicShield=0;
     this.pendingFunds = 0;
     this.ready = false;
     this.infoReady = this.isBot;
@@ -185,7 +186,7 @@ export class PlayerState {
     /** reward offers queue (merge rewards, special refreshes): { tier, source, label, slots: [{ kind, id, price, sold }] } */
     this.offers = [];
     /** @type {Array<any>} */
-    this.hand = new Array(HAND_SIZE).fill(null);
+    this.hand = new Array(this.gd.benchSize || HAND_SIZE).fill(null);
     /** @type {Array<any>} */
     this.temp = new Array(TEMP_SIZE).fill(null);
     /** preps of this player that ended so far (endPrep) = index of the current (or next) prep */

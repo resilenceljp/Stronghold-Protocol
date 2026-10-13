@@ -5,7 +5,7 @@ import { actions } from './gameActions.js';
 import { useStore } from '../store.js';
 import { t } from '../../../shared/i18n.js';
 
-export function SetupReroll({ pub }) {
+export function SetupReroll({ pub, battlefield=false }) {
   const myId = useStore((s) => s.me.playerId);
   const hostId = useStore((s) => s.room?.hostId);
   const online = useStore((s) => s.connection.status === 'online');
@@ -25,10 +25,10 @@ export function SetupReroll({ pub }) {
     try { await fn(); } finally { pending.current = false; setBusy(false); }
   };
   if (!vote && (!host || !me)) return null;
-  return html`<section class="brief-reroll" aria-label=${t('重刷本局')} aria-live="polite">
+  return html`<section class="brief-reroll" aria-label=${t(battlefield?'刷新战场':'重刷本局')} aria-live="polite">
     <div class="brief-reroll__text">
-      <strong>${vote ? t('重刷本局投票：{agreed}/{total}', { agreed: vote.agreed.length, total: vote.voters.length }) : t('重刷本局')}</strong>
-      <span>${vote ? t('全员同意后重新随机战场、领袖、特训敌人和禁用；确认倒计时已暂停。') : t('保留房间和个人配置，重新随机全部开局信息。')}</span>
+      <strong>${vote ? t('重刷本局投票：{agreed}/{total}', { agreed: vote.agreed.length, total: vote.voters.length }) : t(battlefield?'刷新战场':'重刷本局')}</strong>
+      <span>${vote ? t(vote.kind==='battlefield'?'全员同意后只更换战场；任何人拒绝即取消。':'全员同意后重新随机战场、领袖、特训敌人和禁用；确认倒计时已暂停。') : t(battlefield?'全体真人一致同意后更换战场；领袖、盟约、禁用和个人配置保留。':'保留房间和个人配置，重新随机全部开局信息。')}</span>
       ${vote ? html`<div class="brief-reroll__players">${vote.voters.map((id) => {
         const p = players.find((p) => p.playerId === id);
         return html`<span key=${id} class=${vote.agreed.includes(id) ? 'is-agreed' : ''}>${p?.name || id} · ${vote.agreed.includes(id) ? t('已同意') : t('待同意')}</span>`;
@@ -37,7 +37,7 @@ export function SetupReroll({ pub }) {
     <div class="brief-reroll__actions">
       ${!vote ? html`<${Button} icon="refresh" size="lg" loading=${busy} disabled=${!online || !allConnected}
         title=${allConnected ? t('全体真人玩家一致同意后刷新，随机结果可能重复。') : t('请等待所有玩家连接后再发起投票')}
-        onClick=${() => send(() => actions.rerollSetup(pub.setupRevision ?? 0))}>${t('重刷本局')}<//>` : null}
+        onClick=${() => send(() => actions.rerollSetup(pub.setupRevision ?? 0,battlefield?'battlefield':null))}>${t(battlefield?'刷新战场':'重刷本局')}<//>` : null}
       ${vote && voter ? html`<${Button} variant="primary" loading=${busy} disabled=${!online || agreed}
         onClick=${() => send(() => actions.rerollVote(vote.id, true))}>${agreed ? t('已同意') : t('同意重刷')}<//>
         <${Button} variant="danger" disabled=${busy || !online}

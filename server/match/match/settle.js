@@ -3,6 +3,7 @@
 // view carries) and RESULT (finish: m.result to every human still here, onEnd).
 // Installed on Match.prototype by server/match/Match.js (a method container: never instantiated; `this` is the match).
 
+import { awardRelic } from '../relics.js';
 import { PHASE, layerGainRoom } from '../../../shared/constants.js';
 import { uniteSurvivors, plannedUniteSurvivors } from '../unite.js';
 import { buildResult } from '../results.js';
@@ -38,7 +39,9 @@ export class MatchSettle {
     for (const ps of alive) {
       const r = this.lastResults.get(ps.playerId) || { leaked: [], perfect: true, coins: 0, layerGains: {}, killed: 0, damageDealt: 0 };
       const counted = (r.leaked || []).filter((l) => l && l.counted !== false).length;
-      const loss = plan && plan.leakers.includes(ps) ? Math.min(cap, survivors.get(ps.playerId) || 0) : Math.min(cap, counted);
+      const rawLoss = plan && plan.leakers.includes(ps) ? Math.min(cap, survivors.get(ps.playerId) || 0) : Math.min(cap, counted);
+      const loss=Math.max(0,rawLoss-(this.ruleset !== 'standard'?ps.relicShield:0));
+      ps.relicShield=0;awardRelic(this,ps,counted);
       if (this.uniteResultView) this.uniteResultView.losses[ps.playerId] = loss;
       ps.lp -= loss;
       ps.stats.lpLost += loss;
