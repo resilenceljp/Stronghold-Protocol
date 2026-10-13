@@ -392,10 +392,10 @@ export class MatchViews {
       });
     };
     for (let i = 0; i < ps.hand.length; i++) {
-      if(ps.hand[i]) {const tile=handTile(i,benchGeo(ps.hand.length));benchUnit(ps.hand[i],tile.col,tile.row,'hand');}
+      if(ps.hand[i]) {const tile=handTile(i,benchGeo(ps.hand.length,false,ps.temp.length));benchUnit(ps.hand[i],tile.col,tile.row,'hand');}
     }
     for (let i = 0; i < ps.temp.length; i++) {
-      if (ps.temp[i]) benchUnit(ps.temp[i], benchGeo(ps.hand.length).TEMP_C0 + i, benchGeo(ps.hand.length,this.round===this.gd.bossRound||this.round===this.gd.hiddenRound).TEMP_ROW, 'temp');
+      if (ps.temp[i]) benchUnit(ps.temp[i], benchGeo(ps.hand.length,false,ps.temp.length).TEMP_C0 + i, benchGeo(ps.hand.length,false,ps.temp.length).TEMP_ROW, 'temp');
     }
     // `nextEnemies`: the scouted player's coming enemies — their preview pen shows on the scouting board too (research 09
     // §2.2 "Teammates"; render/app.js enterBattle({ prep: true, nextEnemies }))

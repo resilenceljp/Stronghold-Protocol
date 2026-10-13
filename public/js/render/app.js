@@ -504,7 +504,7 @@ export async function createFieldView(host, options = {}) {
     // prep lights the bench (hand row 7 / temp row 8) with the field, like the official prep view
     if (camOpts.rect) { const r = normRect(camOpts.rect); return k === 'prep' ? { ...r, r0: Math.min(r.r0, GEO.HAND_ROW) } : r; }
     // the boss round's prep lights the whole boss field: the pair partner's half is shown with its pieces (item 51)
-    if (k === 'bossPrep') return { ...GEO.BOSS_RECT };
+    if (k === 'bossPrep') return { ...GEO.BOSS_RECT,r1:stageRec?.extendedBossPrep?7:GEO.BOSS_RECT.r1 };
     return k === 'boss' ? { ...GEO.BOSS_RECT } : k === 'unite' ? { ...GEO.UNITE_RECT } : k === 'prep' ? { r0: 7, r1: 12, c0: 0, c1: 10 } : { ...GEO.NORMAL_RECT };
   }
 
@@ -512,6 +512,8 @@ export async function createFieldView(host, options = {}) {
     const sz = size();
     const k = kind === 'hidden' ? 'boss' : (['prep', 'normal', 'unite', 'boss', 'bossPrep', 'pen'].includes(kind) ? kind : 'normal');
     let rect = o.rect ? normRect(o.rect) : null;
+    if(k==='bossPrep'&&stageRec?.extendedBossPrep) rect={r0:0,r1:6,c0:0,c1:20};
+    if(k==='prep'&&stageRec?.extendedBench) rect={r0:6,r1:12,c0:0,c1:10};
     if (k === 'prep') rect = rect ? { ...rect, r0: Math.min(rect.r0, GEO.HAND_ROW) } : null;
     // official configBlackBoard framing (render/projection.js presetCamera); the padding only matters for the
     // fitted fallback (custom rects, portrait viewports); a prep camera keeps the bench and the field clear of the HUD
@@ -519,7 +521,7 @@ export async function createFieldView(host, options = {}) {
     // shop's HUD band (re-evaluated on resize: camOpts keep the flag)
     const vk = viewKind(kind, o); // (a 'prep' camera on the boss rows = the Final Assault prep)
     return presetCamera(k, { width: sz.width, height: sz.height, padding: o.padding || defaultPadding(k, sz) }, {
-      rect, side: o.side, half: !!o.half, shop: o.shop, fit: !!o.fit, config: stageRec?.config || null,
+      rect, side: o.side, half: !!o.half, shop: o.shop, fit: !!o.fit||!!stageRec?.extendedBossPrep||!!stageRec?.extendedBench, config: stageRec?.config || null,
       hud: hudBands(vk, sz, { shop: o.shop !== false }),
     });
   }
@@ -545,7 +547,7 @@ export async function createFieldView(host, options = {}) {
     // the field actually shown (a 'prep' camera on the boss rows is the Final Assault prep: boss field built / drawn)
     const vk = viewKind(camKind, camOpts);
     if (vk === 'prep') setPrepField(IDENTITY);
-    else if (vk === 'bossPrep') setPrepField(bossPrepField(camOpts.side === 'R' ? 'R' : 'L'));
+    else if (vk === 'bossPrep') setPrepField(bossPrepField(camOpts.side === 'R' ? 'R' : 'L',lastPrep?.ps?.hand?.length===22));
     const target = targetCamera(camKind, camOpts);
     const band = bandFor(vk);
     const field = fieldRows(vk);
@@ -579,7 +581,7 @@ export async function createFieldView(host, options = {}) {
    */
   function setPrepField(xf) {
     const next = xf || IDENTITY;
-    if (next.kind === prepXf.kind && next.side === prepXf.side) return;
+    if (next.kind === prepXf.kind && next.side === prepXf.side && next.extended===prepXf.extended) return;
     prepXf = next;
     if (mode !== 'prep') return;
     if (lastPrep) setPrep(lastPrep.ps, lastPrep.o);
@@ -711,7 +713,7 @@ export async function createFieldView(host, options = {}) {
     return b ? { ...t, row: b.row, col: b.col } : { row: -1, col: -1, x: t.x, y: t.y };
   }
 
-  const currentGeo=()=>benchGeo(lastPrep?.ps?.hand?.length,prepXf.kind==='bossPrep');
+  const currentGeo=()=>benchGeo(lastPrep?.ps?.hand?.length,prepXf.kind==='bossPrep',lastPrep?.ps?.temp?.length);
   function slotWorld(p) {
     const h = held.get(p.uid);
     if (h) return h;
@@ -725,6 +727,7 @@ export async function createFieldView(host, options = {}) {
     const o = options && typeof options === 'object' ? options : {};
     if (mode !== 'prep') enterPrepMode();
     lastPrep = { ps, o };
+    if(prepXf.kind==='bossPrep'&&!!prepXf.extended!==(ps?.hand?.length===22))prepXf=bossPrepField(prepXf.side,ps?.hand?.length===22);
     editable = !!o.editable;
     canPlaceFn = typeof o.canPlace === 'function' ? o.canPlace : null;
     drag.setCanPlace(canPlaceFn ? adaptCanPlace(canPlaceFn) : null);
@@ -824,7 +827,7 @@ export async function createFieldView(host, options = {}) {
       const dir = prepXf.dirToDisp(u.dir);
       return { unit: u, display: { ...u, x: p.col, y: p.row, dir, facing: dir === 'LEFT' ? -1 : 1 } };
     }).filter(Boolean) : [];
-    const mate = prepXf.kind === 'bossPrep' && src.bossMate && Array.isArray(src.bossMate.units) ? src.bossMate.units : [];
+    const mate = prepXf.kind === 'bossPrep' && src.bossMate && Array.isArray(src.bossMate.units) ? src.bossMate.units.map(u=>prepXf.extended?{...u,y:u.y+1}:u) : [];
     syncReadOnlyPrepUnits([...prepMapChars.map((e) => e.display), ...mate]);
     prepPieces = list.filter((e) => e.key && views.has(e.key));
     if (dragState && !views.has(dragState.key)) { drag.reset(); endDragVisual(false); }
@@ -948,6 +951,7 @@ export async function createFieldView(host, options = {}) {
    * leaderStand; see the header) or none. Kept while the same leader stands on the same tile.
    */
   function setLeader(stand) {
+    if(stand&&prepXf.extended)stand={...stand,row:stand.row+1,tiles:(stand.tiles||[]).map(([r,c])=>[r+1,c])};
     const key = stand ? `${stand.entry.enemyKey}@${stand.row},${stand.col}` : null;
     if ((leader ? leader.key : null) === key) return;
     clearLeader();

@@ -1530,5 +1530,7 @@
   "无尽模式": "Endless mode",
   "开启后从第1回合起敌人属性每回合增长10%，最终攻势后继续无尽；关闭时获胜后全员投票决定是否继续。": "When enabled, enemy attributes grow 10% per round from round 1 and play continues after Final Assault. Otherwise, all players vote on continuing after victory.",
   "七级商店": "Level-7 shop",
-  "允许调度升至7级，增加一个干员槽和一个装备槽，其他规则不变。": "Allow the shop to reach level 7, adding one operator slot and one equipment slot. Other rules stay the same."
+  "允许调度升至7级，增加一个干员槽和一个装备槽，其他规则不变。": "Allow the shop to reach level 7, adding one operator slot and one equipment slot. Other rules stay the same.",
+  "扩展整备区": "Expanded reserve area",
+  "关闭：整备10格、临时5格；开启：整备22格（两排各11格）、底部临时11格。部分区域会被商店遮挡，收起商店后可完整查看。": "Off: 10 reserve and 5 temporary slots. On: 22 reserve slots (two rows of 11) and 11 temporary slots along the bottom. Collapse the shop to see covered areas."
 }

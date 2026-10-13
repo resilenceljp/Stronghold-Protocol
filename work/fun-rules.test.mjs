@@ -18,7 +18,7 @@ function create(ruleset='entertainment',humans=1) {
 }
 test('strict host rule payloads; revision cancels consent and cannot change standard matches',()=>{
  const m=create(),p=m.order[0];p.infoReady=true;
- assert.equal(m.setFunRules('p0',{startingFunds:50,training:'max',deployCap:12,relicsEnabled:true},0).ok,true);
+ assert.equal(m.setFunRules('p0',{startingFunds:50,training:'max',deployCap:12,expandedBench:true,relicsEnabled:true},0).ok,true);
  assert.equal(m.setupRevision,1);assert.equal(p.infoReady,false);assert.equal(p.deployCap,12);
  assert.ok(m.setFunRules('p0',{startingFunds:60},0).error);
  for(const rules of [{startingFunds:-1},{startingFunds:1.5},{deployCap:999},{training:'bad'},{relicIds:['bad']},{relicIds:['ruler','ruler']},{admin:true}]) {
@@ -27,7 +27,7 @@ test('strict host rule payloads; revision cancels consent and cannot change stan
  m.dispose();const s=create('standard');assert.ok(s.setFunRules('p0',{deployCap:12},0).error);assert.equal(s.order[0].hand.length,10);s.dispose();
 });
 test('starting funds paid exactly once in R1; default normal income remains, max applies to actual battle input',()=>{
- const m=create(),p=m.order[0];m.setFunRules('p0',{startingFunds:50,training:'max',deployCap:12},0);
+ const m=create(),p=m.order[0];m.setFunRules('p0',{startingFunds:50,training:'max',deployCap:12,expandedBench:true},0);
  m.startRound(1);m.phase='PREP';assert.equal(p.funds,50+m.gd.income(1));assert.equal(p.hand.length,22);
  p.setLoadout(null,{char_133_mm:{potential:1,cultivate:0}});
  const cv=p.cultivationFor(m.gd.chess('chess_char_1_12_a'));assert.deepEqual(cv,{potential:6,cultivate:3});
@@ -49,7 +49,7 @@ test('22 slots map to two rows of11; server permits slot21 but standard denies i
  for(let idx=0;idx<22;idx++){const tile=handTile(idx,geo);assert.ok(tile.col<11);assert.deepEqual(tileSlot(tile,geo),{area:'hand',idx});}
  assert.deepEqual(handTile(21,geo),{row:8,col:10});
  assert.deepEqual(resolveDrop({piece:{uid:1},from:{area:'hand',idx:0},tile:{row:8,col:10},overCanvas:true,geo}).target,{area:'hand',idx:21});
- const m=create();m.startRound(1);m.phase='PREP';const p=m.order[0];p.acquireChess('chess_char_1_12_a',{source:'console',fromPool:false});
+ const m=create();m.setFunRules('p0',{expandedBench:true},m.setupRevision);m.startRound(1);m.phase='PREP';const p=m.order[0];p.acquireChess('chess_char_1_12_a',{source:'console',fromPool:false});
  assert.equal(p.move(p.hand.find(Boolean).uid,{area:'hand',idx:21}).ok,true);assert.equal(p.hand[21].id,'chess_char_1_12_a');
  const spec=buildBattleSpec(m._normalOpts(p));assert.equal(spec.players[0].units.length,0,'bench never enters battle');m.dispose();
  const s=create('standard');s.startRound(1);s.phase='PREP';const q=s.order[0];q.acquireChess('chess_char_1_12_a',{source:'test',fromPool:false});assert.ok(q.move(q.hand.find(Boolean).uid,{area:'hand',idx:21}).error);s.dispose();

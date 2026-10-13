@@ -32,7 +32,7 @@
 .project-notice h2 { font-size:clamp(18px,.24rem,26px); }
 @media(min-width:751px) and (max-width:1199px) { .project-notice { width:220px; } }
 
-.fun-game-label { position:absolute; right:.24rem; top:.75rem; padding:.06rem .1rem; color:#b990ff; background:#171523; font-size:clamp(11px,.14rem,16px); }
+.fun-game-label { position:static; align-self:flex-end; padding:.06rem .1rem; color:#b990ff; background:#171523; font-size:clamp(11px,.14rem,16px); }
 .entertainment-console .modal__actions .btn { min-height:40px; min-width:84px; font-size:14px; }
 
 .fun-rules{overflow:auto;flex:1;padding:20px 5vw;font-size:16px;line-height:1.6;background:#101c18;min-height:0}

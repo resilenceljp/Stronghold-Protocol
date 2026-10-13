@@ -28,6 +28,7 @@ export function FunRules({pub}) {
    <nav class="fun-options"><button type="button" aria-pressed=${rules.relicsEnabled===false} class=${rules.relicsEnabled===false?'is-selected':''} disabled=${disabled} onClick=${()=>set({relicsEnabled:false})}>${t('关闭')}</button><button type="button" aria-pressed=${rules.relicsEnabled===true} class=${rules.relicsEnabled===true?'is-selected':''} disabled=${disabled} onClick=${()=>set({relicsEnabled:true})}>${t('开启')}</button></nav></div>
 
   ${toggle('endlessEnabled',N_('无尽模式'),N_('开启后从第1回合起敌人属性每回合增长10%，最终攻势后继续无尽；关闭时获胜后全员投票决定是否继续。'))}
+  ${toggle('expandedBench',N_('扩展整备区'),N_('关闭：整备10格、临时5格；开启：整备22格（两排各11格）、底部临时11格。部分区域会被商店遮挡，收起商店后可完整查看。'))}
   ${toggle('shopLevel7',N_('七级商店'),N_('允许调度升至7级，增加一个干员槽和一个装备槽，其他规则不变。'))}
   <h3>${t('本局藏品池')} · ${rules.relicIds.length}/${RELICS.length}</h3>
   <p>${t('勾选加入本局候选池，取消勾选可移除。已获得的藏品不会重复出现。')}</p>

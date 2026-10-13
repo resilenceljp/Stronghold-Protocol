@@ -1,10 +1,11 @@
 import { RELICS } from './relics.js';
-export const DEFAULT_FUN_RULES={consoleEnabled:false,endlessEnabled:false,shopLevel7:false,training:'official',deployCap:8,startingFunds:0,relicsEnabled:false,relicIds:RELICS.map(r=>r.id)};
+export const DEFAULT_FUN_RULES={consoleEnabled:false,endlessEnabled:false,shopLevel7:false,expandedBench:false,training:'official',deployCap:8,startingFunds:0,relicsEnabled:false,relicIds:RELICS.map(r=>r.id)};
 export function validFunRules(v) {
  return !!v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).every(k=>k in DEFAULT_FUN_RULES)
  &&(v.consoleEnabled===undefined||typeof v.consoleEnabled==='boolean')
  &&(v.endlessEnabled===undefined||typeof v.endlessEnabled==='boolean')
  &&(v.shopLevel7===undefined||typeof v.shopLevel7==='boolean')
+ &&(v.expandedBench===undefined||typeof v.expandedBench==='boolean')
  &&(v.training===undefined||['official','max'].includes(v.training))
  &&(v.deployCap===undefined||[8,12].includes(v.deployCap))
  &&(v.startingFunds===undefined||(Number.isInteger(v.startingFunds)&&v.startingFunds>=0&&v.startingFunds<=9999))

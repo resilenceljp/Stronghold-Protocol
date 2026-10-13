@@ -153,11 +153,11 @@ export function tempRowRule(ready) {
 /**
  * The temp row's notice: dashed red frame + label (count, what to do, what happens at the end of the prep — tempRowRule).
  * `label` false (a piece is being dragged / placed): the frame only, nothing over the pieces the player is moving.
- * @param {{ view: any, count: number, items?: number, label?: boolean, ready?: boolean }} props
+ * @param {{ view: any, count: number, items?: number, label?: boolean, ready?: boolean, geo?: any }} props
  */
-export function TempRowNotice({ view, count, items = 0, label = true, ready = false }) {
-  const a = useTileScreen(view, GEO.TEMP_ROW, GEO.TEMP_C0);
-  const b = useTileScreen(view, GEO.TEMP_ROW, GEO.TEMP_C0 + GEO.TEMP_SIZE - 1);
+export function TempRowNotice({ view, count, items = 0, label = true, ready = false, geo = GEO }) {
+  const a = useTileScreen(view, geo.TEMP_ROW, geo.TEMP_C0);
+  const b = useTileScreen(view, geo.TEMP_ROW, geo.TEMP_C0 + geo.TEMP_SIZE - 1);
   let rem = 100;
   try { rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 100; } catch { /* default */ }
   const vw = globalThis.innerWidth || 1920;

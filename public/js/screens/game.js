@@ -106,7 +106,7 @@ import {
   mergeTarget, modeOffBonds, readyFundsPrompt, readyShopFold, ownerBandId, ownDiyRecord, ownStandIn,
 } from '../ui/gameLogic.js';
 import { toast } from '../ui/toasts.js';
-import { benchStage } from '../../../shared/bench.js';
+import { benchStage,benchGeo } from '../../../shared/bench.js';
 import { RelicPanel } from '../ui/relicPanel.js';
 import { BriefingScreen } from './briefing.js';
 import { BandDraftScreen } from './bandDraft.js';
@@ -411,8 +411,8 @@ function MatchScreen() {
   useEffect(() => {
     if (!view) return;
     const st = ownView ? ownStage : baseStage;
-    if (st) view.setStage(benchStage(st,priv?.hand?.length));
-  }, [view, ownView, ownStage, baseStage, priv?.hand?.length]);
+    if (st) view.setStage(showPrep?benchStage(st,priv?.hand?.length,priv?.temp?.length,prepCam.kind==='bossPrep'):st);
+  }, [view, ownView, ownStage, baseStage, priv?.hand?.length,priv?.temp?.length,showPrep,prepCam.kind==='bossPrep']);
   // the stage behind the board ON SCREEN — the own one (机变 overrides applied) or, while watching a teammate, the plain
   // one — and how a tapped BOARD tile maps to it (GitHub issue #184: tileClick → gameLogic.terrainInfo). Everywhere but a
   // boss-prep board the two spaces are the same: a 最终攻势 / 隐秘核心 battle renders the stage's own rows (GEO.BOSS_RECT),
@@ -1174,7 +1174,7 @@ function MatchScreen() {
   // the selected piece's underframe on screen: the detail card docks on the side away from it (user playtest #2
   // item 8 — at some aspect ratios a bench unit's 出售 sat under the left card); the underframe is drawn above every
   // panel anyway (css z-index), this keeps it visible too
-  const ufTile = selEntry && editable && showPrep ? pieceTile(selEntry) : null;
+  const ufTile = selEntry && editable && showPrep ? pieceTile(selEntry,benchGeo(priv?.hand?.length,prepCam.kind==='bossPrep',priv?.temp?.length)) : null;
   const ufGeo = useTileScreen(view, ufTile ? ufTile.row : null, ufTile ? ufTile.col : null);
   // the gold tile of an armed merge card (mergeAt): the detail card the first tap opened docks away from it (QA 6b — at
   // 1920×1080 the left card covered half of a target tile in the leftmost legal column)
@@ -1450,7 +1450,7 @@ function MatchScreen() {
     ${viewKind === 'loading' ? html`<div class="gm__loading"><${Spinner} label="LOADING FIELD" /></div>` : null}
     <div class="gm__vignette" aria-hidden="true"></div>
     ${tempNotice ? html`<${TempRowNotice} view=${view} count=${temp.count} items=${temp.items} label=${!drag && !facing}
-      ready=${phase === PHASE.PREP && !!priv?.ready} />` : null}
+      ready=${phase === PHASE.PREP && !!priv?.ready} geo=${benchGeo(priv?.hand?.length,prepCam.kind==='bossPrep',priv?.temp?.length)} />` : null}
     ${showPrep && view && viewKind !== 'loading' && priv && !pen ? html`<${StandInTags} view=${view} priv=${priv} getChess=${gd.chess} backups=${gd.backups} diyData=${{ chess: data.get('chess'), backups: gd.backups }} />` : null}
 
     <div class="gm__hud" ref=${hudElRef}>
@@ -1492,7 +1492,7 @@ function MatchScreen() {
         ${spectator ? null : html`<${Button} size="sm" variant="primary" icon="back" onClick=${() => watchPlayer({ playerId: myId })}>${t('返回自己')}<//>`}
       </div>` : null}
 
-      ${pub?.ruleset && pub.ruleset !== 'standard' ? html`<div class="fun-game-label">${pub.endless ? t('无尽模拟') : t('娱乐模式')} · ${t('层数上限')} ${pub.layerCap}</div>` : null}
+
 
       ${showShop ? html`<${ShopBar} priv=${priv} editable=${editable} collapsed=${collapsed} refreshBusy=${refreshBusy} onCollapse=${setCollapsed}
         barRef=${barRef} offBonds=${offBonds}
@@ -1539,7 +1539,7 @@ function MatchScreen() {
         onBond=${(id) => openBond(id, detailOwner, 'detail')} />` : null}
 
       ${selEntry && editable && !facing && !drag && showPrep ? html`<${Underframe} key=${sel.uid} view=${view} uid=${sel.uid}
-        row=${pieceTile(selEntry)?.row} col=${pieceTile(selEntry)?.col} actions=${underframeActions(placeCtx, sel.uid)} busy=${selBusy}
+        row=${pieceTile(selEntry,benchGeo(priv?.hand?.length,prepCam.kind==='bossPrep',priv?.temp?.length))?.row} col=${pieceTile(selEntry,benchGeo(priv?.hand?.length,prepCam.kind==='bossPrep',priv?.temp?.length))?.col} actions=${underframeActions(placeCtx, sel.uid)} busy=${selBusy}
         name=${(selEntry.piece.kind === 'item' ? gd.item(selEntry.piece.id) : selEntry.piece.kind === 'token' ? gd.token(selEntry.piece.id) : ownShown(selEntry.piece.id))?.name || ''}
         onRetreat=${retreatSel} onSell=${sellSel} onDestroy=${sellSel} />` : null}
     </div>

@@ -8,7 +8,8 @@ export function configureEntertainment(gd, ruleset = 'standard') {
   gd.mode = gd._standardMode;
   gd.ruleset = RULESETS.includes(ruleset) ? ruleset : 'standard';
   gd.layerCap = gd.ruleset === 'standard' ? 999 : 9999;
-  if(gd.ruleset !== 'standard') gd.economy={...gd.economy,benchSize:22};
+  gd._standardEconomy ||= gd.economy;
+  gd.economy={...gd._standardEconomy};
   gd.inactiveEnemies=new Set(gd.mode.inactiveEnemyKeys||[]);
   if (gd.ruleset !== 'endless') return;
   // [ASSUMED] NORMAL supplies the 14-round campaign, all eight maps and the late normal-wave templates.
@@ -54,4 +55,8 @@ export function consoleIntent(m, ps, msg) {
   else return fail(ERR.BAD_MSG);
   ps.dirty(); m.markPublic();
   return { ok: true };
+}
+
+export function configureBench(gd, enabled) {
+ gd.economy={...gd.economy,benchSize:enabled?22:gd._standardEconomy.benchSize,tempSize:enabled?11:gd._standardEconomy.tempSize};
 }

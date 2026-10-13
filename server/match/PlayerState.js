@@ -189,7 +189,7 @@ export class PlayerState {
     /** @type {Array<any>} */
     this.hand = new Array(this.gd.benchSize || HAND_SIZE).fill(null);
     /** @type {Array<any>} */
-    this.temp = new Array(TEMP_SIZE).fill(null);
+    this.temp = new Array(this.gd.tempSize || TEMP_SIZE).fill(null);
     /** preps of this player that ended so far (endPrep) = index of the current (or next) prep */
     this.prepsEnded = 0;
     /** @type {Map<number, number>} temp piece uid → index of the prep whose deadline resolves it (see tempDue) */

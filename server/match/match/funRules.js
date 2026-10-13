@@ -1,7 +1,7 @@
 import { PHASE,ERR } from '../../../shared/constants.js';
 import { DEFAULT_FUN_RULES,validFunRules } from '../../../shared/entertainmentRules.js';
 import { DataSource } from '../../sim/simdata.js';
-import { configureEntertainment,configureShop7 } from '../entertainment.js';
+import { configureEntertainment,configureShop7,configureBench } from '../entertainment.js';
 export class MatchFunRules {
  offerEndless(outcome) {
   if(this.ruleset!=='entertainment'||!outcome.victory)return this.finish(outcome);
@@ -23,7 +23,7 @@ export class MatchFunRules {
  resolveEndless(agree){
   if(!this.endlessVote)return;this.cancel(this._endlessTimer);this._endlessTimer=null;this.endlessVote=null;
   if(!agree)return this.finish(this._endlessOutcome);
-  configureEntertainment(this.gd,'endless');configureShop7(this.gd,this.funRules.shopLevel7);this.ruleset='endless';
+  configureEntertainment(this.gd,'endless');configureBench(this.gd,this.funRules.expandedBench);configureShop7(this.gd,this.funRules.shopLevel7);this.ruleset='endless';
   this.modeId=this.gd.modeId;this.difficulty=this.gd.difficulty;
   this.funRules={...this.funRules,endlessEnabled:true};this.bossPool=null;this.bossWaves=null;this.teamLp=null;
   this.startRound(Math.max(15,this.round+1));this.markPublic();this.flush(true);
@@ -36,8 +36,12 @@ export class MatchFunRules {
   if(patch?.training==='max'&&!this.data['full-training']?.chess)return {error:ERR.BAD_TARGET,detail:'full training data unavailable'};
   if(!validFunRules(patch)||revision!==this.setupRevision) return {error:ERR.BAD_MSG};
   const modeChanged=patch.endlessEnabled!==undefined&&patch.endlessEnabled!==this.funRules.endlessEnabled;
+  const expanded=patch.expandedBench??this.funRules.expandedBench;
+  if(!expanded&&this.order.some(p=>p.hand.slice(10).some(Boolean)||p.temp.slice(5).some(Boolean)))return {error:ERR.BAD_TARGET};
   this.funRules={...DEFAULT_FUN_RULES,...this.funRules,...patch};
   configureEntertainment(this.gd,this.funRules.endlessEnabled?'endless':'entertainment');
+  configureBench(this.gd,this.funRules.expandedBench);
+  for(const p of this.order){p.hand=Array.from({length:this.gd.benchSize},(_,i)=>p.hand[i]||null);p.temp=Array.from({length:this.gd.tempSize},(_,i)=>p.temp[i]||null);}
   configureShop7(this.gd,this.funRules.shopLevel7);this.ruleset=this.gd.ruleset;
   this.modeId=this.gd.modeId;this.difficulty=this.gd.difficulty;
   const full=this.data['full-training'];

@@ -39,15 +39,15 @@ export const IDENTITY = Object.freeze({
  * Transform of the Final Assault prep on side 'L' | 'R' of the boss field. `toBoard` returns null for display tiles
  * that are not on the player's half of the boss rows (0–5) — nothing of the board is there.
  */
-export function bossPrepField(side) {
+export function bossPrepField(side,extended=false) {
   const R = side === 'R';
   const lo = R ? 10 : 0, hi = R ? MAX_COL : 10;
   return Object.freeze({
-    kind: 'bossPrep', side: R ? 'R' : 'L', mirror: R,
-    toDisp: (row, col) => ({ row: row + BOSS_ROW_SHIFT, col: R ? MAX_COL - col : col }),
+    kind: 'bossPrep', side: R ? 'R' : 'L', mirror: R, extended, maxRow:extended?7:6,
+    toDisp: (row, col) => ({ row: row + BOSS_ROW_SHIFT + (extended?1:0), col: R ? MAX_COL - col : col }),
     toBoard: (row, col) => {
-      if (!Number.isInteger(row) || !Number.isInteger(col) || row < 0 || row > 6 || col < lo || col > hi) return null;
-      return { row: row - BOSS_ROW_SHIFT, col: R ? MAX_COL - col : col };
+      if (!Number.isInteger(row) || !Number.isInteger(col) || row < 0 || row > (extended?6:5) || col < lo || col > hi) return null;
+      return { row: row - BOSS_ROW_SHIFT - (extended?1:0), col: R ? MAX_COL - col : col };
     },
     dirToDisp: (d) => (R ? mirrorDir(d) : d),
     dirToBoard: (d) => (R ? mirrorDir(d) : d),
@@ -69,7 +69,7 @@ export function tilesToDisp(xf, tiles) {
     const r = Array.isArray(t) ? t[0] : t?.row, c = Array.isArray(t) ? t[1] : t?.col;
     if (!Number.isInteger(r) || !Number.isInteger(c)) continue;
     const d = xf.toDisp(r, c);
-    if (boss && (d.row < 0 || d.row > BOSS_DISP_MAX_ROW || d.col < 0 || d.col > MAX_COL)) continue;
+    if (boss && (d.row < 0 || d.row > (xf.maxRow??BOSS_DISP_MAX_ROW) || d.col < 0 || d.col > MAX_COL)) continue;
     out.push([d.row, d.col]);
   }
   return out;

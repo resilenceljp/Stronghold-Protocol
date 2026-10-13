@@ -287,7 +287,7 @@ export class BoardScene {
   /** Rebuild everything for a stage (no-op when the same stage object/grid is set again). */
   setStage(stage) {
     if (this.destroyed) return;
-    const official = stage ? this.scenePacks.get(stage.id) || null : null;
+    const official = stage && !stage.extendedBossPrep && !stage.extendedBench ? this.scenePacks.get(stage.id) || null : null;
     const key = stage ? `${stage.id || ''}|${official ? official.key : ''}|${(stage.rows || []).join('/')}|${JSON.stringify((stage.devices || []).map((d) => [d.key, d.pos, d.active, d.dir]))}` : '';
     if (key === this.stageKey) return;
     this.stageKey = key;

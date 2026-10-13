@@ -426,6 +426,7 @@ export function TopBar({ pub, priv, conn, hud, total, drawer, onExit, onDrawer, 
       <${OvertimeWarning} ot=${ot} />
       <${UniteSkipVote} pub=${pub} myId=${myId} onVote=${onUniteSkipVote} />
       ${showReady ? html`<${ReadyToggle} priv=${priv} onToggle=${onReady} busy=${readyBusy} readyCount=${readyCount} total=${playerCount} />` : null}
+      ${pub?.ruleset && pub.ruleset!=='standard'?html`<div class="fun-game-label">${pub.endless?t('无尽模拟'):t('娱乐模式')} · ${t('层数上限')} ${pub.layerCap}</div>`:null}
     </div>
   </header>`;
 }
