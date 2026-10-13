@@ -1,6 +1,6 @@
 # 娱乐扩展 fun.3：布局与手机素材
 
-当前版本：0.2.4-20p-fun.3，基线 LongQianChen20p 0.2.4。
+当前版本：0.2.5-20p-fun.4，基线 LongQianChen20p 0.2.4。
 
 ## 手机 / iPad
 

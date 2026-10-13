@@ -125,8 +125,9 @@ export function restartForEnvProxy({
   env = process.env,
   error = (line) => console.error(line),
   version = process.versions.node,
+  startedWithFlag = STARTED_WITH_ENV_PROXY,
 } = {}) {
-  const plan = envProxyPlan(env, version);
+  const plan = envProxyPlan(env, version, startedWithFlag);
   if (plan.action === 'off' || plan.action === 'already') return false;
   if (plan.action === 'unsupported') {
     error(`[assets] ${plan.reason}`);

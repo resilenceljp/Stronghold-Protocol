@@ -93,3 +93,6 @@
 新的娱乐、无尽与monitor目录工作见 [DEV-20261013-01](records/2026-10-13-01-entertainment-endless.md)。本地分支 feat/entertainment-endless，尚未部署到正式服务器。
 
 最新娱乐扩展为0.2.4-20p-fun.2，新增第二页规则和藏品、22格整备区，上游来源与同步见UPSTREAM.json及[DEV-20261013-02](records/2026-10-13-02-fun-rules-relics.md)。
+
+
+原版v0.2.5/20p-fun.4合并记录：[DEV-20261013-03](records/2026-10-13-03-original025.md)。

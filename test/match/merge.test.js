@@ -156,14 +156,16 @@ test('merge whose copies are not deployed (temp) with a full hand overflows the 
   m.dispose();
 });
 
-test('reward pick respects the pool and a full hand; offers expire at prep end', () => {
+test('displayed operator rewards survive stock exhaustion but respect a full hand and expire at prep end', () => {
   const { h, m, ps } = prep(24);
   ps.pushRewardOffer('merge');
   const offer = ps.offers[0];
   const id0 = offer.slots[0].id;
   const taken = m.pool.take(id0, 100);
-  assert.deepEqual(m.handle('p_0', { t: 'g.reward', idx: 0 }), { error: ERR.SOLD_OUT });
+  assert.deepEqual(m.handle('p_0', { t: 'g.reward', idx: 0 }), { ok: true });
+  assert.equal(m.pool.entries.get(id0).left, -1);
   m.pool.give(id0, taken);
+  ps.pushRewardOffer('merge', { ids: [id0] });
   const others = chessOfTier(3).filter((c) => m.pool.has(c) && !offer.slots.some((s) => s.id === c));
   for (let i = 0; ps.hand.some((p) => p == null); i++) give(m, ps, others[i]);
   assert.deepEqual(m.handle('p_0', { t: 'g.reward', idx: 0 }), { error: ERR.HAND_FULL });
@@ -255,7 +257,7 @@ test('缪尔赛思 wearing 变形同构体 + 维式重锤 counts twice for 维�
 });
 
 test('consume-on-equip built-ins: 盟约之币 funds, 随身身份牌 layers, 人事部文档 cap 9, 博士投影 promote; Arts limit', () => {
-  const { m, ps } = prep(27);
+  const { m, ps, h } = prep(27);
   const id = chessOfTier(2).find((c) => m.pool.has(c));
   const a = give(m, ps, id);
   ps.funds = 0;
@@ -284,8 +286,7 @@ test('consume-on-equip built-ins: 盟约之币 funds, 随身身份牌 layers, �
   ps.hand.forEach((p, i) => { if (p && p.kind === 'item') ps.hand[i] = null; });
   checkInvariants(m);
   m.handle('p_0', { t: 'g.ready', ready: true });
-  const h = { sched: m.sched };
-  h.sched.runUntil(() => m.phase === PHASE.PREP && m.round === 2, { maxSteps: 1e6 });
+  h.run(() => m.phase === PHASE.PREP && m.round === 2, { maxSteps: 1e6 });
   // the bot-free solo round needs a combat → it ran; now at R2
   assert.equal(b.id, DATA.chess[b.id].goldenId ? b.id : b.id);
   assert.ok(m.gd.isGolden(b.id), 'promoted at the round start');
@@ -447,7 +448,7 @@ test('equipment: the replace dialog picks WHICH equipped item a third one destro
 
 test('equipment: a consume-on-equip item on a full carrier replaces the picked item first and leaves the slot free; a refused 博士投影 keeps both (GitHub #263)', () => {
   // PRTS 卫戍协议/帮助 "达到上限强行佩戴会改为替换装备：指定一件已佩戴装备替换为将要佩戴的装备，并销毁被指定的装备"
-  const { m, ps } = prep(27);
+  const { m, ps, h } = prep(27);
   const pool = chessOfTier(2).filter((c) => m.pool.has(c) && DATA.chess[c].bonds.length);
   let n = 0;
   /** A normal operator in the hand wearing two different plain items (older, newer). */

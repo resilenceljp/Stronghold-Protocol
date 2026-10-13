@@ -90,8 +90,11 @@ runtime/announcements/assets/update/team.webp
 Markdown 写法：
 
 ```markdown
-![开服安排](assets/banner.png)
-![队伍示意](assets/update/team.webp "队伍分组")
+![开服安排][banner]
+![队伍示意][team]
+
+[banner]: assets/banner.png
+[team]: assets/update/team.webp "队伍分组"
 ```
 
 `assets/` 固定表示公告存储目录下的图片目录，不表示草稿所在目录；`./assets/` 写法也支持。草稿仍可放在任何位置，`--file` 只复制 Markdown 正文，图片须由服主另行放到上述目录。使用 `SP_ANNOUNCEMENTS_DIR` 或 `--dir` 更改公告目录后，图片相应放在该目录的 `assets/` 中。

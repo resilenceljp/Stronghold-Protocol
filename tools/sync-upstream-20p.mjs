@@ -23,7 +23,9 @@ if(argv.includes('--apply-version')) {
  run(['merge-base','--is-ancestor',sha,'HEAD']);
  const path=n=>new URL('../'+n,import.meta.url);
  const meta=JSON.parse(readFileSync(path('UPSTREAM.json'),'utf8'));
- meta.baseVersion=base;meta.commit=sha;const version=`${base}-${meta.extension}.${meta.revision}`;
+ meta.baseVersion=base;meta.commit=sha;
+ const bases=[base,meta.originalVersion].filter(Boolean);bases.sort((a,b)=>{const x=a.split('.').map(Number),y=b.split('.').map(Number);for(let i=0;i<3;i++){if(x[i]!==y[i])return x[i]-y[i];}return 0;});
+ const version=`${bases.at(-1)}-${meta.extension}.${meta.revision}`;
  for(const f of ['package.json','package-lock.json']) {const x=JSON.parse(readFileSync(path(f),'utf8'));x.version=version;if(x.packages)x.packages[''].version=version;writeFileSync(path(f),JSON.stringify(x,null,2)+'\n');}
  const f=path('shared/constants.js');writeFileSync(f,readFileSync(f,'utf8').replace(/APP_VERSION = '[^']*'/,`APP_VERSION = '${version}'`));
  writeFileSync(path('UPSTREAM.json'),JSON.stringify(meta,null,2)+'\n');

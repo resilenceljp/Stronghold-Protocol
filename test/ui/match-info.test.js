@@ -106,6 +106,18 @@ test('MatchBondRow: greyed by state (✕ disc), the banned-member badge, the red
   assert.equal(badge('deputShip'), undefined);
   assert.equal(tipOf('deputShip').props.text, '助力');
   assert.equal(disc('deputShip').props.tier, DATA.bonds.deputShip.thresholds.length);
+  // the box beside the tip: one line per banned member (avatar, name, its bonds with this one highlighted); none ⇒ null
+  const aside = tipOf('preciShip').props.aside;
+  const ops = [...walk(aside)].filter((v) => hasClass(v, 'brief-bantip__op'));
+  const bannedPreci = DATA.bonds.preciShip.visibleMembers.filter((id) => PUB.bannedChess.includes(id));
+  assert.deepEqual(ops.map((v) => v.props['data-chess']), bannedPreci);
+  for (const op of ops) {
+    const c = DATA.chess[op.props['data-chess']];
+    assert.ok([...walk(op)].some((v) => v.type === UnitThumb && v.props.id === c.chessId));
+    assert.match(textOf(op), new RegExp('^' + c.name));
+    assert.ok([...walk(op)].some((v) => hasClass(v, 'is-this') && textOf(v) === '精准'));
+  }
+  assert.equal(tipOf('deputShip').props.aside, null);
 });
 
 test('MatchLegend: the grey and the badge; "或本模式禁用" only when the mode switches bonds off', () => {
@@ -202,7 +214,7 @@ test('the briefing, the strategy draft and the in-game 本局信息 tab all read
   assert.match(draft, /data-testid="match-info-open"[\s\S]*?onClick=\$\{\(\) => setInfoOpen\(true\)\}>\$\{t\('查看禁用盟约与干员'\)\}</);
   assert.match(draft, /<\$\{MatchInfoDialog\} open=\$\{infoOpen\} onClose=\$\{\(\) => setInfoOpen\(false\)\} model=\$\{info\}/);
   // a turn change or my pick closes it; the draft's end unmounts the screen
-  assert.match(draft, /const turnKey = `\$\{draft\.turnPid \|\| ''\}\|\$\{myPick \|\| ''\}`;\n\s*useEffect\(\(\) => \{ setInfoOpen\(false\); \}, \[turnKey\]\);/);
+  assert.match(draft, /const turnKey = `\$\{draft\.id \|\| ''\}\|\$\{draft\.turnPid \|\| ''\}\|\$\{myPick \|\| ''\}`;\n\s*useEffect\(\(\) => \{ setInfoOpen\(false\); \}, \[turnKey\]\);/);
   const drawer = read('public/js/ui/enemyDrawer.js');
   assert.match(drawer, /import \{ matchInfoModel, DiyBannedLine \} from '\.\/matchInfo\.js';/);
   assert.match(drawer, /matchInfoModel\(pub, \{\s*bonds: data\.list\('bonds'\), chess: \(id\) => data\.lookup\('chess', id\), mode: data\.get\('config'\)\?\.modes\?\.\[pub\?\.modeId\],/);

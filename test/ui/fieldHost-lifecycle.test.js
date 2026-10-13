@@ -37,6 +37,7 @@ function fixture() {
   const context = vm.createContext({
     AbortController, DOMException, URLSearchParams, Promise,
     console: { warn: (...args) => warnings.push(args) },
+    loadPref: (_key,fallback)=>fallback,
     audio: {}, data: { get() { return null; } }, settingsStore: { get() { return {}; } },
     setTimeout(fn) { timers.set(++timerId, fn); return timerId; },
     clearTimeout(id) { timers.delete(id); },

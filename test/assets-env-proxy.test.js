@@ -134,13 +134,13 @@ test('restart decision: nothing to do, one spawn, or a hard stop — and the mar
   const child = new EventEmitter();
   const spawnImpl = (...args) => { spawned.push(args); return child; };
   try {
-    assert.equal(restartForEnvProxy({
+    assert.equal(restartForEnvProxy({ startedWithFlag:false,
       env: cleanEnv(), spawnImpl, error: (line) => logs.push(line),
     }), false);
     assert.equal(spawned.length, 0);
 
     const proxyEnv = cleanEnv({ HTTP_PROXY: 'http://proxy.example:8080', KEEP: 'yes' });
-    const stopped = restartForEnvProxy({
+    const stopped = restartForEnvProxy({ startedWithFlag:false,
       env: proxyEnv,
       execPath: process.execPath,
       execArgv: ['--no-warnings'],
@@ -169,7 +169,7 @@ test('restart decision: nothing to do, one spawn, or a hard stop — and the mar
 
     spawned.length = 0;
     logs.length = 0;
-    assert.equal(restartForEnvProxy({
+    assert.equal(restartForEnvProxy({ startedWithFlag:false,
       env: cleanEnv({ HTTP_PROXY: 'http://proxy.example:8080', [REEXEC_MARKER]: '1' }),
       spawnImpl,
       error: (line) => logs.push(line),
@@ -311,7 +311,7 @@ test('an old Node with HTTP(S)_PROXY set warns and downloads directly instead of
   const spawned = [];
   const logs = [];
   try {
-    const goOn = restartForEnvProxy({
+    const goOn = restartForEnvProxy({ startedWithFlag:false,
       env: cleanEnv({ HTTPS_PROXY: 'http://proxy.example:8080' }),
       version: '22.20.0',
       spawnImpl: (...args) => { spawned.push(args); return new EventEmitter(); },

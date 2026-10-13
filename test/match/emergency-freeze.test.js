@@ -202,7 +202,9 @@ test('Final Assault freezes overtime, silence handover and AI pacer; resumes the
   h.sched.advance(1000);
   const field = m.fields.find((f) => f.mode === 'client');
   const authority = field.authority;
-  const botField = m.fields.find((f) => f.mode === 'server');
+  // Random pairing can place the two bots beside separate humans. Force one paired field to server authority.
+  const botField = m.fields.find(f=>f!==field) || field;
+  m._runOnServer(botField, 'freeze-test');
   const botTime = botField.battle.time;
   const lp = m.teamLp;
   const overtime = m.overtimeAt;

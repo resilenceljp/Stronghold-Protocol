@@ -1,3 +1,4 @@
+// i18n-ignore-file: Independent local administrator diagnostics.
 // Read-only telemetry. Keep match/simulation state untouched; failures never block combat.
 import fs from 'node:fs';
 import path from 'node:path';

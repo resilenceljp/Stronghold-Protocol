@@ -1012,6 +1012,12 @@ describe('websocket lobby', () => {
       const reply = await c.request(msg, 3000);
       assert.ok(['ok', 'error', 'welcome', 'pong'].includes(reply.t));
       if (reply.t === 'ok') okCounts[msg.t] = (okCounts[msg.t] || 0) + 1;
+      // Starting is asynchronous; exercise the ready transition before random leave/drop can erase the match.
+      if(reply.t==='ok' && msg.t==='room.start') {
+        await c.waitFor('m.public',v=>v.phase==='INFO_CHECK');
+        const readyReply=await c.request({t:'g.infoReady'});
+        assert.equal(readyReply.t,'ok');okCounts['g.infoReady']=(okCounts['g.infoReady']||0)+1;
+      }
       if (reply.t === 'error') assert.ok(Object.hasOwn(ERR, reply.code), reply.code);
       if (i % 50 === 0) await delay(30); // stay well under the rate limit
     }
