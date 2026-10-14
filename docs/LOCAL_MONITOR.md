@@ -42,3 +42,36 @@ Validation: new lifecycle/loopback tests pass. Full local CI was run on Windows/
 it reported environment and wall-clock benchmark failures (directory symlink
 privilege, proxy environment and loaded-machine network/performance timing).
 The new integration and packaging checks are separately verified.
+
+## Intended deployment and local validation
+
+The primary use case is a locally hosted server reached by remote players through
+FRP / SakuraFRP or another private-network tunnel. This module observes game TCP
+connections; it does not establish tunnels or report the provider's billable quota.
+The administrator and dashboard endpoints remain local and must not be tunneled.
+
+On Windows without directory-symlink privileges, the asset-index test uses a
+junction to exercise the same linked-directory traversal. No assertion is skipped.
+For a local run on a busy machine, run the complete test suite serially so CPU-heavy
+simulation tests do not compete with websocket deadlines or performance benchmarks:
+
+```powershell
+Remove-Item Env:NODE_USE_ENV_PROXY -ErrorAction SilentlyContinue
+New-Item public/fonts -ItemType Directory -Force | Out-Null
+node tools/ci.mjs --only setup
+node --test --test-concurrency=1
+node tools/ci.mjs --only smoke,lint,imports,typecheck
+```
+
+The proxy environment variable is cleared only in the validation shell, because
+the proxy tests explicitly exercise processes started with and without that flag.
+The font directory is an ignored local asset directory, not a game-art contribution.
+Default CI browser-suite flags remain disabled; browser end-to-end suites require
+separate opt-in and assets as described in CONTRIBUTING.md.
+
+Validation on 2026-10-14 (Windows, Node 24.21.0): complete serial suite:
+6,342 tests, 6,296 passed, 0 failed, 46 skipped by the repository's default
+optional/browser-suite gates (2,008,322 ms). Setup, smoke, lint, imports and
+typecheck all passed. Websocket deadlines and all three performance benchmarks
+passed without threshold changes. The previous full golden run matched every
+scenario (179,954 ms); these validation changes do not touch gameplay code.
