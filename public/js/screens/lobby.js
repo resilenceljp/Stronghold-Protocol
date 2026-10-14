@@ -405,8 +405,8 @@ export function LobbyScreen() {
         </div>
         </div>
         ${ruleset !== 'standard' ? html`<div class=${ruleset==='endless'?'diff-card is-selected fun-endless-card':'fun-mode-notes'} style="--d-color:#a860ff">
-          <b class="diff-card__name">${ruleset === 'endless' ? t('无尽模拟') : t('娱乐模式')}</b>${ruleset==='endless'?html`<span class="diff-card__code">AC-∞</span><span class="diff-card__meta">14 ${t('回合')} → ∞</span>`:null}
-          <p>${ruleset === 'endless' ? t('敌人生命、攻击、防御每回合复利增长10%；14回合最终攻势后继续无尽关卡，无隐秘核心。调度7级增加一个干员槽和一个装备槽，随机8张战场。') : t('独立娱乐房间，保留所选难度；盟约层数上限9999，按原有增益规则叠加。')}</p>
+          <b class="diff-card__name">${ruleset === 'endless' ? t('无尽模拟') : t('娱乐模式')}</b>${ruleset==='endless'?html`<span class="diff-card__code">AC-∞</span><span class="diff-card__meta">7＋1 ${t('回合')} → ∞</span>`:null}
+          <p>${ruleset === 'endless' ? t('每循环7波普通敌人＋1波Boss；起始逐波乘1.2，击败Boss后下一循环逐波倍率增加0.1。关闭时获胜后全员投票决定是否继续。') : t('独立娱乐房间，保留所选难度；盟约层数上限9999，按原有增益规则叠加。')}</p>
           <p>${t('本局可选规则统一在开始后的第二页准备界面设置。')}</p>
           <small>${t('控制台只操作自己的阵容；娱乐房默认不参与快速匹配，使用同盟密钥邀请好友。')}</small>
         </div>` : null}

@@ -56,25 +56,25 @@ test('actual simulation layer cap survives BattleSpec and holds at9999',()=>{
  assert.equal(battle.addLayers(p.playerId,id,100),9);assert.equal(battle.addLayers(p.playerId,id,100),0);
  m.dispose();
 });
-test('endless uses14-round boss, no hidden,8maps,level7 extra slot and 10% compounded scaling',()=>{
- const m=match('endless'),p=m.order[0];assert.equal(m.gd.bossRound,14);assert.equal(m.gd.hiddenRound,null);
+test('endless uses an eight-wave cycle, no hidden, eight maps and rising compounding',()=>{
+ const m=match('endless'),p=m.order[0];assert.equal(m.gd.bossRound,8);assert.equal(m.gd.hiddenRound,null);
  assert.equal(m.gd.mode.stages.length,8);assert.equal(m.gd.maxShopLevel,7);
- assert.equal(m.gd.enemyScale(1).hpMul,1);assert.ok(Math.abs(m.gd.enemyScale(15).atkMul-1.1**14)<1e-8);
+ assert.equal(m.gd.enemyScale(1).hpMul,1.2);assert.ok(Math.abs(m.gd.enemyScale(15).atkMul-1.2**8*1.3**7)<1e-8);
  assert.equal(intent(m,'level',null,7).ok,true);p.rollShop();assert.equal(p.shop.layout.item,2);
  assert.equal(p.shop.slots.at(-1).special,undefined);assert.equal(p.shop.layout.chess,6);assert.equal(p.shop.slots.length,8);
  m.startRound(15);assert.ok(m.wave.spawns.length>0);assert.ok(m.wave.spawns.every(s=>s.mods.defMul>1));
  m.startRound(99);assert.ok(m.wave.spawns.length>0);assert.ok(Number.isFinite(m.gd.enemyScale(10000).hpMul));
  m.dispose();
 });
-test('actual final-assault win enters15 then ordinary settlement enters16; loss ends',()=>{
- const m=match('endless');m.startRound(14);m.startFinalAssault(false);
+test('actual first cycle Boss win enters9 then ordinary settlement enters10; loss ends',()=>{
+ const m=match('endless');m.startRound(8);m.startFinalAssault(false);
  m.bossPool.hp=0;m._finalEnding='cleared';m._finishFinal(false,()=>({synthetic:true,perPlayer:{}}));
- m.sched.source.runUntil(()=>m.round===15 || m.ended,1000);
- assert.equal(m.round,15);assert.equal(m.ended,false);assert.equal(m.hiddenReached,false);
- m.phase='SETTLE';m.afterSettle();assert.equal(m.round,16);m.dispose();
- const loss=match('endless');loss.startRound(14);loss.startFinalAssault(false);loss._finalEnding='forced';
+ m.sched.source.runUntil(()=>m.round===9 || m.ended,1000);
+ assert.equal(m.round,9);assert.equal(m.ended,false);assert.equal(m.hiddenReached,false);
+ m.phase='SETTLE';m.afterSettle();assert.equal(m.round,10);m.startRound(16);m.startFinalAssault(false);m.bossPool.hp=0;m._finalEnding='cleared';m._finishFinal(false,()=>({synthetic:true,perPlayer:{}}));m.sched.source.runUntil(()=>m.round===17||m.ended,1000);assert.equal(m.round,17);assert.equal(m.ended,false);m.dispose();
+ const loss=match('endless');loss.startRound(8);loss.startFinalAssault(false);loss._finalEnding='forced';
  loss._finishFinal(false,()=>({synthetic:true,perPlayer:{}}));
- loss.sched.source.runUntil(()=>loss.ended,1000);assert.equal(loss.ended,true);assert.equal(loss.round,14);loss.dispose();
+ loss.sched.source.runUntil(()=>loss.ended,1000);assert.equal(loss.ended,true);assert.equal(loss.round,8);loss.dispose();
 });
 test('twenty-seat room isolates two human consoles and reconnect retains permission',()=>{
  const seats=Array.from({length:20},(_,seat)=>({seat,playerId:seat<2?`p_${seat}`:`ai_${seat}`,name:`S${seat}`,isBot:seat>=2,connected:true}));

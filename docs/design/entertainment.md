@@ -9,3 +9,5 @@ Part of [DESIGN.md](../DESIGN.md)
 娱乐扩展fun.5的规则、来源与验证见[DEV-20261013-04](../development/records/2026-10-13-04-fun5.md)。
 
 fun.6 的可选22/11格整备区与界面坐标修正见 [娱乐规则](../ENTERTAINMENT.md#fun6-扩展整备区)。
+
+fun.7无尽为7普通波＋1Boss，逐波倍率从1.2起，每过Boss下周期加0.1，累计增长不清零；详见[fun.7](../development/records/2026-10-14-02-fun7.md)。

@@ -534,3 +534,8 @@ SOFTWARE.
    See the License for the specific language governing permissions and
    limitations under the License.
 ```
+
+## html-to-image
+
+html-to-image 1.11.13, MIT, https://github.com/bubkoo/html-to-image .
+The license is copied to public/vendor/html-to-image-LICENSE.txt by tools/vendor.mjs.

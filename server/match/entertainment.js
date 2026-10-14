@@ -15,7 +15,7 @@ export function configureEntertainment(gd, ruleset = 'standard') {
   // [ASSUMED] NORMAL supplies the 14-round campaign, all eight maps and the late normal-wave templates.
   const base = gd.config.modes?.[gd.isSolo ? 'mode_single_normal' : 'mode_multi_normal'] || gd.mode;
   gd.modeId = gd.isSolo ? 'mode_single_normal' : 'mode_multi_normal';
-  gd.mode = { ...base, lastRound: 14, bossRound: 14, hiddenRound: null, maxShopLevel: 7,
+  gd.mode = { ...base, lastRound: 14, bossRound: 8, hiddenRound: null, maxShopLevel: 7,
     stages: [...(base.stages || [])], shopSlots: { ...base.shopSlots, 7: { chess: (base.shopSlots?.[6]?.chess||5)+1, item: (base.shopSlots?.[6]?.item||1)+1 } },
     upgradePrices: [...(base.upgradePrices || [5, 7, 9, 11, 13]), 20] };
   gd.inactiveEnemies = new Set(gd.mode.inactiveEnemyKeys || []);
@@ -25,9 +25,13 @@ export function configureShop7(gd, enabled) {
   const slots=gd.mode.shopSlots?.[6]||{chess:5,item:1};
   gd.mode={...gd.mode,maxShopLevel:7,shopSlots:{...gd.mode.shopSlots,7:{chess:slots.chess+1,item:slots.item+1}},upgradePrices:[...gd.mode.upgradePrices.slice(0,5),20]};
 }
-export function endlessFactor(round) {
-  // Numeric safety ceiling, reached only after ~290 rounds; no finite round-count limit.
-  return Math.min(1e12, 1.1 ** Math.max(0, round - 1));
+export function endlessStep(round,start=1) { return Math.max(1,round-start+1); }
+export function endlessTemplateRound(round,start=1) { const step=endlessStep(round,start);return step%8===0?14:7+((step-1)%8); }
+export function endlessFactor(round,start=1) {
+  // [ASSUMED] Seven normal waves + a boss; each cycle raises the per-wave compound multiplier.
+  const step=endlessStep(round,start),cycle=Math.floor((step-1)/8);let factor=1;
+  for(let c=0;c<=cycle;c++){factor*=Math.pow(1.2+c*0.1,c===cycle?(step-1)%8+1:8);if(factor>=1e12)return 1e12;}
+  return factor;
 }
 export function consoleIntent(m, ps, msg) {
   const fail = (error, detail) => ({ error, detail });
@@ -46,11 +50,21 @@ export function consoleIntent(m, ps, msg) {
     if (!ps.gd.bond(msg.id)) return fail(ERR.BAD_TARGET);
     ps.addLayers(msg.id, n, { reason: 'console' });
   } else if (msg.kind === 'level') {
-    if (n > ps.gd.maxShopLevel || n < ps.shop.level) return fail(ERR.BAD_TARGET);
+    if (n > ps.gd.maxShopLevel) return fail(ERR.BAD_TARGET);
     ps.shop.level = n;
     ps.shop.upgradePrice = ps.gd.upgradeBase(n) ?? 0;
-    ps._openLevelSlots();
+    const layout=ps.gd.shopSlots(n),oldLayout=ps.shop.layout||{chess:ps.shop.slots.length,item:0};
+    const chess=ps.shop.slots.slice(0,oldLayout.chess).slice(0,layout.chess),items=ps.shop.slots.slice(oldLayout.chess).slice(0,layout.item);
+    while(chess.length<layout.chess)chess.push(null);while(items.length<layout.item)items.push(null);
+    ps.shop.slots=[...chess,...items];ps.shop.layout=layout;
     ps.recompute();
+  } else if (msg.kind === 'lp') {if(m.teamLp!=null){m.teamLp=n;m._syncTeamLp();}else ps.lp=n;ps.recompute();}
+  else if(msg.kind==='enemy'){
+    const rec=ps.gd.enemy(msg.id);
+    if(!rec||rec.templateSlot||rec.tokenOnly||!['NORMAL','ELITE'].includes(rec.rank)||n>20||m.round===m.gd.bossRound||m.round===m.gd.hiddenRound)return fail(ERR.BAD_TARGET);
+    const extras=ps.bounties.filter(b=>b.consoleGrant);if(extras.reduce((sum,b)=>sum+b.card.count,0)+n>100)return fail(ERR.BAD_TARGET);
+    m._consoleEnemySeq=(m._consoleEnemySeq||0)+1;
+    ps.bounties.push({id:`console-${ps.playerId}-${m._consoleEnemySeq}`,consoleGrant:true,card:{enemyKey:msg.id,count:n,coin:0,payout:'kill',name:rec.name||msg.id},roundsLeft:1});ps.recompute();
   } else if (msg.kind === 'funds') ps.addFunds(n, { reason: 'console' });
   else return fail(ERR.BAD_MSG);
   ps.dirty(); m.markPublic();

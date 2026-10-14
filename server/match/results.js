@@ -138,6 +138,7 @@ export function buildResult(m, outcome) {
     ...(m.ruleset && m.ruleset !== 'standard' ? { ruleset: m.ruleset, consoleEnabled: m.consoleEnabled } : {}),
     victory,
     roundsPassed: teamRounds,
+    ...(m.ruleset==='endless'?{endless:true,endlessFloor:Math.max(1,m.round-(gd.endlessStartRound||1)+1),endlessCleared:Math.max(0,teamRounds-(gd.endlessStartRound||1)+1)}:{}),
     hiddenReached,
     hiddenCleared,
     reason: outcome.reason,

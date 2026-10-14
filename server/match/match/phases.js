@@ -342,6 +342,7 @@ export class MatchPhases {
   startRound(r) {
     this.phase = PHASE.ROUND_START;
     this.round = r;
+    if(this.ruleset==='endless'){const start=this.gd.endlessStartRound||1;this.gd.mode={...this.gd.mode,bossRound:start+Math.ceil((r-start+1)/8)*8-1};}
     this.fields = [];
     this.watchers.clear();
     this.unitePlan = null;

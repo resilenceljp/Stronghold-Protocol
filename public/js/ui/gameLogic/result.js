@@ -43,6 +43,7 @@ export function normalizeResult(res, pub) {
   }).sort((a, b) => a.seat - b.seat);
   return {
     victory: !!r.victory,
+    endless:!!r.endless,endlessFloor:r.endlessFloor??pub?.endlessFloor??0,endlessCleared:r.endlessCleared??0,
     roundsPassed: Number.isFinite(r.roundsPassed) ? r.roundsPassed : Math.max(0, ...players.map((p) => p.roundsPassed), 0),
     lastRound: Number.isFinite(r.lastRound) ? r.lastRound : (Number.isFinite(pub?.lastRound) ? pub.lastRound : 14),
     hiddenCleared: !!r.hiddenCleared,

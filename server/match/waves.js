@@ -1,3 +1,4 @@
+import {endlessTemplateRound} from './entertainment.js';
 // server/match/waves.js — per-match enemy setup and per-round spawn generation: the OFFICIAL generator decoded from
 // the client (`RandomEnemyGenerater`, research 08 §2; DESIGN §14 "Corrections from research 08/09"). No custom balance:
 // counts, kinds, timing and stat scaling are the official ones.
@@ -218,7 +219,7 @@ export function setupMatchWaves(gd, rng) {
 export function roundPick(gd, rng, factionsOrSetup, round) {
   const src = factionsOrSetup;
   const picks = src && !Array.isArray(src) && Array.isArray(src.picks) ? src.picks : (src && src.schedule && Array.isArray(src.schedule.picks) ? src.schedule.picks : null);
-  if (picks) return picks[gd.ruleset === 'endless' && round > 14 ? 8 + ((round - 15) % 6) : round] ?? null;
+  if (picks) return picks[gd.ruleset==='endless'?endlessTemplateRound(round,gd.endlessStartRound||1):round] ?? null;
   const factions = Array.isArray(src) ? src : (src && Array.isArray(src.factions) ? src.factions : []);
   const g = gen(gd);
   const types = gd.factions.types && typeof gd.factions.types === 'object' ? gd.factions.types : {};

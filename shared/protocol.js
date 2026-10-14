@@ -446,7 +446,7 @@ export const C2S = {
   // the strategy highlighted in the draft screen (user playtest #4 item 4): a turn that runs out takes it while it is
   // free (Match.timeoutBand); absent / null clears it
   'g.bandFocus': { bandId: nullable(isId), ...draftScope, $optional: ['bandId', ...draftScopeOptional] },
-  'g.console': { kind: (v) => ['chess', 'item', 'layers', 'level', 'funds'].includes(v),
+  'g.console': { kind: (v) => ['chess', 'item', 'layers', 'level', 'funds', 'lp', 'enemy'].includes(v),
     id: isId, amount: (v) => isInt(v, 1, 9999), $optional: ['id', 'amount'] },
   'g.buy': { slot: (v) => isInt(v, 0, 15) },
   'g.refresh': {},

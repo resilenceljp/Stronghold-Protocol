@@ -87,7 +87,7 @@ export function bossPoolShareOf(modeScale, cfgScale, isSolo, aliveCount) {
 /** Strip the _a/_b suffix of an item id (the registry key of an item family). */
 export const itemKey = (id) => (typeof id === 'string' ? id.replace(/_[ab]$/, '') : '');
 
-import { endlessFactor } from './entertainment.js';
+import { endlessFactor,endlessTemplateRound } from './entertainment.js';
 
 export class GameData {
   /**
@@ -350,7 +350,7 @@ export class GameData {
   get maxShopLevel() { return posIntOr(this.mode.maxShopLevel, DEFAULTS.maxShopLevel); }
 
   roundCfg(r) {
-    if (this.ruleset === 'endless' && r > 14) r = 8 + ((r - 15) % 6);
+    if(this.ruleset==='endless')r=endlessTemplateRound(r,this.endlessStartRound||1);
     const rounds = this.mode.rounds;
     return rounds && typeof rounds === 'object' && rounds[String(r)] && typeof rounds[String(r)] === 'object' ? rounds[String(r)] : null;
   }
@@ -443,7 +443,7 @@ export class GameData {
   /** Enemy multipliers of round r = the official table (baseEnemyScale; no custom multiplier). */
   enemyScale(r) {
     if (this.ruleset !== 'endless') return this.baseEnemyScale(r);
-    const factor = endlessFactor(r);
+    const factor = endlessFactor(r,this.endlessStartRound||1);
     return { hpMul: factor, atkMul: factor, defMul: factor, speedMul: 1 };
   }
 

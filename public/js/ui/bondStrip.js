@@ -57,8 +57,8 @@ export function BondStrip({ bonds, layersDisabled = false, onOpen, openId = null
       ${owner ? html`<${OwnerTag} owner=${owner} />` : html`<${MicroLabel}>BONDS</${MicroLabel}>`}<span>${owner ? t('{owner} 尚未激活盟约', { owner }) : t('部署干员以激活盟约')}</span></div>`;
   }
   const m = data.get('assets');
-  const shown = sorted.slice(0, max);
-  const strip = html`<div class=${cx('bstrip', layersDisabled && 'is-frozen', owner && 'is-other')} role="list"
+  const shown = sorted;
+  const strip = html`<div class=${cx('bstrip', layersDisabled && 'is-frozen', owner && 'is-other')} role="list" tabIndex="0" onWheel=${e=>{if(e.currentTarget.scrollWidth>e.currentTarget.clientWidth){e.currentTarget.scrollLeft+=e.deltaY||e.deltaX;e.preventDefault();}}}
       aria-label=${owner ? t('{owner} 的盟约', { owner }) : t('我的盟约')} data-owner=${owner || null}>
     ${owner ? html`<${OwnerTag} owner=${owner} />` : null}
     ${shown.map((b) => {
@@ -87,7 +87,8 @@ export function BondStrip({ bonds, layersDisabled = false, onOpen, openId = null
     })}
     ${sorted.length > shown.length ? html`<span class="bstrip__more num">+${sorted.length - shown.length}</span>` : null}
   </div>`;
-  return layersDisabled ? html`<${Tooltip} text=${t('层数叠加已禁用')} placement="bottom">${strip}<//>` : strip;
+  const content=html`<div class="bstrip-scroll"><button type="button" aria-label=${t('向左滚动盟约')} onClick=${e=>e.currentTarget.parentElement.querySelector('.bstrip')?.scrollBy({left:-240,behavior:'smooth'})}>‹</button>${strip}<button type="button" aria-label=${t('向右滚动盟约')} onClick=${e=>e.currentTarget.parentElement.querySelector('.bstrip')?.scrollBy({left:240,behavior:'smooth'})}>›</button></div>`;
+  return layersDisabled ? html`<${Tooltip} text=${t('层数叠加已禁用')} placement="bottom">${content}<//>` : content;
 }
 
 /**

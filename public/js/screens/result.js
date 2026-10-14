@@ -1,3 +1,4 @@
+import {ResultShare} from '../ui/resultShare.js';
 // Result screen (research 06 §10.6): victory / defeat hero with rounds passed, boss medallions, and a
 // card per player — band, final lineup avatars with elite marks, stats, title (评语) with its icon —
 // plus 返回同盟.
@@ -15,7 +16,7 @@
 //                 stats: { dmgDealt, kills, leaks, gold /* funds SPENT */, refreshes, merges, bossDamage?, itemsEquipped?,
 //                          activatedLayers?, lpLost?, perfectRounds? } }] }
 
-import { useEffect } from '../../vendor/hooks.module.js';
+import { useEffect,useRef } from '../../vendor/hooks.module.js';
 import { html, Button, Icon, MicroLabel, DifficultyTag } from '../ui/components.js';
 import { useGameData, Img, UnitThumb, BandIcon, PlayerAvatar, BondGlyph, LpTower, Sprite } from '../ui/gameComponents.js';
 import { normalizeResult, fmtNum, diyRecordFor, cardStandIn, standInForText } from '../ui/gameLogic.js';
@@ -119,6 +120,7 @@ export function ResultScreen() {
  * @param {{ res: any, pub?: any, myId?: string|null, backLabel: string, onBack: () => void, quiet?: boolean }} props
  */
 export function ResultView({ res, pub = null, myId = null, backLabel, onBack, quiet = false }) {
+  const target=useRef(null);
   const gd = useGameData();
   const r = normalizeResult(res, pub);
   const titles = Array.isArray(gd.config?.titles) ? gd.config.titles : [];
@@ -135,7 +137,7 @@ export function ResultView({ res, pub = null, myId = null, backLabel, onBack, qu
   const bg = uiUrl(gd.m, r.victory ? 'settle/settlemen_teamshow_success' : 'settle/settlemen_teamshow_fail');
   const mins = r.durationMs ? Math.round(r.durationMs / 60000) : null;
 
-  return html`<div class=${cx('screen', 'result', r.victory ? 'is-win' : 'is-lose')}>
+  return html`<div ref=${target} class=${cx('screen', 'result', r.victory ? 'is-win' : 'is-lose')}>
     <div class="result__bg" aria-hidden="true" style=${bg ? `--result-bg:url("${bg}")` : undefined}></div>
     <div class="result__grid" aria-hidden="true"></div>
     <main class="result__main">
@@ -146,9 +148,9 @@ export function ResultView({ res, pub = null, myId = null, backLabel, onBack, qu
         <h1 class="result__headline">${r.victory ? t('模拟完成') : t('模拟失败')}</h1>
         <p class="result__sub">${r.victory ? t('成功卫戍 · 敌方领袖已被击败') : t('防线已被突破')}</p>
         <div class="result__rounds">
-          <span class="result__rlabel">${t('通过回合')}</span>
-          <b class="result__rnum num">${r.roundsPassed}</b>
-          ${r.roundsPassed <= r.lastRound ? html`<span class="result__rof num">/${r.lastRound}</span>` : null}
+          <span class="result__rlabel">${r.endless?t('到达无尽层数'):t('通过回合')}</span>
+          <b class="result__rnum num">${r.endless?r.endlessFloor:r.roundsPassed}</b>
+          ${!r.endless&&r.roundsPassed <= r.lastRound ? html`<span class="result__rof num">/${r.lastRound}</span>` : null}
         </div>
         <div class="result__medals">
           ${boss ? html`<div class=${cx('medal', r.victory && 'is-done')} title=${boss.name}>
@@ -161,6 +163,7 @@ export function ResultView({ res, pub = null, myId = null, backLabel, onBack, qu
         ${mins ? html`<p class="result__time t-lo">${tParts('本局耗时 {n} 分钟', { n: html`<b class="num">${mins}</b>`, mins })}</p>` : null}
         </div>
         <footer class="result__foot">
+          <${ResultShare} target=${target} />
           <${Button} variant="primary" size="xl" icon="chevronLeft" onClick=${onBack}>${backLabel}<//>
         </footer>
       </section>

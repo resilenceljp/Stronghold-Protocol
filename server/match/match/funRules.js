@@ -23,6 +23,7 @@ export class MatchFunRules {
  resolveEndless(agree){
   if(!this.endlessVote)return;this.cancel(this._endlessTimer);this._endlessTimer=null;this.endlessVote=null;
   if(!agree)return this.finish(this._endlessOutcome);
+  this.gd.endlessStartRound=Math.max(15,this.round+1);
   configureEntertainment(this.gd,'endless');configureBench(this.gd,this.funRules.expandedBench);configureShop7(this.gd,this.funRules.shopLevel7);this.ruleset='endless';
   this.modeId=this.gd.modeId;this.difficulty=this.gd.difficulty;
   this.funRules={...this.funRules,endlessEnabled:true};this.bossPool=null;this.bossWaves=null;this.teamLp=null;

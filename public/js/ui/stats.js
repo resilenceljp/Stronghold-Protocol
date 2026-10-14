@@ -187,6 +187,7 @@ export function normalizeRecord(raw) {
     victory: bool(r.victory),
     roundsPassed: quit ? num(r.roundsPassed) : int(r.roundsPassed, 0),
     lastRound: num(r.lastRound),
+    ...(r.endless?{endless:true,endlessFloor:int(r.endlessFloor,0),endlessCleared:int(r.endlessCleared,0)}:{}),
     hiddenReached: bool(r.hiddenReached),
     hiddenCleared: bool(r.hiddenCleared),
     reason: str(r.reason, 32),
@@ -282,7 +283,7 @@ export function loadStats() {
 // ---- compaction + the storage budget ---------------------------------------------------------------------------
 
 const COMPACT_FRAME = ['id', 'v', 't', 'end', 'victory', 'roundsPassed', 'lastRound', 'hiddenReached', 'hiddenCleared', 'reason', 'modeId',
-  'difficulty', 'roomMode', 'durationMs', 'selfId'];
+  'difficulty', 'roomMode', 'durationMs', 'selfId', 'endless', 'endlessFloor', 'endlessCleared'];
 
 /**
  * The compact form of a record: the frame and the player's OWN row without lineup, bonds and name — everything the
@@ -379,6 +380,7 @@ export function buildRecord(res, ctx = {}) {
     victory: bool(r.victory),
     roundsPassed: int(r.roundsPassed, 0),
     lastRound: num(r.lastRound),
+    ...(r.endless?{endless:true,endlessFloor:int(r.endlessFloor,0),endlessCleared:int(r.endlessCleared,0)}:{}),
     hiddenReached: bool(r.hiddenReached),
     hiddenCleared: bool(r.hiddenCleared),
     reason: str(r.reason),
@@ -476,6 +478,7 @@ export function buildQuitRecord(state, ctx = {}) {
     victory: false,
     roundsPassed,
     lastRound: num(pub.lastRound),
+    ...(pub.endless?{endless:true,endlessFloor:int(pub.endlessFloor,0),endlessCleared:Math.max(0,int(pub.endlessFloor,0)-1)}:{}),
     hiddenReached: pub.phase === PHASE.HIDDEN_CORE,
     hiddenCleared: false,
     reason: 'quit',
@@ -510,6 +513,7 @@ export function recordToResult(rec) {
   if (!r || r.end === 'quit' || r.compact) return null;
   const res = {
     victory: r.victory,
+    ...(r.endless?{endless:true,endlessFloor:r.endlessFloor,endlessCleared:r.endlessCleared}:{}),
     roundsPassed: r.roundsPassed,
     hiddenReached: r.hiddenReached,
     hiddenCleared: r.hiddenCleared,
