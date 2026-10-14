@@ -50,3 +50,5 @@
 .bstrip-scroll>button{flex-shrink:0;background:#15221fcc;color:#a5edda;border:1px solid #53766a;cursor:pointer;font-size:.24rem;padding:.08rem}
 
 .result-share-preview{display:block;width:100%;height:auto;max-height:65vh;object-fit:contain}.result__foot{flex-wrap:wrap;gap:.12rem}
+
+.console-filters{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}.console-filters label{display:flex;align-items:center;gap:6px}.console-filters select{max-width:180px;min-height:36px;background:#101d18;color:#dbebe5;border:1px solid #52796c;padding:4px 8px}.fun-rule .console-warning{color:#ff7979}

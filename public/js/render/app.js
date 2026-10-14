@@ -512,8 +512,6 @@ export async function createFieldView(host, options = {}) {
     const sz = size();
     const k = kind === 'hidden' ? 'boss' : (['prep', 'normal', 'unite', 'boss', 'bossPrep', 'pen'].includes(kind) ? kind : 'normal');
     let rect = o.rect ? normRect(o.rect) : null;
-    if(k==='bossPrep'&&stageRec?.extendedBossPrep) rect={r0:0,r1:6,c0:0,c1:20};
-    if(k==='prep'&&stageRec?.extendedBench) rect={r0:6,r1:12,c0:0,c1:10};
     if (k === 'prep') rect = rect ? { ...rect, r0: Math.min(rect.r0, GEO.HAND_ROW) } : null;
     // official configBlackBoard framing (render/projection.js presetCamera); the padding only matters for the
     // fitted fallback (custom rects, portrait viewports); a prep camera keeps the bench and the field clear of the HUD
@@ -521,7 +519,7 @@ export async function createFieldView(host, options = {}) {
     // shop's HUD band (re-evaluated on resize: camOpts keep the flag)
     const vk = viewKind(kind, o); // (a 'prep' camera on the boss rows = the Final Assault prep)
     return presetCamera(k, { width: sz.width, height: sz.height, padding: o.padding || defaultPadding(k, sz) }, {
-      rect, side: o.side, half: !!o.half, shop: o.shop, fit: !!o.fit||!!stageRec?.extendedBossPrep||!!stageRec?.extendedBench, config: stageRec?.config || null,
+      rect, side: o.side, half: !!o.half, shop: o.shop, fit: !!o.fit, config: stageRec?.config || null,
       hud: hudBands(vk, sz, { shop: o.shop !== false }),
     });
   }
