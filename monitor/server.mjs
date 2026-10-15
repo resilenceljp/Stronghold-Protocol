@@ -195,6 +195,14 @@ const server=http.createServer(async(req,res)=>{
     if(req.method==='GET' && route==='/api/export') {
       res.setHeader('Content-Disposition','attachment; filename="stronghold-snapshot.json"');return send(200,snapshot());
     }
+    if(req.method==='POST' && route==='/api/clear-room'){
+      if(req.headers.origin!==`http://${req.headers.host}`||!req.headers['content-type']?.startsWith('application/json'))return send(403,{error:'请求来源无效'});
+      if(!state.admin?.monitorActions?.clearRooms)return send(409,{error:'清除房间需要 boot v10，请在空闲时重启更新后的游戏服。'});
+      let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>4096)return send(413,{error:'请求过大'});}
+      const response=await fetch(`http://127.0.0.1:${config.adminPort}/admin/clear-room`,{method:'POST',headers:{'Content-Type':'application/json','X-Stronghold-Command':'local-monitor-clear-room'},body,redirect:'error',signal:AbortSignal.timeout(4000)});
+      const result=await response.json();if(response.ok){event('OWNER_CLEAR_ROOM',`清除房间 ${result.roomCode} · ${result.members.length} 名玩家 · 对局${result.inMatch?'已结束':'未开始'}`);nextProbe=0;}
+      return send(response.status,result);
+    }
     if(req.method==='POST' && route==='/api/kick'){
       if(req.headers.origin!==`http://${req.headers.host}`||!req.headers['content-type']?.startsWith('application/json'))return send(403,{error:'请求来源无效'});
       if(!state.admin?.monitorActions?.kick)return send(409,{error:'当前游戏不支持踢出，请安装 boot v9 并在空闲时重启游戏服。'});

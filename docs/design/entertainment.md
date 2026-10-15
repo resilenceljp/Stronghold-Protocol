@@ -11,3 +11,5 @@ Part of [DESIGN.md](../DESIGN.md)
 fun.6 的可选22/11格整备区与界面坐标修正见 [娱乐规则](../ENTERTAINMENT.md#fun6-扩展整备区)。
 
 fun.7无尽为7普通波＋1Boss，逐波倍率从1.2起，每过Boss下周期加0.1，累计增长不清零；详见[fun.7](../development/records/2026-10-14-02-fun7.md)。
+
+fun.10：娱乐12位的基础上限保留人事部文档相对+1效果（到13），重复不叠加；标准8→9不变。

@@ -12,7 +12,7 @@
 //
 // No reconnect tokens are exposed. Local administrators can inspect game inventories.
 
-import { installMonitorV6, playerExtra, serverExtra, sendMonitorMessage, kickMonitorPlayer, trafficLedgerFor } from './monitor-v6.js';
+import { installMonitorV6, playerExtra, serverExtra, sendMonitorMessage, kickMonitorPlayer, clearMonitorRoom, trafficLedgerFor } from './monitor-v6.js';
 import { readTrafficHistory } from './traffic-ledger.js';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -535,6 +535,7 @@ function monitorMatchSnapshot(room, now) {
   };
 
   return {
+    poolGroups:(match.poolGroups||[]).map(g=>({id:g.id,playerIds:g.playerIds.slice()})),
     funRules: match.funRules || null, ruleset: match.ruleset || 'standard', consoleEnabled: !!match.consoleEnabled, endless: match.ruleset === 'endless',
     phase: publicView?.phase || match.phase || null,
     round: monitorNumber(publicView?.round, monitorNumber(match.round, 0)),
@@ -664,7 +665,7 @@ function adminSnapshot(srv) {
     roomOnline: onlineSessions.filter((s) => !!s.roomCode).length,
     sessions: srv.registry.size,
     ...base,
-    monitorActions:{messages:true,chat:true,kick:true},
+    monitorActions:{messages:true,chat:true,kick:true,clearRooms:true},
     onlineSessions,
     roomsDetail: rooms,
     ...serverExtra(srv),
@@ -704,6 +705,12 @@ export async function startAdminServer(srv) {
       return;
     }
 
+    if(pathname==='/admin/clear-room'&&req.method==='POST'){
+      const reply=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
+      if(req.headers.host!==`127.0.0.1:${port}`||req.headers.origin||req.headers['x-stronghold-command']!=='local-monitor-clear-room'||!req.headers['content-type']?.startsWith('application/json'))return reply(403,{error:'local monitor required'});
+      try{let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>4096)return reply(413,{error:'request too large'});}return reply(200,clearMonitorRoom(srv,JSON.parse(body)));}
+      catch(error){return reply(400,{error:error.message});}
+    }
     if(pathname==='/admin/kick'&&req.method==='POST'){
       const reply=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
       if(req.headers.host!==`127.0.0.1:${port}`||req.headers.origin||req.headers['x-stronghold-command']!=='local-monitor-kick'||!req.headers['content-type']?.startsWith('application/json'))return reply(403,{error:'local monitor required'});

@@ -1553,5 +1553,7 @@
   "每循环7波普通敌人＋1波Boss；起始逐波乘1.2，击败Boss后下一循环逐波倍率增加0.1。关闭时获胜后全员投票决定是否继续。": "Each cycle has 7 normal waves and 1 Boss. Stats compound by ×1.2 each wave initially; after each Boss, the next cycle's per-wave factor rises by 0.1. When disabled, everyone votes after victory to continue.",
   "品阶": "Tier",
   "无盟约限制": "No bond restriction",
-  "无尽模式（建议关闭，等到完成隐秘核心再投票）": "Endless mode (recommended off; vote after completing the Hidden Core)"
+  "无尽模式（建议关闭，等到完成隐秘核心再投票）": "Endless mode (recommended off; vote after completing the Hidden Core)",
+  "卡池组": "Pool group",
+  "开局前分组会随入座变化，开局后固定": "Groups follow occupied seats before starting and remain fixed afterwards"
 }

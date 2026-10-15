@@ -28,7 +28,11 @@ export class PlayerBasics {
   /** The engine acts for this seat (AI teammate or "AI 托管"; a departed human is eliminated, so nothing is left to do). */
   get botControlled() { return this.isBot || this.left || this.autoplay; }
 
-  get deployCap() { return Math.max(1, (this.m.ruleset !== 'standard' ? this.m.funRules.deployCap : this.gd.deployCap) + this.deployCapBonus, this.deployCapMin); }
+  get deployCap() {
+    const base=this.m.ruleset !== 'standard' ? this.m.funRules.deployCap : this.gd.deployCap;
+    // Absolute official item floors preserve their gain relative to a custom base (8→9 becomes 12→13).
+    return Math.max(1,base+this.deployCapBonus,this.deployCapMin+base-this.gd.deployCap);
+  }
   get deployCount() { let n = 0; for (const p of this.board.values()) if (p.kind === 'chess') n++; return n; }
   get tempEmpty() { return this.temp.every((x) => x == null); }
 

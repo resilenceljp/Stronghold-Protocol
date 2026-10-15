@@ -27,6 +27,8 @@ import { LoadoutButton } from './loadout.js';
 import { net } from '../net.js';
 import { store, useStore, shallowEqual, emptyMatch, isSpectating } from '../store.js';
 import { difficultyInfo } from './lobby.js';
+import { poolGroupSizes } from '../../../shared/playerCapacity.js';
+import { poolGroupIdentity } from '../ui/gameLogic/groups.js';
 import { t, tc } from '../../../shared/i18n.js';
 
 /**
@@ -44,6 +46,16 @@ export function normalizeSeats(room) {
     out.push(s && typeof s === 'object' ? { ...s, seat: Number.isInteger(s.seat) ? s.seat : i } : null);
   }
   return out;
+}
+
+/** Waiting-room preview uses the same occupied-seat grouping as match creation. */
+export function roomPoolGroups(room) {
+ const occupied=normalizeSeats(room).filter(s=>s&&!s.left).sort((a,b)=>a.seat-b.seat),map=new Map();
+ if(!occupied.length)return map;let offset=0;
+ for(const [i,n] of poolGroupSizes(occupied.length).entries()){
+   const identity=poolGroupIdentity(i+1);for(const seat of occupied.slice(offset,offset+n))map.set(seat.playerId,identity);offset+=n;
+ }
+ return map;
 }
 
 /**
@@ -117,7 +129,7 @@ export function SeatCard({ seat, index, room, facts, myId, busy, onAddBot, onRem
   if (!seat) {
     const canAdd = coop && facts.isHost;
     return html`<article class="seat seat--empty" style=${`--seat-i:${index}`}>
-      <header class="seat__head"><span class="seat__no num">P${index + 1}</span><${MicroLabel}>SEAT ${String(index + 1).padStart(2, '0')}<//></header>
+      <header class="seat__head"><span class="seat__no num">P${index + 1}</span>${group?html`<span class="seat__pool" style=${`color:${group.color};border-color:${group.color}`} title=${t('开局前分组会随入座变化，开局后固定')}>${group.label} · ${t('卡池组')}</span>`:null}<${MicroLabel}>SEAT ${String(index + 1).padStart(2, '0')}<//></header>
       <div class="seat__art seat__art--empty">
         <div class="seat__radar" aria-hidden="true"></div>
         <span class="seat__wait">${t('等待博士加入')}</span>
@@ -132,6 +144,7 @@ export function SeatCard({ seat, index, room, facts, myId, busy, onAddBot, onRem
       </footer>
     </article>`;
   }
+  const group = coop ? roomPoolGroups(room).get(seat.playerId) : null;
   const isMe = seat.playerId === myId;
   const isHostSeat = seat.playerId === room.hostId;
   const offline = seat.connected === false && !seat.isBot;
@@ -140,7 +153,7 @@ export function SeatCard({ seat, index, room, facts, myId, busy, onAddBot, onRem
   return html`<article class=${`seat brackets${isMe ? ' is-me' : ''}${isHostSeat ? ' is-host' : ''}${seat.isBot ? ' is-bot' : ''} is-${state}`}
       style=${`--seat-i:${index}`}>
     <header class="seat__head">
-      <span class="seat__no num">P${index + 1}</span>
+      <span class="seat__no num">P${index + 1}</span>${group?html`<span class="seat__pool" style=${`color:${group.color};border-color:${group.color}`} title=${t('开局前分组会随入座变化，开局后固定')}>${group.label} · ${t('卡池组')}</span>`:null}
       <${MicroLabel}>SEAT ${String(index + 1).padStart(2, '0')}<//>
       ${isHostSeat ? html`<span class="seat__host"><${Icon} name="crown" />${t('房主')}</span>` : null}
     </header>
