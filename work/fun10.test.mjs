@@ -16,7 +16,7 @@ test('clear waiting and running rooms releases humans and spectators to lobby wi
  try{const make=async name=>{const c=await TestClient.connect(srv.url.replace('http','ws')+'/ws');const w=await c.hello(name);c.id=w.playerId;cs.push(c);return c;};const host=await make('Host'),guest=await make('Guest'),viewer=await make('Viewer');
  for(const playing of [false,true]){assert.equal((await host.request({t:'room.create',mode:'coop',difficulty:'NORMAL',capacity:4})).t,'ok');const room=[...srv.lobby.rooms.values()][0];assert.equal((await guest.request({t:'room.join',code:room.code})).t,'ok');assert.equal((await viewer.request({t:'room.spectate',code:room.code})).t,'ok');
  if(playing){await guest.request({t:'room.ready',ready:true});assert.equal((await host.request({t:'room.start'})).t,'ok');assert.ok(room.match);}
- const command={roomCode:room.code,createdAt:room.createdAt,matchNo:room.matchNo??0};assert.throws(()=>clearMonitorRoom(srv,{...command,createdAt:room.createdAt+1}),/room changed/);assert.ok(srv.lobby.rooms.has(room.code));
+ const command={roomCode:room.code,createdAt:room.createdAt,matchNo:room.matchCount??room.matchNo??0};assert.throws(()=>clearMonitorRoom(srv,{...command,createdAt:room.createdAt+1}),/room changed/);assert.ok(srv.lobby.rooms.has(room.code));
  const result=clearMonitorRoom(srv,command);assert.equal(result.inMatch,playing);assert.equal(srv.lobby.rooms.has(room.code),false);assert.equal(room.match,null);for(const c of cs){assert.equal(srv.registry.byId(c.id).roomCode,null);assert.equal(c.ws.readyState,1);}}
  }finally{for(const c of cs)await c.terminate().catch(()=>{});await srv.close();}
 });

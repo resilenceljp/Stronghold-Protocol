@@ -442,9 +442,9 @@ export class GameData {
 
   /** Enemy multipliers of round r = the official table (baseEnemyScale; no custom multiplier). */
   enemyScale(r) {
-    if (this.ruleset !== 'endless') return this.baseEnemyScale(r);
-    const factor = endlessFactor(r,this.endlessStartRound||1);
-    return { hpMul: factor, atkMul: factor, defMul: factor, speedMul: 1 };
+    const base=this.ruleset!=='endless'?this.baseEnemyScale(r):(()=>{const factor=endlessFactor(r,this.endlessStartRound||1);return {hpMul:factor,atkMul:factor,defMul:factor,speedMul:1};})();
+    const pressure=this.adminPressure||1;if(pressure===1)return base;
+    return {...base,hpMul:base.hpMul*pressure,atkMul:base.atkMul*pressure,defMul:(base.defMul??1)*pressure};
   }
 
   timer(key) {

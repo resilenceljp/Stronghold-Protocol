@@ -1555,5 +1555,6 @@
   "无盟约限制": "No bond restriction",
   "无尽模式（建议关闭，等到完成隐秘核心再投票）": "Endless mode (recommended off; vote after completing the Hidden Core)",
   "卡池组": "Pool group",
-  "开局前分组会随入座变化，开局后固定": "Groups follow occupied seats before starting and remain fixed afterwards"
+  "开局前分组会随入座变化，开局后固定": "Groups follow occupied seats before starting and remain fixed afterwards",
+  "你已接管AI席位，资金、阵容与分组已保留": "You have taken over the AI seat; funds, lineup and group are preserved"
 }

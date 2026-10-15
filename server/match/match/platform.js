@@ -200,7 +200,7 @@ export class MatchPlatform {
     if (phase === PHASE.FINAL_ASSAULT) this.hiddenLayerSum = Math.max(0, this.hiddenLayerSum - leavingBossLayers);
     if (this.bossPool && (phase === PHASE.FINAL_ASSAULT || phase === PHASE.HIDDEN_CORE) && this.alivePlayers().length) {
       const bossId = phase === PHASE.HIDDEN_CORE ? this.hiddenBossId : this.bossId;
-      this.bossPool.rescale(bossPoolHp(this.gd, bossId, this.alivePlayers().length) * (this.ruleset === 'endless' ? this.gd.enemyScale(this.round).hpMul : 1));
+      this.bossPool.rescale(bossPoolHp(this.gd, bossId, this.alivePlayers().length) * (this.ruleset === 'endless' ? this.gd.enemyScale(this.round).hpMul : (this.gd.adminPressure||1)));
       this._broadcastPool(true);
     }
     this.tickerText(msg('{name}博士中途退出了模拟', { name: ps.name }), FLOW_TICKER_PRIORITY);

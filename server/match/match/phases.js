@@ -340,6 +340,7 @@ export class MatchPhases {
   }
 
   startRound(r) {
+    if(this.pendingAdminPressure!=null){this.gd.adminPressure=this.pendingAdminPressure;this.pendingAdminPressure=null;}
     this.phase = PHASE.ROUND_START;
     this.round = r;
     if(this.ruleset==='endless'){const start=this.gd.endlessStartRound||1;this.gd.mode={...this.gd.mode,bossRound:start+Math.ceil((r-start+1)/8)*8-1};}

@@ -87,7 +87,7 @@ export function installMonitorV6(srv, root) {
   };
   const timer=setInterval(()=>{const n=current(),time=Date.now(),seconds=(time-previous.time)/1000;rates={receivedBytesPerSecond:Math.max(0,(n.receivedBytes-previous.receivedBytes)/seconds),sentBytesPerSecond:Math.max(0,(n.sentBytes-previous.sentBytes)/seconds)};previous={receivedBytes:n.receivedBytes,sentBytes:n.sentBytes,time};},1000);
   timer.unref();srv.server?.once('close',()=>clearInterval(timer));
-  states.set(srv,{ledger,snapshot:()=>({monitorVersion:10,monitorCapabilities:{rosterBoundary:methods.length===2,gameTraffic:!!srv.server,detailedTraffic:true,shopDetails:true},trafficLedger:ledger.snapshot(),gameTraffic:{...current(),...rates,startedAt:bootAt,scope:'game TCP bytes; excludes tagged local monitor requests; not tunnel billing'}})});
+  states.set(srv,{ledger,snapshot:()=>({monitorVersion:11,monitorCapabilities:{rosterBoundary:methods.length===2,gameTraffic:!!srv.server,detailedTraffic:true,shopDetails:true},trafficLedger:ledger.snapshot(),gameTraffic:{...current(),...rates,startedAt:bootAt,scope:'game TCP bytes; excludes tagged local monitor requests; not tunnel billing'}})});
 }
 export function serverExtra(srv) { return states.get(srv)?.snapshot() || {}; }
 export function trafficLedgerFor(srv) { return states.get(srv)?.ledger || null; }
@@ -134,7 +134,7 @@ export function clearMonitorRoom(srv,command) {
  if(!command||typeof command.roomCode!=='string'||!Number.isInteger(command.matchNo))throw Error('invalid room target');
  const room=srv.lobby.rooms.get(command.roomCode);
  if(!room||room.disposed)throw Error('room no longer exists');
- if((room.createdAt??null)!==command.createdAt||(room.matchNo??0)!==command.matchNo)throw Error('room changed; refresh before clearing');
+ if((room.createdAt??null)!==command.createdAt||(room.matchCount??room.matchNo??0)!==command.matchNo)throw Error('room changed; refresh before clearing');
  const result={ok:true,roomCode:room.code,inMatch:!!room.match,members:[...room.seats,...(room.spectators||[])].filter(s=>s&&!s.isBot&&!s.left).map(s=>s.playerId)};
  srv.lobby.disposeRoom(room,'kicked');
  return result;

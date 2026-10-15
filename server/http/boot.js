@@ -13,6 +13,8 @@
 // No reconnect tokens are exposed. Local administrators can inspect game inventories.
 
 import { installMonitorV6, playerExtra, serverExtra, sendMonitorMessage, kickMonitorPlayer, clearMonitorRoom, trafficLedgerFor } from './monitor-v6.js';
+import { roomControlSnapshot, applyRoomControl } from './room-control.js';
+import { validateC2S } from '../../shared/protocol.js';
 import { readTrafficHistory } from './traffic-ledger.js';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -665,7 +667,7 @@ function adminSnapshot(srv) {
     roomOnline: onlineSessions.filter((s) => !!s.roomCode).length,
     sessions: srv.registry.size,
     ...base,
-    monitorActions:{messages:true,chat:true,kick:true,clearRooms:true},
+    monitorActions:{messages:true,chat:true,kick:true,clearRooms:true,roomControl:!!(srv.lobby.MatchClass?.prototype?.adminControlVersion>=1)},
     onlineSessions,
     roomsDetail: rooms,
     ...serverExtra(srv),
@@ -673,6 +675,7 @@ function adminSnapshot(srv) {
 }
 
 export async function startAdminServer(srv) {
+  srv.monitorControlValidate=validateC2S;
   const host = '127.0.0.1';
 
   // Default: game port + 1. Override with SP_ADMIN_PORT.
@@ -705,6 +708,14 @@ export async function startAdminServer(srv) {
       return;
     }
 
+    if(pathname==='/admin/room-control'){
+      const reply=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
+      if(req.method==='GET'){try{return reply(200,roomControlSnapshot(srv,{roomCode:new URL(req.url,'http://127.0.0.1').searchParams.get('roomCode')}));}catch(error){return reply(400,{error:error.message});}}
+      if(req.method!=='POST')return reply(405,{error:'method not allowed'});
+      if(req.headers.host!==`127.0.0.1:${port}`||req.headers.origin||req.headers['x-stronghold-command']!=='local-monitor-room-control'||!req.headers['content-type']?.startsWith('application/json'))return reply(403,{error:'local monitor required'});
+      try{let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>8192)return reply(413,{error:'request too large'});}return reply(200,applyRoomControl(srv,JSON.parse(body)));}
+      catch(error){return reply(400,{error:error.message});}
+    }
     if(pathname==='/admin/clear-room'&&req.method==='POST'){
       const reply=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
       if(req.headers.host!==`127.0.0.1:${port}`||req.headers.origin||req.headers['x-stronghold-command']!=='local-monitor-clear-room'||!req.headers['content-type']?.startsWith('application/json'))return reply(403,{error:'local monitor required'});

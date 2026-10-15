@@ -1,3 +1,4 @@
+import { RELICS } from '../../shared/relics.js';
 // server/match/Match.js — the match & meta engine: state machine, timers, round loop, co-op orchestration,
 // broadcasting views (DESIGN §6, §8). Rules are documented in the module headers of ./PlayerState.js, ./pool.js,
 // ./board.js, ./bondsMeta.js, ./effectsMeta.js, ./choices.js, ./waves.js, ./unite.js, ./finalAssault.js,
@@ -231,6 +232,9 @@ import { DEFAULT_FUN_RULES } from '../../shared/entertainmentRules.js';
 import { MatchFunRules } from './match/funRules.js';
 
 export class Match {
+  /** Opt-in capability used by the separate loopback-owner module. */
+  get adminControlVersion() { return 1; }
+  get adminRelicCatalog() { return RELICS; }
   /** @param {object} opts see MATCH INTERFACE above */
   constructor(opts) {
     if (!opts || !Array.isArray(opts.seats) || opts.seats.length === 0) throw new TypeError('Match: seats required');

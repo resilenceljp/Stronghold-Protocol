@@ -14,3 +14,5 @@
 .traffic-scroll{overflow:auto;max-width:100%;max-height:65vh}.traffic-scroll th,.traffic-scroll td{white-space:nowrap}.traffic-scroll details{max-width:700px}#traffic-view>.panel{margin-bottom:16px}#traffic-report>.panel{margin-bottom:16px}
 
 .room-kick-actions{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.room-kick-actions span{display:inline-flex;align-items:center;gap:6px}button.danger{border-color:#a65a5a;color:#ffaaaa}
+
+#room-control-dialog{width:min(1100px,94vw);max-height:90vh;overflow:auto;background:#14221d;color:#dcebe5;border:1px solid #6cba9e;padding:22px}#room-control-dialog::backdrop{background:#000a}.control-heading,.control-fields,.control-shop{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.control-heading{justify-content:space-between}.control-fields label{display:flex;flex-direction:column;gap:4px}.control-fields select{max-width:260px}#room-control-dialog section{border-top:1px solid #456556;margin-top:16px;padding-top:12px}#room-control-dialog pre{max-height:240px;overflow:auto}#control-error{color:#ff9292;white-space:pre-wrap}#control-pool-table{max-height:280px;overflow:auto}

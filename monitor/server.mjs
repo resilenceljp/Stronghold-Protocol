@@ -195,6 +195,14 @@ const server=http.createServer(async(req,res)=>{
     if(req.method==='GET' && route==='/api/export') {
       res.setHeader('Content-Disposition','attachment; filename="stronghold-snapshot.json"');return send(200,snapshot());
     }
+    if(route==='/api/room-control'&&['GET','POST'].includes(req.method)){
+      if(!state.admin?.monitorActions?.roomControl)return send(409,{error:'此功能需要 boot v11 与 room-control.js，请在空闲时更新并重启游戏服。'});
+      if(req.method==='GET'){const roomCode=new URL(req.url,'http://127.0.0.1').searchParams.get('roomCode');return send(200,await json(config.adminPort,'/admin/room-control?'+new URLSearchParams({roomCode})));}
+      if(req.headers.origin!==`http://${req.headers.host}`||!req.headers['content-type']?.startsWith('application/json'))return send(403,{error:'请求来源无效'});
+      let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>8192)return send(413,{error:'请求过大'});}
+      const response=await fetch(`http://127.0.0.1:${config.adminPort}/admin/room-control`,{method:'POST',headers:{'Content-Type':'application/json','X-Stronghold-Command':'local-monitor-room-control'},body,redirect:'error',signal:AbortSignal.timeout(5000)});
+      const result=await response.json();if(response.ok){event('OWNER_INTERVENTION',`${result.roomCode}: ${result.detail}`);nextProbe=0;}return send(response.status,result);
+    }
     if(req.method==='POST' && route==='/api/clear-room'){
       if(req.headers.origin!==`http://${req.headers.host}`||!req.headers['content-type']?.startsWith('application/json'))return send(403,{error:'请求来源无效'});
       if(!state.admin?.monitorActions?.clearRooms)return send(409,{error:'清除房间需要 boot v10，请在空闲时重启更新后的游戏服。'});
@@ -227,7 +235,7 @@ const server=http.createServer(async(req,res)=>{
       event('SETTINGS_CHANGED','监控设置已保存');return send(200,{ok:true});
     }
     if(req.method!=='GET')return send(405,{error:'Method not allowed'});
-    const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css'};
+    const files={'/':'index.html','/app.js':'app.js','/room-control-ui.js':'room-control-ui.js','/style.css':'style.css'};
     if(!files[route])return send(404,{error:'Not found'});
     res.writeHead(200,{'Content-Type':mime[path.extname(files[route])]});fs.createReadStream(path.join(root,'public',files[route])).pipe(res);
   } catch(e) {send(400,{error:e.message});}

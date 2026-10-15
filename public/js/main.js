@@ -180,9 +180,11 @@ function onWelcome(msg) {
   if (prevId != null && prevId !== msg.playerId) {
     // A brand-new server session (the server restarted — crashed / killed, so no room.closed arrived — or this session
     // expired on it): whatever we showed before is gone — back to the lobby cleanly and say why.
-    const notice = sessionResetNotice(prev, msg.playerId);
+    const takeover=msg.takeoverFrom===prevId;
+    const notice = takeover ? null : sessionResetNotice(prev, msg.playerId);
     backToLobby();
     if (notice) toast(t(notice), 'warn', { ttl: 7000 });
+    if(takeover)toast(t('你已接管AI席位，资金、阵容与分组已保留'),'info');
   } else if (prev.room || prev.match.public) {
     // Resumed session: the server re-pushes room/match state; drop whatever it doesn't.
     store.patch('ui', { restoring: true });

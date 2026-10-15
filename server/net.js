@@ -91,6 +91,8 @@ export class Session {
   constructor({ playerId, token, name, now = Date.now() }) {
     /** @type {string} public id, shared with other players */
     this.playerId = playerId;
+    /** @type {string | null} previous lobby/spectator id during an explicit owner AI handover */
+    this.monitorTakeoverFrom = null;
     /** @type {string} secret 128-bit hex reconnect token (only ever sent to its owner) */
     this.token = token;
     /** @type {string} sanitized nickname */
@@ -550,6 +552,8 @@ const PEEK_RID_MAX_BYTES = 2048;
 
 /** Owns every live socket; turns frames into validated messages for the handler. */
 export class Network {
+  /** Existing negotiated layout, retained across a local-owner seat handover. */
+  wireVersion(ws) { return wireVersionOf(ws); }
   /**
    * @param {{
    *   registry: SessionRegistry,
@@ -790,6 +794,7 @@ export class Network {
     try { extra = this.handler.welcomeInfo?.() ?? null; } catch (e) { this.log.error('[net] welcomeInfo crashed', e); }
     const welcome = { ...(extra && typeof extra === 'object' ? extra : null), t: 'welcome', playerId: session.playerId, token: session.token, name: session.name, serverNow: now, version: PROTOCOL_VERSION, resumed,
       emergency: this.emergency };
+    if(session.monitorTakeoverFrom){welcome.takeoverFrom=session.monitorTakeoverFrom;session.monitorTakeoverFrom=null;}
     const wire = this.opts.compactWire && msg.wire === WIRE_VERSION ? WIRE_VERSION : 0;
     if (wire) welcome.wire = wire;
     if (validRid(rid)) welcome.rid = rid;

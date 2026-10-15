@@ -48,3 +48,5 @@ C=P9–12、D=P13–16、E=P17–20（席位连续时）。AI也占座位和组�
 单人干员基准为12/14/18/16/8/5，同盟基准乘2；五人组再乘1.25。
 详见 [容量说明](PLAYER_CAPACITY.md)；实现入口为 shared/playerCapacity.js、
 server/match/pool.js、server/match/gamedata.js。
+
+fun.12：本机服主可显式修改本局组池、托管、AI席位和下一回合压力；无操作时沿用原规则。详见开发记录2026-10-15-04-room-control。
