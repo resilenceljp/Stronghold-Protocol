@@ -17,7 +17,9 @@ const settingsFile = path.join(dataDir, 'settings.json');
 const defaults = {gamePort:3000, adminPort:3001, refreshSeconds:2, timeoutSeconds:2, ownerName:'', ownerPlayerId:''};
 let config = {...defaults};
 try { config = validate({...defaults, ...JSON.parse(fs.readFileSync(settingsFile,'utf8'))}); } catch {}
-const uiPort = Number(process.env.MONITOR_UI_PORT || 3010);
+let uiPort = Number(process.env.MONITOR_UI_PORT || 3010);
+if(!Number.isInteger(uiPort)||uiPort<1||uiPort>65535)throw Error("Invalid monitor port");
+let portAttempts=0;
 const startedAt = Date.now();
 const sakuraMonitor=createSakuraMonitor({disabled:process.env.MONITOR_SAKURA_DISABLED==='1'});
 let state = {status:'CHECKING', since:startedAt, health:null, admin:null, healthAt:null, adminAt:null, error:null, adminError:null, diagnostics:null, history:[], events:[]};
@@ -193,6 +195,14 @@ const server=http.createServer(async(req,res)=>{
     if(req.method==='GET' && route==='/api/export') {
       res.setHeader('Content-Disposition','attachment; filename="stronghold-snapshot.json"');return send(200,snapshot());
     }
+    if(req.method==='POST' && route==='/api/kick'){
+      if(req.headers.origin!==`http://${req.headers.host}`||!req.headers['content-type']?.startsWith('application/json'))return send(403,{error:'请求来源无效'});
+      if(!state.admin?.monitorActions?.kick)return send(409,{error:'当前游戏不支持踢出，请安装 boot v9 并在空闲时重启游戏服。'});
+      let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>4096)return send(413,{error:'请求过大'});}
+      const response=await fetch(`http://127.0.0.1:${config.adminPort}/admin/kick`,{method:'POST',headers:{'Content-Type':'application/json','X-Stronghold-Command':'local-monitor-kick'},body,redirect:'error',signal:AbortSignal.timeout(4000)});
+      const result=await response.json();if(response.ok){event('OWNER_KICK',`踢出 ${result.name} (${result.playerId}) · ${result.roomCode||'大厅'}`);nextProbe=0;}
+      return send(response.status,result);
+    }
     if(req.method==='POST' && route==='/api/message'){
       if(req.headers.origin!==`http://${req.headers.host}`||!req.headers['content-type']?.startsWith('application/json'))return send(403,{error:'请求来源无效'});
       if(!state.admin?.monitorActions?.messages)return send(409,{error:'当前游戏启动器不支持消息，请安装新版 boot 并重启游戏服。'});
@@ -215,8 +225,23 @@ const server=http.createServer(async(req,res)=>{
   } catch(e) {send(400,{error:e.message});}
 });
 if(!fs.existsSync(path.join(dataDir,'stronghold-monitor.csv')))append('stronghold-monitor.csv','Time,ServerState,Sockets,Rooms,Matches');
-server.listen(uiPort,'127.0.0.1',()=>{fs.writeFileSync(path.join(dataDir,'monitor.pid'),String(process.pid));console.log(`Stronghold Monitor UI: http://127.0.0.1:${uiPort}`);event('MONITOR_STARTED','独立监视台启动');poll();diagnostics();});
-server.on('error',e=>{console.error(e.message);process.exit(1);});
+server.on('listening',()=>{
+  uiPort=server.address().port;
+  const ready={pid:process.pid,port:uiPort,url:`http://127.0.0.1:${uiPort}`,startedAt};
+  fs.writeFileSync(path.join(dataDir,'monitor.pid'),String(process.pid));
+  fs.writeFileSync(path.join(dataDir,`ui-ready-${process.pid}.json`),JSON.stringify(ready));
+  fs.writeFileSync(path.join(dataDir,'ui-last.json'),JSON.stringify(ready));
+  console.log(`Stronghold Monitor UI: ${ready.url}`);event('MONITOR_STARTED',`监视台启动：${ready.url}`);poll();diagnostics();
+});
+server.on('error',e=>{
+  if(['EACCES','EADDRINUSE'].includes(e.code)&&portAttempts++<40){
+    const next=portAttempts===40?0:e.code==='EACCES'&&uiPort<13010?13010:uiPort<65535?uiPort+1:1024;
+    console.log(`[port] ${uiPort} unavailable (${e.code}); trying ${next||'system-assigned port'}`);
+    uiPort=next;server.listen(uiPort,'127.0.0.1');return;
+  }
+  console.error(e.message);process.exit(1);
+});
+server.listen(uiPort,'127.0.0.1');
 const pollTimer=setInterval(()=>poll().catch(e=>{state.error=e.message;}),500);
 let diagBusy=false;const diagTimer=setInterval(async()=>{if(diagBusy)return;diagBusy=true;try{await diagnostics();}finally{diagBusy=false;}},10000);
 const sakuraTimer=setInterval(()=>{sakuraMonitor.refresh();trafficJournal.observe(state.admin,state.diagnostics,sakuraMonitor.snapshot());},1000);sakuraMonitor.refresh();

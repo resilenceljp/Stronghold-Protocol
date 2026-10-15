@@ -1,5 +1,5 @@
 // i18n-ignore-file: Independent local administrator diagnostics.
-// Read-only telemetry. Keep match/simulation state untouched; failures never block combat.
+// Telemetry plus explicit local-owner commands. Passive sampling never changes game state.
 import fs from 'node:fs';
 import path from 'node:path';
 import { installTrafficLedger } from './traffic-ledger.js';
@@ -87,7 +87,7 @@ export function installMonitorV6(srv, root) {
   };
   const timer=setInterval(()=>{const n=current(),time=Date.now(),seconds=(time-previous.time)/1000;rates={receivedBytesPerSecond:Math.max(0,(n.receivedBytes-previous.receivedBytes)/seconds),sentBytesPerSecond:Math.max(0,(n.sentBytes-previous.sentBytes)/seconds)};previous={receivedBytes:n.receivedBytes,sentBytes:n.sentBytes,time};},1000);
   timer.unref();srv.server?.once('close',()=>clearInterval(timer));
-  states.set(srv,{ledger,snapshot:()=>({monitorVersion:8,monitorCapabilities:{rosterBoundary:methods.length===2,gameTraffic:!!srv.server,detailedTraffic:true,shopDetails:true},trafficLedger:ledger.snapshot(),gameTraffic:{...current(),...rates,startedAt:bootAt,scope:'game TCP bytes; excludes tagged local monitor requests; not tunnel billing'}})});
+  states.set(srv,{ledger,snapshot:()=>({monitorVersion:9,monitorCapabilities:{rosterBoundary:methods.length===2,gameTraffic:!!srv.server,detailedTraffic:true,shopDetails:true},trafficLedger:ledger.snapshot(),gameTraffic:{...current(),...rates,startedAt:bootAt,scope:'game TCP bytes; excludes tagged local monitor requests; not tunnel billing'}})});
 }
 export function serverExtra(srv) { return states.get(srv)?.snapshot() || {}; }
 export function trafficLedgerFor(srv) { return states.get(srv)?.ledger || null; }
@@ -110,4 +110,22 @@ export function sendMonitorMessage(srv,command) {
    srv.lobby.broadcastRoom(r,{t:'m.chat',matchId:chat.matchId,...entry});
  }
  return {ok:true,recipients:recipients.length,rooms:rooms.map(r=>r.code)};
+}
+
+// Disconnect a named identified session, using the game's normal leave lifecycle.
+// This invalidates resume credentials, but does not ban a person from reconnecting as a new session.
+export function kickMonitorPlayer(srv,command) {
+ if(!command||typeof command.playerId!=='string'||command.playerId.length>128||!(command.roomCode===null||typeof command.roomCode==='string'))throw Error('invalid target');
+ const session=srv.registry.byId(command.playerId);
+ if(!session||!session.connected)throw Error('player is no longer online');
+ const roomCode=session.roomCode||null;
+ if(roomCode!==command.roomCode)throw Error('player location changed; refresh before kicking');
+ const ws=session.ws,room=roomCode?srv.lobby.rooms.get(roomCode):null;
+ if(room)srv.lobby.removeMember(room,session.playerId);
+ srv.lobby.discovery?.forget(session.playerId);srv.lobby.clearResync?.(session.playerId);
+ if(ws?.readyState===1)ws.send(JSON.stringify({t:'room.closed',reason:'kicked'}));
+ const conn=srv.network?.conns?.get(ws);
+ if(conn)conn.close(1008,'removed by server owner');else ws?.close(1008,'removed by server owner');
+ srv.registry.remove(session);
+ return {ok:true,playerId:session.playerId,name:session.name,roomCode};
 }

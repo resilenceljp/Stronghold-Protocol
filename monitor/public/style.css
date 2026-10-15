@@ -12,3 +12,5 @@
 #owner-messaging{margin:16px 0}#message-form{display:flex;gap:8px;flex-wrap:wrap}#message-text{flex:1;min-width:200px}#chat-messages{max-height:240px;overflow:auto;overflow-wrap:anywhere}#message-result{color:#a6ffcb}
 
 .traffic-scroll{overflow:auto;max-width:100%;max-height:65vh}.traffic-scroll th,.traffic-scroll td{white-space:nowrap}.traffic-scroll details{max-width:700px}#traffic-view>.panel{margin-bottom:16px}#traffic-report>.panel{margin-bottom:16px}
+
+.room-kick-actions{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.room-kick-actions span{display:inline-flex;align-items:center;gap:6px}button.danger{border-color:#a65a5a;color:#ffaaaa}

@@ -12,7 +12,7 @@
 //
 // No reconnect tokens are exposed. Local administrators can inspect game inventories.
 
-import { installMonitorV6, playerExtra, serverExtra, sendMonitorMessage, trafficLedgerFor } from './monitor-v6.js';
+import { installMonitorV6, playerExtra, serverExtra, sendMonitorMessage, kickMonitorPlayer, trafficLedgerFor } from './monitor-v6.js';
 import { readTrafficHistory } from './traffic-ledger.js';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -664,14 +664,14 @@ function adminSnapshot(srv) {
     roomOnline: onlineSessions.filter((s) => !!s.roomCode).length,
     sessions: srv.registry.size,
     ...base,
-    monitorActions:{messages:true,chat:true},
+    monitorActions:{messages:true,chat:true,kick:true},
     onlineSessions,
     roomsDetail: rooms,
     ...serverExtra(srv),
   };
 }
 
-async function startAdminServer(srv) {
+export async function startAdminServer(srv) {
   const host = '127.0.0.1';
 
   // Default: game port + 1. Override with SP_ADMIN_PORT.
@@ -704,6 +704,12 @@ async function startAdminServer(srv) {
       return;
     }
 
+    if(pathname==='/admin/kick'&&req.method==='POST'){
+      const reply=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
+      if(req.headers.host!==`127.0.0.1:${port}`||req.headers.origin||req.headers['x-stronghold-command']!=='local-monitor-kick'||!req.headers['content-type']?.startsWith('application/json'))return reply(403,{error:'local monitor required'});
+      try{let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>4096)return reply(413,{error:'request too large'});}return reply(200,kickMonitorPlayer(srv,JSON.parse(body)));}
+      catch(error){return reply(400,{error:error.message});}
+    }
     if(pathname==='/admin/message'&&req.method==='POST'){
       const reply=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
       if(req.headers.host!==`127.0.0.1:${port}`||req.headers.origin||req.headers['x-stronghold-command']!=='local-monitor-message'||!req.headers['content-type']?.startsWith('application/json'))return reply(403,{error:'local monitor required'});

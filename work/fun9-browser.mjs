@@ -1,0 +1,16 @@
+import puppeteer from 'puppeteer-core';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import net from 'node:net';
+import {once} from 'node:events';import {spawn} from 'node:child_process';
+import {startServer} from '../server/index.js';import {startAdminServer} from '../server/http/boot.js';import {TestClient} from '../test/helpers/wsClient.js';
+const pause=ms=>new Promise(r=>setTimeout(r,ms));async function port(){const s=net.createServer();s.listen(0,'127.0.0.1');await once(s,'listening');const n=s.address().port;await new Promise(r=>s.close(r));return n;}
+const srv=await startServer({port:0,host:'127.0.0.1',quiet:true});process.env.SP_ADMIN_PORT=String(await port());const admin=await startAdminServer(srv);const clients=[],dir=fs.mkdtempSync(path.join(os.tmpdir(),'monitor-ui-kick-'));
+const browser=await puppeteer.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true,args:['--no-first-run','--no-sandbox']});let child;
+try{
+ const make=async name=>{const c=await TestClient.connect(srv.url.replace('http','ws')+'/ws');const w=await c.hello(name);c.id=w.playerId;clients.push(c);return c;};const host=await make('RoomHost'),guest=await make('RoomGuest'),lobby=await make('LobbyUser');await host.request({t:'room.create',mode:'coop',difficulty:'NORMAL',capacity:4});const room=[...srv.lobby.rooms.values()][0];await guest.request({t:'room.join',code:room.code});
+ fs.writeFileSync(path.join(dir,'settings.json'),JSON.stringify({gamePort:srv.port,adminPort:admin.port,refreshSeconds:2,timeoutSeconds:2}));
+ child=spawn(process.execPath,['monitor/server.mjs'],{env:{...process.env,MONITOR_UI_PORT:String(await port()),MONITOR_DATA_DIR:dir,MONITOR_SAKURA_DISABLED:'1'},stdio:'ignore'});
+ const readyFile=path.join(dir,`ui-ready-${child.pid}.json`);for(let i=0;i<100&&!fs.existsSync(readyFile);i++)await pause(100);const ready=JSON.parse(fs.readFileSync(readyFile));for(let i=0;i<30;i++){const s=await(await fetch(ready.url+'/api/status')).json();if(s.adminFresh)break;await pause(200);}
+ const page=await browser.newPage();await page.setViewport({width:1360,height:900});page.on('dialog',dialog=>dialog.accept());await page.goto(ready.url,{waitUntil:'networkidle2'});await page.click('[data-view="users"]');const lobbySelector=`#user-list [data-kick="${lobby.id}"]`;await page.waitForSelector(lobbySelector+':not([disabled])');await page.click(lobbySelector);for(let i=0;i<40&&srv.registry.byId(lobby.id);i++)await pause(100);assert.equal(srv.registry.byId(lobby.id),null);assert.ok(srv.registry.byId(guest.id));
+ await page.click('[data-view="rooms"]');const selector=`#room-list [data-kick="${guest.id}"]`;await page.waitForSelector(selector+':not([disabled])');await page.click(selector);for(let i=0;i<40&&srv.registry.byId(guest.id);i++)await pause(100);assert.equal(srv.registry.byId(guest.id),null);assert.ok(srv.registry.byId(host.id));await page.screenshot({path:'work/fun9-monitor.png'});console.log('Browser: lobby kick and room kick removed only the selected session; owner remained online.');
+}finally{await browser.close();if(child){child.kill();await once(child,'exit');}for(const c of clients)await c.terminate().catch(()=>{});await admin.close();await srv.close();fs.rmSync(dir,{recursive:true,force:true});}
