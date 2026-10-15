@@ -108,3 +108,5 @@ fun.8：[控制台分类与准备比例](records/2026-10-14-03-fun8.md)。
 fun.9：[监视台端口与踢出](records/2026-10-15-01-monitor-actions.md)。
 
 fun.10：[部署位、分组与清除房间](records/2026-10-15-02-room-fixes.md)。
+
+fun.11：[空座位崩溃修复](records/2026-10-15-03-empty-seat.md)。

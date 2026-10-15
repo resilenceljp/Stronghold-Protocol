@@ -129,7 +129,7 @@ export function SeatCard({ seat, index, room, facts, myId, busy, onAddBot, onRem
   if (!seat) {
     const canAdd = coop && facts.isHost;
     return html`<article class="seat seat--empty" style=${`--seat-i:${index}`}>
-      <header class="seat__head"><span class="seat__no num">P${index + 1}</span>${group?html`<span class="seat__pool" style=${`color:${group.color};border-color:${group.color}`} title=${t('开局前分组会随入座变化，开局后固定')}>${group.label} · ${t('卡池组')}</span>`:null}<${MicroLabel}>SEAT ${String(index + 1).padStart(2, '0')}<//></header>
+      <header class="seat__head"><span class="seat__no num">P${index + 1}</span><${MicroLabel}>SEAT ${String(index + 1).padStart(2, '0')}<//></header>
       <div class="seat__art seat__art--empty">
         <div class="seat__radar" aria-hidden="true"></div>
         <span class="seat__wait">${t('等待博士加入')}</span>
