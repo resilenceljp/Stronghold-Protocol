@@ -304,7 +304,7 @@ export class MatchPhases {
     if (this.draftTurn(ps.playerId) !== ps.playerId) return fail(ERR.NOT_YOUR_TURN);
     if (!(g.skipsLeft[ps.playerId] > 0)) return fail(ERR.ALREADY, 'no skip left');
     if (!g.order.slice(g.idx + 1).some((pid) => !d.picks[pid] && this.manualDraftPicker(this.players.get(pid)))) {
-      return fail(ERR.BAD_TARGET, 'no manual teammate to pass to');
+      return fail(ERR.BAD_TARGET, 'nobody to pass to');
     }
     g.skipsLeft[ps.playerId]--;
     g.order.splice(g.idx, 1);

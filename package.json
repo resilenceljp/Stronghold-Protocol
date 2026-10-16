@@ -1,6 +1,6 @@
 {
   "name": "stronghold-protocol-alliance",
-  "version": "0.2.5-20p-fun.12",
+  "version": "0.3.0-20p-fun.13",
   "private": true,
   "description": "基于 sganggs 原版与 LongQianChen 20人分支的非商业扩展：娱乐控制台、无尽模拟、藏品和独立监视台",
   "license": "GPL-3.0-or-later",
@@ -25,7 +25,7 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
-    "test": "node --test",
+    "test": "node tools/test-all.mjs",
     "golden": "node tools/golden.mjs",
     "golden:update": "node tools/golden.mjs --update",
     "vendor": "node tools/vendor.mjs",
@@ -55,8 +55,10 @@
     "pixi-spine": "^4.0.6",
     "pixi.js": "^7.4.2",
     "preact": "^10.29.8",
+    "ses": "2.3.0",
     "three": "^0.186.1",
-    "ws": "^8.22.0"
+    "ws": "^8.22.0",
+    "acorn": "8.18.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

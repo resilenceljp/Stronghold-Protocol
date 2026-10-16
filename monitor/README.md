@@ -1,3 +1,5 @@
+当前版本：UI 2.3 / boot v12（适配0.3.0-20p-fun.13）。插件隔离进程中的房间可查看基础监控和流量，但暂不支持局内干预。普通多人和娱乐/无尽房间不受此限制。
+
 # UI 2.2 / boot v11 · 牌库、AI与压力
 
 本功能需要游戏fun.12及boot v11/monitor-v6.js/traffic-ledger.js/room-control.js四件一起更新。单独给旧原版替换boot不会开启不支持的局内干预。

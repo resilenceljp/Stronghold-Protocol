@@ -130,8 +130,8 @@ describe('renderer recovery after transient resource failures', { skip: !enabled
     const context = await browser.createBrowserContext(), page = await context.newPage();
     let failing = true, requests = 0;
     try {
-      // Fault injection must reach the network, even after another test warmed the browser / service-worker cache.
-      await page.setCacheEnabled(false);
+      // the imported-art service worker (public/sw.js, PR #628 — registered by an earlier page of this origin) would
+      // fetch the hashed atlas itself, past this page's request interception
       await page.setBypassServiceWorker(true);
       await page.setRequestInterception(true);
       page.on('request', req => {

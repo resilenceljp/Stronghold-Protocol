@@ -143,6 +143,12 @@ async function cachedResponse(response, entry, request) {
 }
 
 async function fetchAsset(event, path) {
+  const url = new URL(event.request.url);
+  if (/^\/(?:assets|fonts|media)\/~[0-9a-f]{16}\//.test(url.pathname) && !event.request.headers.has('range')) {
+    const imported = await caches.open('sp-imported-assets-v1');
+    const hit = await imported.match(url.origin + url.pathname);
+    if (hit) return hit;
+  }
   try {
     const pin = await getPin(event.clientId);
     // A new document has fresh application data but has not declared its asset version yet.

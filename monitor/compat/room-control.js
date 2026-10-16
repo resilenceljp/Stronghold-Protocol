@@ -6,6 +6,7 @@ function target(srv,command,write=false){
  if(!command||typeof command.roomCode!=='string')throw Error('invalid room');
  const room=srv.lobby.rooms.get(command.roomCode),m=room?.match;
  if(!room||room.disposed)throw Error('room no longer exists');
+ if(m?.hosted)throw Error('该房间运行在插件隔离进程中，当前监视台只提供观察；局内干预暂不支持插件房间。');
  if(!m&&write&&command.action!=='removeAI')throw Error('this operation requires an active match');
  if(!((m?.adminControlVersion??srv.lobby.MatchClass?.prototype?.adminControlVersion)>=1))throw Error('game build lacks room intervention support; update the entertainment fork');
  if(write&&((room.createdAt??null)!==command.createdAt||(room.matchCount??room.matchNo??0)!==command.matchNo||(m?.round??0)!==command.round))throw Error('room or round changed; refresh the panel');

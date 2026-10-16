@@ -1,4 +1,4 @@
-// Universal local monitor boot.js v8 for Stronghold-Protocol variants.
+// Universal local monitor boot.js v12 for Stronghold-Protocol variants.
 // Compatible with the current sganggs/Stronghold-Protocol and LongQianChen/Stronghold-Protocol
 // layouts that expose { lobby, network, registry } from startServer().
 //
@@ -11,6 +11,15 @@
 //   - otherwise falls back to APP_VERSION + package.json + MAX_SEATS heuristics
 //
 // No reconnect tokens are exposed. Local administrators can inspect game inventories.
+//   * first, an update package extracted over the install (UPDATE.json) is finished — old files deleted, the install
+//     verified (server/update.js); one that does not match its MANIFEST.json keeps the server from starting (exit 1);
+//   * the boot banner: release version, the Local URL, the LAN URLs when listening on every interface, the plugin
+//     studio's address with its key (server/studio/key.js: this machine and the local network only), the cloudflared
+//     command for internet play;
+//   * a server that cannot start exits 1 (with a hint when the port is in use); unhandled rejections and uncaught
+//     exceptions are logged, not fatal;
+//   * graceful shutdown on SIGINT/SIGTERM (rooms get room.closed{reason:'shutdown'}, sockets close 1001); a second
+//     signal exits at once, and the process exits anyway 5 s after the first.
 
 import { installMonitorV6, playerExtra, serverExtra, sendMonitorMessage, kickMonitorPlayer, clearMonitorRoom, trafficLedgerFor } from './monitor-v6.js';
 import { roomControlSnapshot, applyRoomControl } from './room-control.js';
@@ -68,6 +77,10 @@ export function isProcessEntry(metaUrl) {
   }
 }
 
+/**
+ * Print the boot banner of a started server.
+ * @param {{ url: string, host: string, port: number, studio?: { pageUrl: (base: string) => string | null } | null }} srv
+ */
 export function printBanner(srv) {
   console.log(`\n  卫戍协议：盟约 · Stronghold Protocol: Alliance v${APP_VERSION}`);
 
@@ -83,6 +96,9 @@ export function printBanner(srv) {
     }
   }
 
+  // the plugin studio with its key: what a change in it needs (a raw TCP tunnel looks like this machine; the key does not)
+  const studio = srv.studio?.pageUrl?.(srv.url);
+  if (studio) console.log(`  Studio:  ${studio}  (插件工作台 · plugin studio — this machine and the LAN; the link carries its key)`);
   console.log('  Internet: cloudflared tunnel --url ' + `http://localhost:${srv.port}` + '\n');
 }
 

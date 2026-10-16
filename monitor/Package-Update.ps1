@@ -7,7 +7,7 @@ Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $base = (Resolve-Path -LiteralPath $PSScriptRoot).Path
 $outputDirectory = Split-Path $base -Parent
-$zipPath = Join-Path $outputDirectory "Stronghold-Monitor-UI-v$Version-boot-v11.zip"
+$zipPath = Join-Path $outputDirectory "Stronghold-Monitor-UI-v$Version-boot-v12.zip"
 $privatePrefix = (Join-Path $base 'data') + [IO.Path]::DirectorySeparatorChar
 $stream = [IO.File]::Open($zipPath, [IO.FileMode]::Create)
 try {
@@ -22,12 +22,12 @@ try {
 } finally { $stream.Dispose() }
 New-Item -ItemType Directory -Path $CopyDirectory -Force | Out-Null
 $bootAlias = Join-Path $CopyDirectory 'boot.js'
-$bootSource = Join-Path $base 'compat\boot-universal-v11.js'
+$bootSource = Join-Path $base 'compat\boot-universal-v12.js'
 if ((Test-Path -LiteralPath $bootAlias) -and (Get-FileHash -LiteralPath $bootAlias).Hash -ne (Get-FileHash -LiteralPath $bootSource).Hash) {
     Copy-Item -LiteralPath $bootAlias -Destination "$bootAlias.backup-$(Get-Date -Format yyyyMMdd-HHmmss-fff)"
 }
 Copy-Item -LiteralPath $bootSource -Destination $bootAlias -Force
-Copy-Item -LiteralPath $bootSource -Destination (Join-Path $CopyDirectory 'boot-universal-v11.js') -Force
+Copy-Item -LiteralPath $bootSource -Destination (Join-Path $CopyDirectory 'boot-universal-v12.js') -Force
 Copy-Item -LiteralPath (Join-Path $base 'compat\monitor-v6.js') -Destination (Join-Path $CopyDirectory 'monitor-v6.js') -Force
 Copy-Item -LiteralPath (Join-Path $base 'compat\traffic-ledger.js') -Destination (Join-Path $CopyDirectory 'traffic-ledger.js') -Force
 Copy-Item -LiteralPath (Join-Path $base 'compat\room-control.js') -Destination (Join-Path $CopyDirectory 'room-control.js') -Force

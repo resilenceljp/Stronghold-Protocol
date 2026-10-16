@@ -41,6 +41,7 @@ export class MatchPlatform {
     // a spectator seat only watches (the platform routes nothing else of it)
     if (ps.spectator && (!msg || msg.t !== 'g.watch')) return fail(ERR.SPECTATOR);
     if (this.disposed || this.ended) {
+      if (msg && msg.t === 'b.rehearsalResult') return OK;
       // a battle report that crossed the match end (the last b.progress of a field) is stale: ignored, never an error
       // (DESIGN §14 — an error frame without a rid would surface as a toast in the browser)
       return this.clientCombat && msg && (msg.t === 'b.progress' || msg.t === 'b.result' || msg.t === 'b.yield') ? OK : fail(ERR.WRONG_PHASE);
@@ -95,6 +96,7 @@ export class MatchPlatform {
       this._resume();
       if (this.emergencyFrozen) this._emergencyLostAuthorities.add(playerId);
       else if (this.clientCombat) this._authorityLost(ps, 'disconnect');
+      this._rehearsalHostChanged();
       this.markPublic();
     });
   }
@@ -152,6 +154,7 @@ export class MatchPlatform {
       this._resume();
       if (this.emergencyFrozen) this._emergencyLostAuthorities.add(playerId);
       else if (this.clientCombat) this._authorityLost(ps, 'left');
+      this._rehearsalHostChanged();
       this.markPublic();
       if (!this.order.some((p) => !p.isBot && !p.left)) {
         this.finish({ victory: false, reason: 'abandoned' });
@@ -230,6 +233,7 @@ export class MatchPlatform {
     this._emergencyLostAuthorities.clear();
     if (this.runner) { try { this.runner.stop(); } catch { /* ignore */ } }
     this._stopClientCombat();
+    this._cancelRehearsal();
     for (const h of this._timers) { try { this.sched.clearTimeout(h); } catch { /* ignore */ } }
     this._timers.clear();
     if (this._pubTimer) { try { this.sched.clearTimeout(this._pubTimer); } catch { /* ignore */ } this._pubTimer = null; }
