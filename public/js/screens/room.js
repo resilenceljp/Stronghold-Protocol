@@ -1,3 +1,4 @@
+import { AiParticipation } from '../ui/aiParticipation.js';
 // Room screen (同盟等待室): configurable seat cards (avatar frame, name, ready state, AI badge, host crown),
 // host controls (difficulty picker, add/remove AI in co-op, start), invite code with copy code /
 // copy link, ready toggle and leave.
@@ -437,6 +438,7 @@ export function RoomScreen() {
         </ul>
       </aside>`}
     </main>
+    <${AiParticipation} settings=${true} />
     <${SpectatorBar} facts=${facts} myId=${me.playerId} busy=${busy} onRemove=${removeSpectator} onSit=${sit} />
 
     <footer class="room-bar">

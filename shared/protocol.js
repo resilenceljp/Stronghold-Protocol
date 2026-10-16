@@ -437,6 +437,10 @@ export const C2S = {
   'room.leave': {},
   'room.ready': { ready: isBool },
   'room.setDifficulty': { difficulty: (v) => DIFFICULTIES.includes(v) },
+  'room.aiPolicy': { policy: (v) => v === 'auto' || v === 'vote' },
+  'room.aiBandVote': { draftId: (v) => typeof v === 'string' && v.length <= 128, botId: (v) => typeof v === 'string' && v.length <= 128, bandId: (v) => v == null || (typeof v === 'string' && v.length <= 128) },
+  'room.aiRequest': { botId: (v) => typeof v === 'string' && v.length <= 128 },
+  'room.aiVote': { voteId: (v) => typeof v === 'string' && v.length <= 16, approve: (v) => typeof v === 'boolean' },
   'room.setCapacity': { capacity: (v) => ROOM_CAPACITIES.includes(v) },
   'room.setMatchmaking': { allowed: isBool },
   // Upstream compatibility: this branch exposes the manual-human-first rule as fixed on; disabling is refused.

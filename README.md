@@ -1,8 +1,8 @@
 # 卫戍协议：盟约 · Stronghold Protocol: Alliance
 
-> 来源：sganggs 原始复刻 → LongQianChen 20人分支 → resilenceljp 娱乐扩展。20p基线v0.2.4-20p.5fix，已合并原版v0.2.5，扩展版0.3.0-20p-fun.13；上游同步入口见文末。
+> 来源：sganggs 原始复刻 → LongQianChen 20人分支 → resilenceljp 娱乐扩展。20p基线v0.2.4-20p.5fix，已合并原版v0.2.5，扩展版0.3.0-20p-fun.14；上游同步入口见文末。
 
-resilenceljp 独立分支 v0.3.0-20p-fun.13：娱乐、无尽与服主监视台；原版内容基线 v0.2.5，20p扩展基线v0.2.4-20p.5fix。
+resilenceljp 独立分支 v0.3.0-20p-fun.14：娱乐、无尽与服主监视台；原版内容基线 v0.2.5，20p扩展基线v0.2.4-20p.5fix。
 
 ## 卫戍协议20人版总结
 
@@ -12,7 +12,7 @@ resilenceljp 独立分支 v0.3.0-20p-fun.13：娱乐、无尽与服主监视台�
 
 #### 联机设计
 
-- 同盟房容量扩展至 4 / 8 / 10 / 16 / 20 人
+- 同盟房容量扩展至 4 / 8 / 12 / 16 / 20 人
   - 调整房间容量时保留成员准备状态
 
 - 玩家**分组机制**，当玩家人数超过5人时，将按平均每组3-5人进行分组，并且设计了分组UI
@@ -55,7 +55,7 @@ resilenceljp 独立分支 v0.3.0-20p-fun.13：娱乐、无尽与服主监视台�
 
 《明日方舟》季节性自走棋塔防玩法「卫戍协议：盟约」的**非官方同人复刻**：浏览器即开即玩，单人或最多 20 人联机合作。
 
-![version](https://img.shields.io/badge/version-0.3.0--20p--fun.13-2ea44f)
+![version](https://img.shields.io/badge/version-0.3.0--20p--fun.14-2ea44f)
 ![version](https://img.shields.io/badge/version-0.3.0-2ea44f)
 ![license](https://img.shields.io/badge/code%20license-GPL--3.0--or--later-blue)
 ![node](https://img.shields.io/badge/node-22%20%7C%2024-339933)
@@ -318,7 +318,7 @@ node tools/perfbench.mjs --cpu 1,4,6 --profile             # 真实战斗的帧�
 
 ## English
 
-An **unofficial, non-commercial fan remake** of Arknights' seasonal auto-chess tower-defense mode *Stronghold Protocol: Alliance*, played in the browser: solo, or up to 20-player co-op (AI teammates can fill seats). Co-op rooms offer 4 / 8 / 10 / 16 / 20 seats, defaulting to 8; see [capacity rules](docs/PLAYER_CAPACITY.md). Combat is simulated in each player's browser, so a low-power PC can host.
+An **unofficial, non-commercial fan remake** of Arknights' seasonal auto-chess tower-defense mode *Stronghold Protocol: Alliance*, played in the browser: solo, or up to 20-player co-op (AI teammates can fill seats). Co-op rooms offer 4 / 8 / 12 / 16 / 20 seats, defaulting to 8; see [capacity rules](docs/PLAYER_CAPACITY.md). Combat is simulated in each player's browser, so a low-power PC can host.
 
 - **Run:** download the full bundle `Stronghold-Protocol-v<version>.zip` (~800 MB, all the art inside, the Chinese, Japanese, English, Korean and own-language operator voices, the official battlefield scenes and the official battle effects included) from [Releases](../../releases/latest) — or the lite one, `…-lite.zip` (~25 MB), which downloads the art (~720 MB) on its first start; from 0.2.1 on, `…-update.zip` holds only the files changed since the earlier 0.2.x releases: stop the server, extract it over an existing 0.2.x folder and start again (the first start deletes the files the new version dropped and verifies the install) — install Node.js 22 or 24, then double-click `scripts\start-windows.bat` (Windows) or run `./scripts/start.sh` (macOS / Linux) and open <http://localhost:3000>. From source: `npm install && npm run setup && npm start` (setup downloads ~720 MB of art from public mirrors, the emotes and the how-to-play pages included; the official 3D board, some official HUD icons, two enemy models and 39 summon models are extracted from a local Arknights client — without one the game uses the 2D board and look-alike stand-ins (the summons show their avatars), and a server can copy `public/assets/local/` and `data/local-assets.json` from the full bundle of the same version).
 - **Languages:** Chinese (the default), English, 日本語, 한국어 and 繁體中文 — switch on the title screen or in Settings. Game texts come from the official clients; the Japanese, Korean and Traditional Chinese interface strings are machine translations (corrections welcome: [docs/I18N.md](docs/I18N.md)).
@@ -340,7 +340,7 @@ An **unofficial, non-commercial fan remake** of Arknights' seasonal auto-chess t
 - 原始复刻：[sganggs/Stronghold-Protocol](https://github.com/sganggs/Stronghold-Protocol)。
 - 20人核心：[LongQianChen 的 feat/IncreasePlayerCapacity 分支](https://github.com/LongQianChen/Stronghold-Protocol/tree/feat/IncreasePlayerCapacity)，保留分组卡池、20人和既有修复。
 - 本地扩展：娱乐控制台、无尽模拟、藏品、可选规则和 monitor 监视台。
-- 当前上游基础版本 **0.2.4**，扩展版本 **0.3.0-20p-fun.13**；基线 SHA 见 `UPSTREAM.json`。之前独立编号0.2.5改用来源明确的版本号。
+- 当前上游基础版本 **0.2.4**，扩展版本 **0.3.0-20p-fun.14**；基线 SHA 见 `UPSTREAM.json`。之前独立编号0.2.5改用来源明确的版本号。
 
 GitHub Actions 的「同步原版20p到独立分支」可手动运行，也会每日检查。原样保存到 `upstream/20p`，每个新提交保留 `upstream20/v版本-SHA` 快照。不会自动覆盖娱乐分支或重启服务器。
 本地 `npm run sync:upstream`；需要推送同步分支时 `npm run sync:upstream -- --push`。人工审查并合并上游后，再 `npm run sync:upstream -- --apply-version` 更新基线版本。扩展修订号独立递增。

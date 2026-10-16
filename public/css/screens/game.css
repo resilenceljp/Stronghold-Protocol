@@ -849,3 +849,12 @@
 .gm.is-pen .gm__bonds .bstrip-scroll *, .gm.has-sp .gm__bonds .bstrip-scroll * { pointer-events: none; }
 
 .gm__bond-list > .tt-anchor { display: block; max-width: 100%; }
+
+.ai-policy { display:flex; flex-wrap:wrap; align-items:center; gap:.1rem; padding:.1rem; }
+.ai-policy button { padding:.08rem .16rem; background:#12231e; color:#bed3ca; border:1px solid #4a7063; }
+.ai-policy button[aria-pressed="true"] { background:#57d6b2; color:#06251b; }
+.ai-vote { display:flex; flex-wrap:wrap; gap:.12rem; align-items:center; margin:.15rem 0; padding:.1rem; border:1px solid #426055; }
+.ai-vote select { max-width:100%; background:#152920; color:#effff8; padding:.1rem; }
+.ai-participation-entry { flex:none; }
+
+.gm.has-chat .gm__corner > .ai-participation-entry { grid-column:1 / -1; }

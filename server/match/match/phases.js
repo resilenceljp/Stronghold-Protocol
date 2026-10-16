@@ -195,6 +195,8 @@ export class MatchPhases {
     const d = this.draft;
     const g = group;
     if (!d || !g || g.done) return;
+    const ps = this.players.get(g.order[g.idx]);
+    if (ps && this.aiBandCoordinator?.(ps, g)) return;
     const token = g.token;
     this.later(0, () => {
       if (this.phase !== PHASE.BAND_DRAFT || this.draft !== d || token !== g.token) return;
@@ -283,6 +285,7 @@ export class MatchPhases {
     if (!d || !g || !ps.alive || ps.left || d.picks[ps.playerId]) return;
     let id = this.gd.bandAllowed(bandId) ? bandId : this.defaultBand(ps.playerId);
     if (dedupe && this.bandTaken(id, ps.playerId)) id = this.gd.bandIds().find((b) => !this.bandTaken(b, ps.playerId)) || id;
+    this.aiBandCompleted?.(ps.playerId);
     d.picks[ps.playerId] = id;
     g.picks[ps.playerId] = id;
     ps.bandId = id;

@@ -816,7 +816,7 @@ export class Network {
     try { extra = this.handler.welcomeInfo?.() ?? null; } catch (e) { this.log.error('[net] welcomeInfo crashed', e); }
     const welcome = { ...(extra && typeof extra === 'object' ? extra : null), t: 'welcome', playerId: session.playerId, token: session.token, name: session.name, serverNow: now, version: PROTOCOL_VERSION, resumed,
       emergency: this.emergency };
-    if(session.monitorTakeoverFrom){welcome.takeoverFrom=session.monitorTakeoverFrom;session.monitorTakeoverFrom=null;}
+    if(session.aiTakeoverFrom || session.monitorTakeoverFrom){welcome.takeoverFrom=session.aiTakeoverFrom || session.monitorTakeoverFrom;session.aiTakeoverFrom=null;session.monitorTakeoverFrom=null;}
     const wire = this.opts.compactWire && msg.wire === WIRE_VERSION ? WIRE_VERSION : 0;
     if (wire) welcome.wire = wire;
     if (validRid(rid)) welcome.rid = rid;

@@ -1,3 +1,4 @@
+import { AiParticipation } from '../ui/aiParticipation.js';
 // Band draft — BAND_DRAFT "2/2 选择策略" (research 06 §4.2, D1): left = draft order (avatar, name, state:
 // … waiting / ⌛ 决策中 / chosen band ✓), each group's current picker highlighted; centre = grid of every band allowed
 // for the mode type (icon, name, LP); a band a teammate already picked carries the picker's avatar and is marked
@@ -285,6 +286,7 @@ export function BandDraftScreen() {
       total=${clock ? clock.total : null} onExit=${() => setExit(true)} />
     <main class="draft__main">
       <aside class="draft-order">
+        <${AiParticipation} bandsOnly=${true} />
         <h3 class="brief-h"><span>${solo ? t('独立模拟') : t('决策顺序')}</span><${MicroLabel}>${solo ? 'FREE PICK' : 'MANUAL FIRST'}</${MicroLabel}></h3>
         <div class="draft-order__list" ref=${orderRef}>
         ${orderGroups.map((group) => html`<div key=${group.id || 'all'} class=${cx('draft-order__group', grouped && 'draft-order__group--framed')}

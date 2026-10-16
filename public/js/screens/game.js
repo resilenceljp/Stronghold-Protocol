@@ -1,3 +1,4 @@
+import { AiParticipation } from '../ui/aiParticipation.js';
 // Game screen — every in-match screen, dispatched by m.public.phase (DESIGN §10):
 //   INFO_CHECK → Briefing (screens/briefing.js), BAND_DRAFT → Band draft (screens/bandDraft.js),
 //   RESULT / m.result → Result (screens/result.js), everything else → MatchScreen below.
@@ -1660,6 +1661,7 @@ function MatchScreen() {
         <button type="button" class="gm__gear" aria-label=${t('设置')} title=${t('设置')} onClick=${() => setSettingsOpen(true)}><${GIcon} name="gear" /></button>
         <button type="button" class="gm__gear gm__guide" aria-label=${t('玩法说明')} title=${t('玩法说明')} onClick=${() => openGuide(0)}><${Icon} name="book" /></button>
         <${FullscreenButton} class="gm__gear gm__fs" />
+        <${AiParticipation} />
         <${EntertainmentConsole} priv=${priv} editable=${editable && !spectator} />
       </div>
 

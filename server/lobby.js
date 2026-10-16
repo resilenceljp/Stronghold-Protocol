@@ -1,10 +1,12 @@
+import { beginAiBandVote, aiBandAction } from './aiBands.js';
+import { aiTakeover, resetAiTakeover } from './aiTakeover.js';
 // server/lobby.js — rooms, seats, host, AI seats, ready/start, reconnect, and room → Match wiring
 // (DESIGN §2, §6.1 LOBBY, §8.1). Implements the handler interface consumed by server/net.js.
 //
 // Rules (the choices where DESIGN is silent are marked ▸):
 //   * Rooms are keyed by 4-letter codes from an unambiguous alphabet (no I/O, letters only). Join codes are
 //     case-insensitive.
-//   * 'solo' rooms hold exactly one human and never bots. 'coop' rooms offer 4 / 8 / 10 / 16 / 20 seats (humans + AI bots).
+//   * 'solo' rooms hold exactly one human and never bots. 'coop' rooms offer 4 / 8 / 12 / 16 / 20 seats (humans + AI bots).
 //     Humans and bots take the lowest free seat index. In a waiting room the host occupies seat 0;
 //     host transfer/migration swaps only the host and seat 0. Running matches retain their fixed seats.
 //   * ▸ Being in a LOBBY room and sending room.create / room.join implicitly leaves it. While your room is
@@ -320,6 +322,7 @@ export class Room {
   toState() {
     return {
       t: 'room.state',
+      aiTakeoverVotes: this.aiTakeoverVotes || [], aiBandPolicy: this.aiBandPolicy || 'auto', aiBandVotes: this.aiBandVotes || [],
       code: this.code,
       hostId: this.hostId,
       maxAiPerRoom: this.maxAiPerRoom,
@@ -667,6 +670,10 @@ export class Lobby {
       case 'room.setCapacity': return this.setCapacity(session, msg);
       case 'room.setMatchmaking': return this.setMatchmaking(session, msg);
       case 'room.setAiPicksLast': return this.setAiPicksLast(session, msg);
+      case 'room.aiPolicy':
+      case 'room.aiBandVote': return aiBandAction(this, session, msg);
+      case 'room.aiRequest':
+      case 'room.aiVote': return aiTakeover(this, session, msg);
       case 'room.addBot': return this.addBot(session);
       case 'room.removeBot': return this.removeBot(session, msg);
       case 'room.kick': return this.kick(session, msg);
@@ -1478,6 +1485,10 @@ export class Lobby {
       };
       // a room with gameplay plugins plays in its content set's match host; every other room here, as always
       const match = modded && this.hosts ? this.hosts.create(room.content.cs, opts) : new this.MatchClass(opts);
+      if (!match.hosted) {
+        match.aiBandCoordinator = (ps, group) => beginAiBandVote(this, room, ps, group);
+        match.aiBandCompleted = id => { if (room.aiBandPending?.delete(id)) { room.aiBandVotes = (room.aiBandVotes || []).filter(v => v.botId !== id); this.broadcastState(room); } };
+      }
       ctx.match = match;
       room.match = match;
       room.matchCtx = ctx;
@@ -1490,7 +1501,10 @@ export class Lobby {
       if (room.matchCtx === ctx && !ctx.chat.closed) this.broadcastRoom(room, ctx.chat.snapshot());
     } catch (e) {
       this.log.error(`[lobby] ${room.code} match failed to start`, e);
-      if (room.matchCtx === ctx) { room.match = null; room.matchCtx = null; room.matchKey = null; }
+      if (room.matchCtx === ctx) {
+        resetAiTakeover(room);
+        room.match = null; room.matchCtx = null; room.matchKey = null;
+      }
       this.disposeMatchCtx(ctx);
       this.broadcastState(room);
       // the match hosts refuse one content set more than they run (PLUGIN_BUSY: server/match/host/index.js)
@@ -1505,6 +1519,8 @@ export class Lobby {
     ctx.ended = true;
     ctx.chat.clear();
     room.lastSummary = summary ?? null;
+    room.aiBandVotes = []; room.aiBandPending?.clear();
+    resetAiTakeover(room);
     room.match = null;
     room.matchCtx = null;
     room.matchKey = null;
@@ -1899,6 +1915,7 @@ export class Lobby {
     if (this.rooms.get(room.code) === room) { this.trustedRuntime?.event('roomClosed',{room:room.toState()}); this.rooms.delete(room.code); }
     this.discovery.changed();
     const ctx = room.matchCtx;
+    resetAiTakeover(room);
     room.match = null;
     room.matchCtx = null;
     room.matchKey = null;
