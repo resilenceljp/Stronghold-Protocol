@@ -45,7 +45,7 @@
 .gm__corner .entertainment-console-entry{position:static;flex:none}.gm__corner{flex-wrap:wrap;max-width:calc(100% - .48rem)}.console-warning{color:#ff7979;font-weight:bold}
 
 .gm__bonds .bstrip-scroll{display:flex;align-items:center;min-width:0;max-width:100%;pointer-events:auto;gap:.04rem}
-.gm__bonds .bstrip-scroll>.bstrip{overflow-x:auto;overflow-y:hidden;min-width:0;scroll-behavior:smooth;touch-action:pan-x;pointer-events:auto;padding:.08rem 0;scrollbar-width:thin}
+.gm__bonds .bstrip-scroll>.bstrip{overflow-x:auto;overflow-y:hidden;min-width:0;touch-action:pan-x;pointer-events:auto;padding:.08rem 0;scrollbar-width:thin}
 .gm__bonds .bstrip-scroll .bslot{flex-shrink:0}
 .bstrip-scroll>button{flex-shrink:0;background:#15221fcc;color:#a5edda;border:1px solid #53766a;cursor:pointer;font-size:.24rem;padding:.08rem}
 

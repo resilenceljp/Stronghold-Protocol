@@ -7,9 +7,8 @@
 
 import { PHASE, ERR } from '../../../shared/constants.js';
 import { buildNormalWave, buildBossWave } from '../waves.js';
-import { pairPlayers } from '../finalAssault.js';
+import { pairPlayers, bossPairSalt } from '../finalAssault.js';
 import { createRng, deriveSeed } from '../../sim/rng.js';
-import { botPickBand } from '../bot.js';
 import { OK, fail, DELAYS, BAND_TURN_SECONDS } from './common.js';
 
 /** Single-pool diagnostics and old fixtures keep their readable/writable first-group fields. */
@@ -128,6 +127,7 @@ export class MatchPhases {
   enterBandDraft() {
     if (this.phase !== PHASE.INFO_CHECK) return;
     this.phase = PHASE.BAND_DRAFT;
+    this._rerollStartAt.clear();
     const skips = this.isSolo ? 0 : this.gd.bandDraft.skipsPerPlayer;
     const untimed = this.soloUntimed;
     const groups = this.makeDraftGroups();
@@ -179,7 +179,7 @@ export class MatchPhases {
       const ms = this.bandTurnMs();
       g.turnDeadline = this.sched.gameNow() + ms;
       g.timer = this.later(ms, () => {
-        if (this.phase !== PHASE.BAND_DRAFT || this.draft !== d || token !== g.token) return;
+        if (this.phase !== PHASE.BAND_DRAFT || this.draft !== d || token !== g.token || (this.test && this.testTimers === false)) return;
         const pid = this.draftTurn(g.playerIds[0]);
         if (pid) this._applyBand(this.players.get(pid), this.timeoutBand(pid));
       });
@@ -199,14 +199,20 @@ export class MatchPhases {
     if (ps && this.aiBandCoordinator?.(ps, g)) return;
     const token = g.token;
     this.later(0, () => {
-      if (this.phase !== PHASE.BAND_DRAFT || this.draft !== d || token !== g.token) return;
+      if (this.phase !== PHASE.BAND_DRAFT || this.draft !== d || token !== g.token || (this.test && this.testTimers === false)) return;
       const ps = this.players.get(g.order[g.idx]);
       if (!ps || !ps.botControlled) return;
-      // a strategy a teammate already took is not selectable (队友已选): the bot re-draws, else the first free one
-      let id = botPickBand(this, ps);
-      for (let k = 0; k < 8 && this.bandTaken(id, ps.playerId); k++) id = botPickBand(this, ps);
-      if (this.bandTaken(id, ps.playerId)) id = this.gd.bandIds().find((b) => !this.bandTaken(b, ps.playerId)) || id;
-      this._applyBand(ps, id, { dedupe: true });
+      const fallback = () => {
+        // a strategy a teammate already took is not selectable (队友已选): the bot re-draws, else the first free one
+        let id = this.bot.pickBand(this, ps);
+        for (let k = 0; k < 8 && this.bandTaken(id, ps.playerId); k++) id = this.bot.pickBand(this, ps);
+        if (this.bandTaken(id, ps.playerId)) id = this.gd.bandIds().find((b) => !this.bandTaken(b, ps.playerId)) || id;
+        this._applyBand(ps, id, { dedupe: true });
+      };
+      if (this.bot.decide?.(this, ps, { kind: 'band',
+        valid: () => this.phase === PHASE.BAND_DRAFT && token === this._turnToken,
+        complete: () => token !== this._turnToken || !!this.draft?.picks[ps.playerId], fallback })) return;
+      fallback();
     });
   }
 
@@ -338,11 +344,29 @@ export class MatchPhases {
 
   enterBattleCheck() {
     this.phase = PHASE.BATTLE_CHECK;
-    this.setDeadline(this.gd.timer('battleCheck'), () => this.startRound(1), { silent: this.soloUntimed });
+    this.setDeadline(this.gd.timer('battleCheck'), () => this.afterBattleCheck(), { silent: this.soloUntimed });
     this.markPublic();
   }
 
-  startRound(r) {
+  /**
+   * BATTLE_CHECK is over: R1 is about to begin. A plugin window declared at `battleCheck` for this round opens here —
+   * "before the round begins", the host's own step first (docs/PLUGINS.md §10b) — and holds R1 back until it closes; a
+   * content set without a window continues exactly as before (`openOfferWindow` returns before it touches anything).
+   */
+  afterBattleCheck() {
+    this.startRound(1);
+  }
+
+  startRound(r, afterStart = null) {
+    // Every round, including boss rounds. [ASSUMED] Expire nonblocking windows at the next round.
+    for (const w of this.offerWin) this._closeOffer(w);
+    this.offersDispose(); // A test-console round jump must discard the older continuation too.
+    const step = () => { this._startRoundAfterOffers(r); afterStart?.(); };
+    if (this.openOfferWindow('battleCheck', r) !== 'open') { step(); return; }
+    this._offerResume = step;
+  }
+
+  _startRoundAfterOffers(r) {
     if(this.pendingAdminPressure!=null){this.gd.adminPressure=this.pendingAdminPressure;this.pendingAdminPressure=null;}
     this.phase = PHASE.ROUND_START;
     this.round = r;
@@ -354,6 +378,7 @@ export class MatchPhases {
     this.sp = null;
     this.wave = null;
     this.bossWaves = null;
+    this.bossPairsRound = null;
     const alive = this.alivePlayers();
     // the round's enemies (shared composition, generated now so the prep preview is exact). Planned BEFORE the players'
     // round start: its recompute() checks the board on the field the player deploys on this round (deployFieldOf reads
@@ -380,13 +405,21 @@ export class MatchPhases {
     for (const ps of this._viewers()) this._followScout(ps);
   }
 
-  /** Stable per-match pairs and their templates, generated before the prep preview / board validation. */
+  /** The round's pairs and their templates, generated before the prep preview / board validation. */
   _planBossWaves() {
     const r = this.round;
-    const bossId = r === this.gd.hiddenRound && r !== this.gd.bossRound ? this.hiddenBossId : this.bossId;
-    // Pairing uses an independent seeded draw, consuming no shop, wave, draft or battle randomness.
-    const groups = pairPlayers(this.alivePlayers(), createRng(deriveSeed(this.seed, 'boss-pairs')), this.bossPairs);
+    const hidden = r === this.gd.hiddenRound && r !== this.gd.bossRound;
+    const bossId = hidden ? this.hiddenBossId : this.bossId;
+    // Pairing uses an independent seeded draw, consuming no shop, wave, draft or battle randomness. The Hidden Core
+    // draws its pairs and sides anew (GitHub #845: the official R15 of BV1VCXyBjEN1 p1 pairs 1-2 / 3-4 after an R14 of
+    // 1-4 / 2-3; DESIGN §35.27, superseding §30.12's kept partners) from a stream of its own, so the Final Assault's
+    // draw is unchanged; a player who changes half keeps the board (bossFieldPlacement mirrors it, the halves' deploy
+    // maps are identical). Only the round's first plan draws anew: a re-plan after a departure in its round start, 机变
+    // draft or prep (platform.js _quit) keeps the intact pairs and re-pairs the orphan, as the Final Assault does.
+    const fresh = hidden && this.bossPairsRound !== r;
+    const groups = pairPlayers(this.alivePlayers(), createRng(deriveSeed(this.seed, bossPairSalt(this.gd, r))), fresh ? null : this.bossPairs);
     this.bossPairs = groups.map(g => g.map(p => p.playerId));
+    this.bossPairsRound = r;
     this.bossWaves = groups.map((g) => ({
       players: g.map((p) => p.playerId),
       wave: buildBossWave(this.gd, this.rngWaves, this.factions, r, { bossId, solo: this.isSolo || g.length === 1 }),
@@ -395,6 +428,14 @@ export class MatchPhases {
 
   afterRoundStart() {
     if (this.gd.spRounds().includes(this.round)) this.enterSpDraft();
-    else this.enterPrep();
+    else this.beforePrepOffers();
+  }
+
+  beforePrepOffers() {
+    // The official round start and its draw/draft finish first; only entering prep waits.
+    this.sp = null;
+    const step = () => this.enterPrep();
+    if (this.openOfferWindow('prep', this.round) !== 'open') { step(); return; }
+    this._offerResume = step;
   }
 }

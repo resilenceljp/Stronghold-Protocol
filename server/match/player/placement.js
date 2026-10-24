@@ -4,6 +4,7 @@
 // Installed on PlayerState.prototype by server/match/PlayerState.js (a method container: never instantiated; `this` is
 // the player state).
 
+import { hasTraitFor } from '../operatorTraits.js';
 import { ERR } from '../../../shared/constants.js';
 import { msg, dn } from '../../../shared/i18n.js';
 import { tileKey, parseKey, inField, canPlace, placeClass, freeSlot, pieceDir, parseDir, ownerRangeKeys } from '../board.js';
@@ -181,6 +182,7 @@ export class PlayerPlacement {
       return OK;
     }
     // hand/temp → board
+    if (occ && this.gd.config.version?.rules?.benchFullSwap === false && freeSlot(this.hand) < 0) return fail(ERR.HAND_FULL);
     if (!occ || occ.kind !== 'chess') {
       if (this.deployCount >= this.deployCap) return fail(ERR.BOARD_FULL);
     }
@@ -198,6 +200,7 @@ export class PlayerPlacement {
     this.board.set(key, piece);
     this.grantTokensFor(piece);
     this.recompute();
+    if (hasTraitFor(this.gd, this.gd.chess(piece.id)?.charId)) this.m.dispatch(this, 'onTraitDeploy', { piece });
     return OK;
   }
 
@@ -307,6 +310,7 @@ export class PlayerPlacement {
         this.removeTokensOf(piece.uid);
         this.hand[idx] = piece;
       } else if (occ.kind === 'chess') {
+        if (this.gd.config.version?.rules?.benchFullSwap === false && freeSlot(this.hand) < 0) return fail(ERR.HAND_FULL);
         const [sr, sc] = parseKey(loc.key);
         if (!this._legal(occ, sr, sc)) return fail(ERR.BAD_TILE);
         // the bench card takes the withdrawn piece's tile with that tile's facing

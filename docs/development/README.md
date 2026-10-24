@@ -114,3 +114,5 @@ fun.10：[部署位、分组与清除房间](records/2026-10-15-02-room-fixes.md
 fun.11：[空座位崩溃修复](records/2026-10-15-03-empty-seat.md)。
 
 fun.12：[本局牌库、AI与压力干预](records/2026-10-15-04-room-control.md)。
+
+最新合并记录：[原版0.3.2 / fun15](records/2026-10-25-01-upstream032.md)。
