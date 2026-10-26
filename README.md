@@ -1,10 +1,10 @@
 # 卫戍协议：盟约 · Stronghold Protocol: Alliance
 
-> 来源：sganggs 原始复刻 → LongQianChen 20人分支 → resilenceljp 娱乐扩展。20p基线v0.2.4-20p.5fix，已合并原版v0.3.2，扩展版0.3.2-20p-fun.15；上游同步入口见文末。
+> 来源：sganggs 原始复刻 → LongQianChen 20人分支 → resilenceljp 娱乐扩展。20p基线v0.2.4-20p.5fix，已合并原版v0.3.3，扩展版0.3.3-20p-fun.16；上游同步入口见文末。
 
-![version](https://img.shields.io/badge/version-0.3.2-2ea44f)
+![version](https://img.shields.io/badge/version-0.3.3-2ea44f)
 
-resilenceljp 独立分支 v0.3.2-20p-fun.15：娱乐、无尽与服主监视台；原版内容基线 v0.3.2，20p扩展基线v0.2.4-20p.5fix。
+resilenceljp 独立分支 v0.3.3-20p-fun.16：娱乐、无尽与服主监视台；原版内容基线 v0.3.3，20p扩展基线v0.2.4-20p.5fix。
 
 ## 卫戍协议20人版总结
 
@@ -57,7 +57,7 @@ resilenceljp 独立分支 v0.3.2-20p-fun.15：娱乐、无尽与服主监视台�
 
 《明日方舟》季节性自走棋塔防玩法「卫戍协议：盟约」的**非官方同人复刻**：浏览器即开即玩，单人或最多 20 人联机合作。
 
-![version](https://img.shields.io/badge/version-0.3.2--20p--fun.15-2ea44f)
+![version](https://img.shields.io/badge/version-0.3.3--20p--fun.16-2ea44f)
 ![version](https://img.shields.io/badge/version-0.3.0-2ea44f)
 ![license](https://img.shields.io/badge/code%20license-GPL--3.0--or--later-blue)
 ![node](https://img.shields.io/badge/node-22%20%7C%2024-339933)
@@ -95,7 +95,7 @@ English summary: [below](#english).
 
 - **独立模拟**（单人）与**同盟模拟**（最多 20 人**合作**，没有 PvP；空位可以加 AI 队友）。
 - 服务器是一个 Node.js 程序，**战斗在各玩家的浏览器里模拟**（和官方一样），服务器只管经济与回合，一台低功耗小主机就能开服。
-- 当前版本 0.3.2：默认提供四个官方版本切换，补齐早期版本规则、干员技能与头像／模型／特效；重做战斗伤判结算并修复首领技能节奏，更新大厅、等待室、调配与开场界面，增加界面大小、观战者接替 AI 等设置，并补齐社区反馈、插件与开服稳定性修复，详见 [CHANGELOG.md](CHANGELOG.md)。仍有少数规则按推断实现，与官方不一致的地方欢迎在 Issue 里反馈。
+- 当前版本 0.3.3：0.3.2 的热修复，修正第一期商店装备空栏与跨版本装备图标缓存；第一期上／下半也允许满整备区互换（维护者决定的有意偏差）。默认仍提供四个官方版本，详见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 功能一览
 

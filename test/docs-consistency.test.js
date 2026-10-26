@@ -886,7 +886,7 @@ test('干员战斗语音 (DESIGN §21.30): the manifest data, the official prior
   // one operator carries every slot a battle can play — and none of the prep-only ones (plan.mjs VOICE_BATTLE_SLOTS):
   // 干员报到 / 编入队伍 / 任命队长 are never requested by the client, so planning them only made every `npm run assets`
   // download 360 files (19.3 MB, one per operator and slot) nobody hears. `--voice-all` brings the complete set back.
-  const slots = ['start', 'faceEnemy', 'select', 'place', 'skill1', 'skill2', 'skill3', 'skill4', 'resultFour', 'resultThree', 'resultTwo', 'resultLose'];
+  const slots = ['start', 'faceEnemy', 'select', 'place', 'resultFour', 'resultThree', 'resultTwo', 'resultLose'];
   const prepOnly = ['gacha', 'squad', 'squadFirst'];
   const lines = [];
   const walk = (x) => {
@@ -896,6 +896,8 @@ test('干员战斗语音 (DESIGN §21.30): the manifest data, the official prior
   };
   for (const id of charIds) {
     for (const s of slots) assert.ok(voice[id][s], `${id}.${s}`);
+    // Official operators have varying skill-line counts; a missing recording stays absent in the asset plan.
+    assert.ok(['skill1', 'skill2', 'skill3', 'skill4'].some(s => voice[id][s]), `${id} has skill voice`);
     for (const s of prepOnly) assert.equal(voice[id][s], undefined, `${id}.${s} is not planned by default`);
     walk(voice[id]);
   }

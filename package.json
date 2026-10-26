@@ -1,6 +1,6 @@
 {
   "name": "stronghold-protocol-alliance",
-  "version": "0.3.2-20p-fun.15",
+  "version": "0.3.3-20p-fun.16",
   "private": true,
   "description": "基于 sganggs 原版与 LongQianChen 20人分支的非商业扩展：娱乐控制台、无尽模拟、藏品和独立监视台",
   "license": "GPL-3.0-or-later",
