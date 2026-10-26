@@ -1,8 +1,6 @@
 name: 同步原版20p到独立分支
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 6 * * *'
 permissions:
   contents: write
 concurrency:
@@ -27,8 +25,8 @@ jobs:
             git merge-base --is-ancestor "origin/$target" "$source_sha"
           fi
           git push origin "$source_sha:refs/heads/$target"
-          snapshot="upstream20/v$version-${source_sha:0:12}"
-          if ! git ls-remote --exit-code --heads origin "$snapshot" >/dev/null 2>&1; then
-            git push origin "$source_sha:refs/heads/$snapshot"
+          snapshot="source-20p/v$version-${source_sha:0:12}"
+          if ! git ls-remote --exit-code --tags origin "$snapshot" >/dev/null 2>&1; then
+            git push origin "$source_sha:refs/tags/$snapshot"
           fi
           printf 'Upstream version: %s\nCommit: %s\nTracking: %s\nEntertainment branch is unchanged.\n' "$version" "$source_sha" "$target" >> "$GITHUB_STEP_SUMMARY"

@@ -30,8 +30,8 @@ jobs:
             git merge-base --is-ancestor "origin/$target" "$sha"
           fi
           git push origin "$sha:refs/heads/$target"
-          snapshot="upstream-original/$tag-${sha:0:12}"
-          if ! git ls-remote --exit-code --heads origin "$snapshot" >/dev/null 2>&1; then
-            git push origin "$sha:refs/heads/$snapshot"
+          snapshot="source-original/$tag-${sha:0:12}"
+          if ! git ls-remote --exit-code --tags origin "$snapshot" >/dev/null 2>&1; then
+            git push origin "$sha:refs/tags/$snapshot"
           fi
           printf 'Original release: %s\nCommit: %s\nEntertainment is unchanged; merge and test before changing its version.\n' "$tag" "$sha" >> "$GITHUB_STEP_SUMMARY"

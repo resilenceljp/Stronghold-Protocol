@@ -1,3 +1,5 @@
+当前维护约定：[分支与同步](BRANCHES.md)。master 为稳定版，develop 用于集成，upstream/original 为纯原版镜像；控制台固定检查入口 `npm run check:fork`。
+
 当前整合任务：[DEV-20261026-02](records/2026-10-26-02-upstream033.md)，合并原版0.3.3并保留20人DIY；以下旧基线保留作为历史。
 
 当前整合任务：[DEV-20261016-01](records/2026-10-16-01-upstream030.md)，合并v0.3.0并保留多人；该任务验证/部署状态见记录，以下旧基线保留作为历史。

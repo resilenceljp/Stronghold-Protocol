@@ -45,7 +45,8 @@
     "package:lite": "node tools/package.mjs --lite",
     "assets:pack": "node tools/asset-cache-pack.mjs",
     "monitor": "node monitor/server.mjs",
-    "sync:upstream": "node tools/sync-upstream-20p.mjs"
+    "sync:upstream": "node tools/sync-upstream-20p.mjs",
+    "check:fork": "node --test --test-concurrency=2 test/fork/*.test.js test/lobby-capacity.test.js test/ai-takeover.test.js test/runtime-http.test.js test/announcement-notices-monitor.test.js"
   },
   "engines": {
     "node": ">=22"

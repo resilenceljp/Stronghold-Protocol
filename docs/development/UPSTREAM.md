@@ -1,3 +1,5 @@
+当前同步流程以[分支与同步约定](BRANCHES.md)为准；下文旧仓库/分支说明保留作历史。当前用户授权在验证后更新 master。
+
 # 上游同步与素材更新
 
 作者仓库在本地 `package.json` 中登记为 `sganggs/Stronghold-Protocol`；当前 `origin` 指向用户 fork `LongQianChen/Stronghold-Protocol`。两个来源不能混淆。本文件给出流程，不表示已经联网拉取、推送或更新线上服务器。

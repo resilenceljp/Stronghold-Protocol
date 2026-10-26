@@ -1,6 +1,6 @@
 # 卫戍协议：盟约 · Stronghold Protocol: Alliance
 
-> 来源：sganggs 原始复刻 → LongQianChen 20人分支 → resilenceljp 娱乐扩展。20p基线v0.2.4-20p.5fix，已合并原版v0.3.3，扩展版0.3.3-20p-fun.16；上游同步入口见文末。
+> 来源：sganggs 原始复刻 → LongQianChen 20人分支 → resilenceljp 娱乐扩展。20p基线v0.2.4-20p.5fix，已合并原版v0.3.3，扩展版0.3.3-20p-fun.16；上游同步入口见文末。稳定版使用 `master`，日常集成使用 `develop`；[分支与控制台维护说明](docs/development/BRANCHES.md)。
 
 ![version](https://img.shields.io/badge/version-0.3.3-2ea44f)
 

@@ -10,14 +10,14 @@ run(['rev-parse','--show-toplevel'],true); // This maintenance tool requires a G
 run(['fetch','https://github.com/LongQianChen/Stronghold-Protocol.git','feat/IncreasePlayerCapacity']);
 const sha=run(['rev-parse','FETCH_HEAD'],true);
 const base=JSON.parse(run(['show',`${sha}:package.json`],true)).version;
-const mirror='upstream/20p',snapshot=`upstream20/v${base}-${sha.slice(0,12)}`;
+const mirror='upstream/20p',snapshot=`source-20p/v${base}-${sha.slice(0,12)}`;
 // An existing tracking branch may only advance, so unrelated local work cannot be overwritten.
 const prev=spawnSync('git',['rev-parse','--verify',`refs/heads/${mirror}`],{cwd:root,encoding:'utf8'});
 if(prev.status===0) run(['merge-base','--is-ancestor',prev.stdout.trim(),sha]);
 run(['update-ref',`refs/heads/${mirror}`,sha,prev.status===0?prev.stdout.trim():'0000000000000000000000000000000000000000']);
-const exists=spawnSync('git',['show-ref','--verify',`refs/heads/${snapshot}`],{cwd:root,encoding:'utf8'});
-if(exists.status!==0)run(['branch',snapshot,sha]);
-if(argv.includes('--push'))run(['push','origin',`refs/heads/${mirror}:refs/heads/${mirror}`,`refs/heads/${snapshot}:refs/heads/${snapshot}`]);
+const exists=spawnSync('git',['show-ref','--verify',`refs/tags/${snapshot}`],{cwd:root,encoding:'utf8'});
+if(exists.status!==0)run(['tag',snapshot,sha]);
+if(argv.includes('--push'))run(['push','origin',`refs/heads/${mirror}:refs/heads/${mirror}`,`refs/tags/${snapshot}:refs/tags/${snapshot}`]);
 if(argv.includes('--apply-version')) {
  // Only stamp the upstream version after its exact commit has been merged into the current branch.
  run(['merge-base','--is-ancestor',sha,'HEAD']);
