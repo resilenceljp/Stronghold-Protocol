@@ -1,6 +1,6 @@
 # 娱乐、无尽与服主监视台
 
-本分支基于 LongQianChen 的 20 人版本，由 resilenceljp 维护。仓库：https://github.com/resilenceljp/Stronghold-Protocol-20p 。上游作者、贡献者和许可证声明保留。
+本分支基于 LongQianChen 的 20 人版本，由 resilenceljp 维护。仓库：https://github.com/resilenceljp/Stronghold-Protocol 。上游作者、贡献者和许可证声明保留。
 
 ## 如何开始
 

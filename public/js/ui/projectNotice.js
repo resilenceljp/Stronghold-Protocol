@@ -7,7 +7,7 @@ export function ProjectNotice() {
     <p>${t('20人合作 · 娱乐控制台 · 无尽模拟 · 藏品')}</p>
     <p>${t('娱乐房的控制台、练度、部署位、起始资金及藏品，在第二页准备界面由房主设置。')}</p>
     <p>${t('无尽模式每回合敌人属性增长10%，最终攻势后继续挑战。')}</p>
-    <a href="https://github.com/resilenceljp/Stronghold-Protocol-20p" target="_blank" rel="noopener noreferrer">GitHub · resilenceljp / Stronghold-Protocol-20p ↗</a>
+    <a href="https://github.com/resilenceljp/Stronghold-Protocol" target="_blank" rel="noopener noreferrer">GitHub · resilenceljp / Stronghold-Protocol-20p ↗</a>
     <p>${t('内置独立监视台：房间、阵容、经济、战绩、连接与穿透流量。服主可从monitor文件夹独立启动。')}</p>
     ${local ? html`<a href="http://127.0.0.1:3010/" target="_blank" rel="noopener noreferrer">${t('打开本机监视台')} ↗</a>` : null}
     <small>${t('非官方同人项目，仅供个人非商业娱乐；游戏素材版权归原权利人所有。')}</small>

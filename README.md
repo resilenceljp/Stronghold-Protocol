@@ -337,7 +337,7 @@ An **unofficial, non-commercial fan remake** of Arknights' seasonal auto-chess t
 
 ## 本仓库新增：娱乐与无尽
 
-本仓库 https://github.com/resilenceljp/Stronghold-Protocol-20p 保留龙千尘的20人分组合作，并加入独立娱乐/无尽房：建房前可启用无次数限制的休整期控制台，盟约上限9999，敌人逐回合增长10%，最终攻势后持续挑战。普通房沿用原玩法。启动页右侧展示项目公告，不阻挡「开始」。
+本仓库 https://github.com/resilenceljp/Stronghold-Protocol 保留龙千尘的20人分组合作，并加入独立娱乐/无尽房：建房前可启用无次数限制的休整期控制台，盟约上限9999，敌人逐回合增长10%，最终攻势后持续挑战。普通房沿用原玩法。启动页右侧展示项目公告，不阻挡「开始」。
 
 服主工具集中在 `monitor/`，游戏boot内置仅本机的只读接口；独立UI默认3010，`npm run monitor` 可启动。详情见 [娱乐与无尽说明](docs/ENTERTAINMENT.md) 与 [监视台说明](monitor/README.md)。
 

@@ -72,4 +72,4 @@ Windows 上解释器名称依实际环境选择。镜像、代理、素材补齐
 
 ## resilenceljp独立仓库的同步入口
 
-当前origin为resilenceljp/Stronghold-Protocol-20p；20人上游为LongQianChen的feat/IncreasePlayerCapacity，原作者为sganggs。此节是独立仓库维护口径，前面的LongQianChen历史记录保留。GitHub手动/每日工作流同步到upstream/20p并保存快照，不自动合并玩法。`npm run sync:upstream`可本地读取，`-- --push`推送镜像。审查合并后`-- --apply-version`更新基线，工具检查上游已是当前HEAD祖先。详见[本次记录](records/2026-10-13-02-fun-rules-relics.md)。
+当前origin为resilenceljp/Stronghold-Protocol；20人上游为LongQianChen的feat/IncreasePlayerCapacity，原作者为sganggs。此节是独立仓库维护口径，前面的LongQianChen历史记录保留。GitHub手动/每日工作流同步到upstream/20p并保存快照，不自动合并玩法。`npm run sync:upstream`可本地读取，`-- --push`推送镜像。审查合并后`-- --apply-version`更新基线，工具检查上游已是当前HEAD祖先。详见[本次记录](records/2026-10-13-02-fun-rules-relics.md)。
