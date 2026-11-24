@@ -14,7 +14,7 @@ export function AiParticipation({ settings = false, bandsOnly = false }) {
   if (settings) return html`<div class="ai-policy"><strong>${t('AI 盟约选择')}</strong><span>${t('同组真人过半同意；到时自动选择')}</span>
     ${['auto', 'vote'].map(policy => html`<button type="button" disabled=${busy || room.hostId !== myId} aria-pressed=${(room.aiBandPolicy || 'auto') === policy} onClick=${() => run('room.aiPolicy', { policy })}>${policy === 'auto' ? t('自动选择') : t('同组投票')}</button>`)}</div>`;
   const spectator = room.spectators?.some(s => s.playerId === myId);
-  const requests = room.aiTakeoverVotes || [], bandVotes = pub?.phase === 'BAND_DRAFT' ? room.aiBandVotes || [] : [];
+  const requests = room.aiTakeoverVotes || [], bandVotes = pub?.phase === 'BAND_DRAFT' ? pub.aiBandVotes || [] : [];
   const votes = bandsOnly ? bandVotes : [...requests, ...bandVotes];
   if (bandsOnly && !bandVotes.length) return null;
   const bots = (pub?.players || []).filter(p => p.isBot && p.alive && !p.left);

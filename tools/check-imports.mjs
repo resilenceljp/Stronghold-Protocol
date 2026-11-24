@@ -213,6 +213,8 @@ export function classify(spec, fromFile, area) {
     if (resolved === 'server/index.js') return { code: 'sim-entry', resolved };
     if (isHttp(spec, resolved)) return { code: 'sim-http', resolved };
     if (resolved === 'public' || resolved.startsWith('public/')) return { code: 'sim-client', resolved };
+    // The browser never imports the Node-only adapter used by simdata.js.
+    if (fromFile === 'server/sim/nodeData.js' && ['node:fs', 'node:path', 'node:url'].includes(spec)) return null;
     if (escaped || isBuiltin(spec)) return { code: 'sim-node', resolved };
     if (resolved === 'server/data.js') return { note: true, resolved };
     return null;

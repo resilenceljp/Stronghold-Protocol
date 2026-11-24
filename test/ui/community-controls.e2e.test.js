@@ -1,7 +1,8 @@
+import { seedReleaseRead } from '../helpers/releaseNotes.js';
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { DEFAULT_VERSION } from '../../shared/versions.js';
 
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const enabled = process.env.SP_E2E === '1' && existsSync(CHROME);
@@ -9,8 +10,8 @@ describe('community UI: lobby header and shared DIY details', { skip: !enabled }
   let srv, browser, announcementRevision;
   before(async () => {
     const { startServer } = await import('../../server/index.js');
-    srv = await startServer({ port: 0, host: '127.0.0.1', quiet: true });
-    announcementRevision = (await (await fetch(`http://127.0.0.1:${srv.port}/api/announcements`)).json()).revision;
+    // written on 盟约 (第二期下半): a stock server's lobby starts on 规程 since 2026-11-09
+    srv = await startServer({ port: 0, host: '127.0.0.1', quiet: true, versions: { default: DEFAULT_VERSION } });
     const P = (await import('puppeteer-core')).default;
     browser = await P.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox'] });
     mkdirSync(new URL('../e2e/out/', import.meta.url), { recursive: true });
@@ -56,9 +57,8 @@ describe('community UI: lobby header and shared DIY details', { skip: !enabled }
       localStorage.setItem('sp.name', '超长名称的测试博士名称'); sessionStorage.setItem('sp.entered', '1');
       localStorage.setItem('sp.pref.settings', JSON.stringify({ textSize: 'xl' }));
       localStorage.setItem('sp.pref.lang', JSON.stringify(l));
-      // Treat the current server announcement as already dismissed, so it cannot obscure this unrelated UI check.
-      if (revision) localStorage.setItem('sp.pref.announcements', JSON.stringify({ v: 1, suppressedRevision: revision }));
-    }, lang, announcementRevision);
+    }, lang);
+    await seedReleaseRead(page);
     await page.goto(`http://127.0.0.1:${srv.port}/`, { waitUntil: 'networkidle0' });
     await page.waitForSelector('.lobby-screen');
     return { context, page };

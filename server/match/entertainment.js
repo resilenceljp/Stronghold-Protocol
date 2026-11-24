@@ -14,7 +14,6 @@ export function configureEntertainment(gd, ruleset = 'standard') {
   if (gd.ruleset !== 'endless') return;
   // [ASSUMED] NORMAL supplies the 14-round campaign, all eight maps and the late normal-wave templates.
   const base = gd.config.modes?.[gd.isSolo ? 'mode_single_normal' : 'mode_multi_normal'] || gd.mode;
-  gd.modeId = gd.isSolo ? 'mode_single_normal' : 'mode_multi_normal';
   gd.mode = { ...base, lastRound: 14, bossRound: 8, hiddenRound: null, maxShopLevel: 7,
     stages: [...(base.stages || [])], shopSlots: { ...base.shopSlots, 7: { chess: (base.shopSlots?.[6]?.chess||5)+1, item: (base.shopSlots?.[6]?.item||1)+1 } },
     upgradePrices: [...(base.upgradePrices || [5, 7, 9, 11, 13]), 20] };

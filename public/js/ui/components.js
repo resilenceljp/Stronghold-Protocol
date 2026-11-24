@@ -49,8 +49,6 @@ export const ICONS = {
   robot: { d: 'M11 2h2v3h4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h4zM8.5 9.5a1.75 1.75 0 1 0 0 3.5 1.75 1.75 0 0 0 0-3.5zm7 0a1.75 1.75 0 1 0 0 3.5 1.75 1.75 0 0 0 0-3.5zM9 15v1.6h6V15zM1 10h2v5H1zm20 0h2v5h-2z', eo: true },
   copy: { d: 'M8 3h11v13h-2V5H8zM5 7h10v14H5zm2 2v10h6V9z', eo: true },
   chat: { d: 'M3 3h18v14H8l-5 4zm2 2v11.8L7.3 15H19V5zm3 3h8v2H8zm0 4h6v2H8z', eo: true },
-  download: { d: 'M11 3h2v9.2l3.6-3.6L18 10l-6 6-6-6 1.4-1.4 3.6 3.6zM4 17h2v3h12v-3h2v5H4z' },
-  folder: { d: 'M2 5h8l2 2h10v14H2zm2 4v10h16V9h-9l-2-2H4z', eo: true },
   link: { d: 'M9 7H6.5a5 5 0 0 0 0 10H9v-2H6.5a3 3 0 0 1 0-6H9zm6 0h2.5a5 5 0 0 1 0 10H15v-2h2.5a3 3 0 0 0 0-6H15zM8 11h8v2H8z' },
   plus: { d: 'M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z' },
   minus: { d: 'M4 11h16v2H4z' },
@@ -203,13 +201,14 @@ export function tierChipUrl(t) {
  * Golden = elite (精锐) variant (gold glow).
  * @param {{ tier: number, golden?: boolean, size?: 'sm'|'md'|'lg', class?: string }} props
  */
-export function TierChip({ tier, golden = false, size = 'md', class: cls }) {
+export function TierChip({ tier, golden = false, size = 'md', class: cls, overlay = null, style = null }) {
   const n = Math.max(1, Math.min(6, Number(tier) | 0 || 1));
   const src = tierChipUrl(n);
   const [bad, setBad] = useState(null);
   const img = !!src && bad !== src;
-  return html`<span class=${cx('tier', `tier--${n}`, `tier--${size}`, golden && 'tier--golden', img && 'tier--img', cls)} aria-label=${t('{tier}阶', { tier: n })}>
+  return html`<span class=${cx('tier', `tier--${n}`, `tier--${size}`, golden && 'tier--golden', img && 'tier--img', cls)} style=${style} aria-label=${t('{tier}阶', { tier: n })}>
     ${img ? html`<img src=${src} alt="" draggable=${false} onError=${() => setBad(src)} />` : roman(n)}
+    ${overlay}
   </span>`;
 }
 
@@ -217,11 +216,13 @@ export function TierChip({ tier, golden = false, size = 'md', class: cls }) {
  * Bond disc: round glyph disc with segmented tier ring, stack count and name.
  * @param {{ name?: string, icon?: string, count?: number, layers?: number, tier?: number, maxTier?: number,
  *   active?: boolean, disabled?: boolean, layersDisabled?: boolean, size?: 'sm'|'md'|'lg', showName?: boolean,
- *   onClick?: Function, class?: string, title?: string }} props
+ *   onClick?: Function, class?: string, title?: string, cross?: boolean, tag?: any }} props
+ *   cross: the red ✕ corner (default: when disabled); tag: a corner mark drawn in its place, on the disc's box (the
+ *   briefing's official 阵容不完整 corner, ui/matchInfo.js BondLackTag)
  */
 export function BondDisc({
   name = '', icon, count, layers, tier = 0, maxTier = 3, active = false, disabled = false, layersDisabled = false,
-  size = 'md', showName = true, onClick, class: cls, title,
+  size = 'md', showName = true, onClick, class: cls, title, cross = disabled, tag = null,
 }) {
   // Remember which URL failed (a per-URL flag can't race a reset effect).
   const [badSrc, setBadSrc] = useState(null);
@@ -250,7 +251,8 @@ export function BondDisc({
           : html`<span class="bond__glyph">${glyph}</span>`}
       </span>
       ${stack != null ? html`<span class="bond__count">${stack}</span>` : null}
-      ${disabled ? html`<span class="bond__ban" aria-label=${t('禁用')}><${Icon} name="close" /></span>` : null}
+      ${cross ? html`<span class="bond__ban" aria-label=${t('禁用')}><${Icon} name="close" /></span>` : null}
+      ${tag}
     </span>
     ${showName && name ? html`<span class="bond__name">${name}</span>` : null}
   <//>`;
@@ -400,13 +402,10 @@ export function Countdown({ deadline, seconds, total, warnAt = 10, label = 'COUN
 const modalStack = []; // open modals, topmost last: only the topmost handles keyboard focus / Escape
 
 /**
- * Modal dialog (declarative). Esc / backdrop click call onClose.
- * @param {{ open: boolean, title?: any, micro?: string, tone?: string, onClose?: Function, actions?: any,
- *   width?: string, closeOnBackdrop?: boolean, class?: string, veilClass?: string, children?: any }} props
- * `veilClass` styles the backdrop itself (e.g. a dialog that dims the field without blurring it).
+ * Share keyboard/focus ownership between Modal and custom cards using the same stack.
+ * @param {boolean} open @param {Function} onClose @param {{ current: any }} boxRef
  */
-export function Modal({ open, title, micro, tone = 'mint', onClose, actions, width, closeOnBackdrop = true, class: cls, veilClass, children }) {
-  const boxRef = useRef(null);
+export function useModalFocus(open, onClose, boxRef) {
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
   useLayoutEffect(() => {
@@ -454,6 +453,17 @@ export function Modal({ open, title, micro, tone = 'mint', onClose, actions, wid
       prevFocus?.focus?.();
     };
   }, [open]);
+}
+
+/**
+ * Modal dialog (declarative). Esc / backdrop click call onClose.
+ * @param {{ open: boolean, title?: any, micro?: string, tone?: string, onClose?: Function, actions?: any,
+ *   width?: string, closeOnBackdrop?: boolean, class?: string, veilClass?: string, children?: any }} props
+ * `veilClass` styles the backdrop itself (e.g. a dialog that dims the field without blurring it).
+ */
+export function Modal({ open, title, micro, tone = 'mint', onClose, actions, width, closeOnBackdrop = true, class: cls, veilClass, children }) {
+  const boxRef = useRef(null);
+  useModalFocus(open, onClose, boxRef);
   if (!open) return null;
   return html`<div class=${cx('modal', veilClass)} role="presentation"
       onMouseDown=${(e) => { if (closeOnBackdrop && e.target === e.currentTarget && onClose) onClose(); }}>
@@ -849,10 +859,11 @@ export function AvatarFrame({ name = '', src, size = 'md', seat = 0, host, bot, 
 /**
  * Chevron phase banner (full-width strip that wipes in horizontally).
  * @param {{ title: any, sub?: any, micro?: string, tone?: 'mint'|'orange'|'red'|'gold'|'ice', mode?: 'overlay'|'inline',
- *   duration?: number, onDone?: Function, class?: string }} props
+ *   duration?: number, onDone?: Function, class?: string, banner?: string|null }} props
  *   mode 'overlay' = fixed over the screen; duration (ms) > 0 auto-hides then calls onDone. Re-key to replay.
+ *   `banner` is a theme plate id (docs/THEMES.md). Absent, the plate is the built-in art.
  */
-export function PhaseBanner({ title, sub, micro, tone = 'mint', mode = 'inline', duration = 0, onDone, class: cls }) {
+export function PhaseBanner({ title, sub, micro, tone = 'mint', mode = 'inline', duration = 0, onDone, class: cls, banner = null }) {
   const [leaving, setLeaving] = useState(false);
   const [gone, setGone] = useState(false);
   useEffect(() => {
@@ -862,7 +873,7 @@ export function PhaseBanner({ title, sub, micro, tone = 'mint', mode = 'inline',
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [duration]);
   if (gone) return null;
-  return html`<div class=${cx('pbanner', `pbanner--${tone}`, `pbanner--${mode}`, leaving && 'is-leaving', cls)} role="status" aria-live="polite">
+  return html`<div class=${cx('pbanner', `pbanner--${tone}`, `pbanner--${mode}`, leaving && 'is-leaving', cls)} role="status" aria-live="polite" data-banner=${banner || undefined}>
     <div class="pbanner__band">
       <${Chevrons} count=${4} tone=${tone} class="pbanner__chev pbanner__chev--l" />
       <div class="pbanner__text">
@@ -880,10 +891,11 @@ export function PhaseBanner({ title, sub, micro, tone = 'mint', mode = 'inline',
  * a centred framed plate — tone-coloured frame and corner ticks, chevrons either side of the title — that opens, holds
  * `duration` ms and closes by itself. Purely presentational: ui/gameLogic/phases.js (roundResultBox / uniteResultBox /
  * battleResultBox) picks the words, screens/game.js the moment (SETTLE). `pointer-events: none`: it never takes a click.
- * @param {{ title: any, sub?: any, micro?: string, tone?: 'mint'|'orange'|'red', duration?: number, onDone?: Function }} props
+ * @param {{ title: any, sub?: any, micro?: string, tone?: 'mint'|'orange'|'red', duration?: number, onDone?: Function, perfect?: boolean }} props
  *   duration (ms) > 0 auto-hides then calls onDone. Re-key to replay.
+ *   `perfect` is the 全员无伤 box (tone mint). A theme may paint a different picture there; the words stay.
  */
-export function ResultDialog({ title, sub, micro, tone = 'mint', duration = 2800, onDone }) {
+export function ResultDialog({ title, sub, micro, tone = 'mint', duration = 2800, onDone, perfect = false }) {
   const [leaving, setLeaving] = useState(false);
   const [gone, setGone] = useState(false);
   useEffect(() => {
@@ -893,7 +905,7 @@ export function ResultDialog({ title, sub, micro, tone = 'mint', duration = 2800
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [duration]);
   if (gone) return null;
-  return html`<div class=${cx('rdialog', `rdialog--${tone}`, leaving && 'is-leaving')} role="status" aria-live="polite">
+  return html`<div class=${cx('rdialog', `rdialog--${tone}`, leaving && 'is-leaving')} role="status" aria-live="polite" data-banner="battleEnd" data-perfect=${perfect ? '1' : undefined}>
     <div class="rdialog__box">
       <span class="rdialog__tick rdialog__tick--tl"></span><span class="rdialog__tick rdialog__tick--tr"></span>
       <span class="rdialog__tick rdialog__tick--bl"></span><span class="rdialog__tick rdialog__tick--br"></span>
@@ -955,11 +967,12 @@ export function DifficultyIcon({ difficulty, class: cls }) {
 }
 
 /**
- * Difficulty tag: coloured glyph + name (标准/险境/绝境/终极模拟).
- * @param {{ difficulty: string, size?: 'sm'|'md'|'lg', class?: string, code?: string }} props
+ * Difficulty tag: coloured glyph + name (标准/险境/绝境/终极模拟); `name` replaces the difficulty's name (a laddered mode's
+ * own: 规程等级 n, 极速模拟).
+ * @param {{ difficulty: string, size?: 'sm'|'md'|'lg', class?: string, code?: string, name?: string | null }} props
  */
-export function DifficultyTag({ difficulty, size = 'md', class: cls, code }) {
-  const name = DIFFICULTY_NAMES[difficulty] ? t(DIFFICULTY_NAMES[difficulty]) : difficulty || '—';
+export function DifficultyTag({ difficulty, size = 'md', class: cls, code, name: own = null }) {
+  const name = own || (DIFFICULTY_NAMES[difficulty] ? t(DIFFICULTY_NAMES[difficulty]) : difficulty || '—');
   const color = DIFFICULTY_COLORS[difficulty] || 'var(--text-lo)';
   return html`<span class=${cx('dtag', `dtag--${size}`, cls)} style=${`--d-color:${color}`}>
     <${DifficultyIcon} difficulty=${difficulty} class="dtag__icon" />

@@ -5,8 +5,10 @@
 //
 //   start()                                  the worker creates the match and starts it (the worker may still be booting:
 //                                            the host queues the messages; the match exists for the lobby at once)
-//   handle / setLoadout / requestSetupReroll / cancelSetupReroll → Promise of the match's answer ({ ok } | { error, detail })
-//                                            — the lobby answers the request when it settles (server/net.js)
+//   handle / setLoadout / requestSetupReroll / cancelSetupReroll / aiHandoverView / acceptAiHandover
+//                                            → Promise of the match's answer ({ ok } | { error, detail })
+//                                            — the lobby answers the request when it settles (server/net.js).
+//                                            aiHandoverView's ok result also carries the eligibility snapshot.
 //   onDisconnect / onReconnect / onLeave / addSpectator / removeSpectator → posted, no answer
 //   dispose()                                posted; nothing of this match reaches the lobby afterwards
 //   diag()                                   → Promise of the match's diagnostics (verifyStats, errors, fields — tests,
@@ -48,15 +50,13 @@ const noopLog = { info() {}, warn() {}, error() {}, debug() {} };
 /** The lobby options a worker can take (JSON-safe: no callbacks, no data, no class). */
 export function wireOptions(opts) {
   const out = {};
-  for (const k of ['roomCode', 'mode', 'difficulty', 'modeId', 'aiPicksLast', 'soloUnlimited', 'seats', 'spectators', 'seed', 'matchNo', 'cs', 'vs', 'requireCs', 'kitted', 'version']) {
+  for (const k of ['roomCode', 'mode', 'difficulty', 'modeId', 'aiPicksLast', 'aiBandPolicy', 'ruleset', 'soloUnlimited', 'seats', 'spectators', 'seed', 'matchNo', 'cs', 'vs', 'requireCs', 'kitted', 'version']) {
     if (opts[k] !== undefined) out[k] = opts[k];
   }
   // A test room must arrive as a test match. Forwarding these only when the flag is set keeps every other
   // worker payload identical. Dropping the flag fails closed: the worker match refuses g.test.
-  if (opts.test === true) {
-    out.test = true;
-    if (typeof opts.hostId === 'string') out.hostId = opts.hostId;
-  }
+  if (opts.test === true) out.test = true;
+  if ((opts.test === true || (opts.version != null && !opts.rules)) && typeof opts.hostId === 'string') out.hostId = opts.hostId;
   // Rule switches ride with the content set. A room that declares none keeps today's worker payload.
   if (opts.rules && typeof opts.rules === 'object' && !Array.isArray(opts.rules)) out.rules = opts.rules;
   return out;
@@ -124,7 +124,17 @@ export class MatchProxy {
   }
 
   handle(playerId, msg) { return this._request('handle', [playerId, msg]); }
+  /** Eligibility snapshot for a spectator AI handover. @returns {Promise<any>} */
+  aiHandoverView() { return this._request('aiHandoverView', []); }
+  /**
+   * Match half of inheriting a bot seat. @param {string} botId @param {string} name
+   * @returns {Promise<{ ok?: boolean, error?: string, detail?: string }>}
+   */
+  acceptAiHandover(botId, name) { return this._request('acceptAiHandover', [botId, name]); }
   setLoadout(playerId, loadout, ops) { return this._request('setLoadout', [playerId, loadout, ops]); }
+  setAiBandPolicy(policy) { return this._request('setAiBandPolicy', [policy]); }
+  voteAiBand(playerId, msg) { return this._request('voteAiBand', [playerId, msg]); }
+  setFunRules(playerId, rules, revision) { return this._request('setFunRules', [playerId, rules, revision]); }
   requestSetupReroll(playerId, revision) { return this._request('requestSetupReroll', [playerId, revision]); }
   cancelSetupReroll(playerId, voteId) { return this._request('cancelSetupReroll', [playerId, voteId]); }
   onDisconnect(playerId) { this._notify('onDisconnect', [playerId]); }
@@ -135,7 +145,7 @@ export class MatchProxy {
    * callMatch no-op'd). Only a test match follows the new host, because g.test checks hostId in the worker.
    */
   setHost(playerId) {
-    if (this.opts.test !== true) return;
+    if (this.opts.test !== true && this.opts.version == null) return;
     this.opts.hostId = typeof playerId === 'string' ? playerId : null;
     this._notify('setHost', [playerId]);
   }

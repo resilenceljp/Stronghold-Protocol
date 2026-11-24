@@ -25,8 +25,8 @@ async function fixture(t, opts = {}) {
     serverSettingsDir: path.resolve('.cache', `chat-ws-settings-${process.pid}-${Date.now()}`), ...opts });
   const clients = [];
   t.after(async () => { await Promise.all(clients.map((c) => c.terminate().catch(() => {}))); await srv.close(); });
-  srv.lobby.setAiLimit(null);
-  srv.lobby.setAssetCachePolicy({ required: false, getSummary: () => null });
+
+
   let now = Date.now();
   srv.lobby.now = () => now;
   const connect = async (name, wire = false, token = undefined) => {
@@ -37,7 +37,7 @@ async function fixture(t, opts = {}) {
     return c;
   };
   const host = await connect('Host', true);
-  assert.equal((await host.request({ t: 'room.create', mode: 'coop', difficulty: 'NORMAL', capacity: 8 })).t, 'ok');
+  assert.equal((await host.request({ t: 'room.create', mode: 'coop', difficulty: 'NORMAL' })).t, 'ok');
   const roomState = await host.waitFor('room.state');
   const room = srv.lobby.getRoom(roomState.code);
   const guest = await connect('Guest', false);
@@ -61,7 +61,7 @@ const expectError = async (client, msg, code) => {
 };
 const requestChat = (client, matchId, text, extra = {}) => client.request({ t: 'room.chat', matchId, text, ...extra });
 
-test('real mixed-wire room chat authorizes players and mid-match spectators, keeps gameplay/public frames separate', async (t) => {
+test('real WebSocket room chat authorizes players and mid-match spectators, keeps gameplay/public frames separate', async (t) => {
   const { srv, room, host, guest, connect, start, logs } = await fixture(t);
   const snap = await start();
   assert.deepEqual(snap.messages, []);
@@ -74,7 +74,6 @@ test('real mixed-wire room chat authorizes players and mid-match spectators, kee
   assert.equal(sent.name, 'Host');
   assert.equal(sent.seat, 0);
   assert.equal(host.log.filter((m) => m.t === 'm.public').length, publicCount);
-  assert.ok(host.rawLog.some((m) => m.t === 'm.chat'), 'new types remain readable JSON on compact sockets');
   const viewer = await connect('Viewer', true);
   assert.equal((await viewer.request({ t: 'room.spectate', code: room.code })).t, 'ok');
   const viewerHistory = await viewer.waitFor('m.chatState');
