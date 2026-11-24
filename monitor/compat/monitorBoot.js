@@ -261,6 +261,7 @@ function monitorMatchSnapshot(room, now) {
   let publicView = null;
   try {
     if (typeof match.publicView === 'function') publicView = match.publicView();
+    else if (room.matchCtx?.lastPublic) publicView = JSON.parse(room.matchCtx.lastPublic);
   } catch {
     publicView = null;
   }
@@ -282,7 +283,7 @@ function monitorMatchSnapshot(room, now) {
 
   const order = Array.isArray(match.order)
     ? match.order
-    : [...(match.players?.values?.() || [])];
+    : match.players?.values ? [...match.players.values()] : [...publicPlayers.values()];
 
   const players = order.map((ps) => {
     const pv = publicPlayers.get(ps.playerId) || null;
@@ -339,8 +340,8 @@ function monitorMatchSnapshot(room, now) {
       pendingLp: monitorNumber(pv?.pendingLp),
       uniteLeft: monitorNumber(pv?.uniteLeft),
 
-      funds: Math.max(0, monitorNumber(ps.funds, 0) ?? 0),
-      pendingFunds: monitorNumber(ps.pendingFunds, 0) ?? 0,
+      funds: match.hosted ? null : Math.max(0, monitorNumber(ps.funds, 0) ?? 0),
+      pendingFunds: match.hosted ? null : (monitorNumber(ps.pendingFunds, 0) ?? 0),
       bandId: ps.bandId || pv?.bandId || null,
 
       shopLevel: monitorNumber(ps.shop?.level, monitorNumber(pv?.shopLevel)),
@@ -462,8 +463,11 @@ function monitorMatchSnapshot(room, now) {
   };
 
   return {
-    poolGroups:(match.poolGroups||[]).map(g=>({id:g.id,playerIds:g.playerIds.slice()})),
-    funRules: match.funRules || null, ruleset: match.ruleset || 'standard', consoleEnabled: !!match.consoleEnabled, endless: match.ruleset === 'endless',
+    poolGroups:(publicView?.poolGroups || match.poolGroups || []).map(g=>({id:g.id,playerIds:g.playerIds.slice()})),
+    funRules: publicView?.funRules || match.funRules || null,
+    ruleset: publicView?.ruleset || match.ruleset || room.ruleset || 'standard',
+    consoleEnabled: !!(publicView?.consoleEnabled ?? match.consoleEnabled),
+    endless: publicView?.endless === true || match.ruleset === 'endless',
     phase: publicView?.phase || match.phase || null,
     round: monitorNumber(publicView?.round, monitorNumber(match.round, 0)),
     lastRound: monitorNumber(publicView?.lastRound, monitorNumber(match.gd?.lastRound)),
@@ -501,7 +505,7 @@ function monitorMatchSnapshot(room, now) {
       connectedHumans: human.filter((p) => p.connected).length,
     },
 
-    economy,
+    economy: match.hosted ? null : economy,
     fields,
     players,
   };
@@ -518,6 +522,8 @@ function adminSnapshot(srv) {
 
     return {
     code: room.code,
+    version: room.version ?? null,
+    capacity: room.mode === 'solo' ? 1 : room.capacity,
     mode: room.mode,
     difficulty: room.difficulty,
     inMatch: !!room.match,
