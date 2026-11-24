@@ -11,8 +11,8 @@ export function AiParticipation({ settings = false, bandsOnly = false }) {
   useData('bands');
   if (!room || room.mode === 'solo' || room.content?.vanilla === false) return null;
   const run = async (kind, body) => { if (busy) return; setBusy(true); try { await net.request(kind, body); } catch (e) { toastError(e); } finally { setBusy(false); } };
-  if (settings) return html`<div class="ai-policy"><strong>${t('AI 盟约选择')}</strong><span>${t('同组真人过半同意；到时自动选择')}</span>
-    ${['auto', 'vote'].map(policy => html`<button type="button" disabled=${busy || room.hostId !== myId} aria-pressed=${(room.aiBandPolicy || 'auto') === policy} onClick=${() => run('room.aiPolicy', { policy })}>${policy === 'auto' ? t('自动选择') : t('同组投票')}</button>`)}</div>`;
+  if (settings) return html`<div class="ai-policy"><strong>${t('AI 盟约选择')}</strong><span>${t('同组真人过半同意；到时自动选择')}</span><div class="ai-policy__options">
+    ${['auto', 'vote'].map(policy => html`<button type="button" disabled=${busy || room.hostId !== myId} aria-pressed=${(room.aiBandPolicy || 'auto') === policy} onClick=${() => run('room.aiPolicy', { policy })}>${policy === 'auto' ? t('自动选择') : t('同组投票')}</button>`)}</div></div>`;
   const spectator = room.spectators?.some(s => s.playerId === myId);
   const requests = room.aiTakeoverVotes || [], bandVotes = pub?.phase === 'BAND_DRAFT' ? pub.aiBandVotes || [] : [];
   const votes = bandsOnly ? bandVotes : [...requests, ...bandVotes];

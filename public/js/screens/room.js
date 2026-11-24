@@ -284,17 +284,17 @@ function SeatCard({ seat, index, room, facts, myId, busy, onAddBot, onRemoveBot,
   // the 转场 flash: a seat that turns ready (or becomes the host's), and an AI teammate added while the room is open
   // (`fresh`: this card mounted after the room was already on screen)
   const flash = useRise(!!seat && (seat.ready || seat.isBot || seat.playerId === room.hostId), 700, fresh);
-  const groupSizes = poolGroupSizes(facts.occupied.length);
+  const groupSizes = facts.occupied.length ? poolGroupSizes(facts.occupied.length) : [];
   const position = facts.occupied.findIndex(s => s.playerId === seat?.playerId);
   let groupIndex = 0, boundary = groupSizes[0] || 0;
   while (position >= boundary && groupIndex < groupSizes.length - 1) boundary += groupSizes[++groupIndex];
-  const group = poolGroupIdentity(groupIndex + 1);
+  const group = coop && position >= 0 && groupSizes.length > 1 ? poolGroupIdentity(groupIndex + 1) : null;
   if (!seat) {
     const canAdd = coop && facts.isHost;
     const invitable = coop && !facts.spectating;
     return html`<article class="seat seat--empty rseat rseat--empty" style=${`--i:${index}`}>
       <span class="rseat__clip" aria-hidden="true"></span>
-      <header class="rseat__strip"><i></i><span class="num">P${index + 1}</span>${group ? html`<b style=${`color:${group.color}`}>${group.label}</b>` : null}</header>
+      <header class="rseat__strip"><i></i><span class="num">P${index + 1}</span></header>
       <div class="rseat__art">
         ${invitable
           ? html`<button type="button" class="rseat__invite" onClick=${onInvite} title=${t('复制同盟密钥以邀请队友')}>
@@ -320,7 +320,7 @@ function SeatCard({ seat, index, room, facts, myId, busy, onAddBot, onRemoveBot,
   return html`<article class=${`seat rseat${isMe ? ' is-me' : ''}${isHostSeat ? ' is-host' : ''}${seat.isBot ? ' is-bot' : ''}${art ? ' has-art' : ''}${lit ? ' is-lit' : ''}${flash ? ' is-flash' : ''} is-${state}`}
       style=${`--i:${index}`}>
     <span class="rseat__clip" aria-hidden="true"></span>
-    <header class="rseat__strip"><i></i><span class="num">P${index + 1}</span>${group ? html`<b style=${`color:${group.color}`}>${group.label}</b>` : null}</header>
+    <header class="rseat__strip"><i></i><span class="num">P${index + 1}</span>${group ? html`<b class="rseat__group" style=${`--seat-group:${group.color}`} title=${t('{group}组 · 同组共享卡池', { group: group.label })}>${group.label}</b>` : null}</header>
     <div class="seat__art rseat__art">
       ${art
         ? html`<img key=${art} class="seat__portrait" src=${art} alt="" draggable=${false} onError=${() => setBadArt((b) => (b.includes(art) ? b : [...b, art]))} />`
@@ -462,6 +462,7 @@ function RoomOptions({ option, takeoverOption, onAiTakeover, soloOption = null, 
       <//>
       ${version.editable ? null : html`<span class="t-dim">${t('由创建者发起')}</span>`}
     </div>` : null}
+    <${AiParticipation} settings=${true} />
     <${AiTakeoverToggle} option=${takeoverOption} busy=${busy} onToggle=${onAiTakeover} />
     ${soloOption
       ? html`<${SoloUnlimitedToggle} option=${soloOption} busy=${busy} onToggle=${onSoloUnlimited} />`
@@ -754,8 +755,7 @@ export function RoomScreen() {
       </div>
     </header>
 
-    <${AiParticipation} settings=${true} />
-    <main style=${facts.seats.length > 4 ? `grid-template-columns:repeat(${facts.seats.length > 8 ? 5 : 4},minmax(0,1fr));overflow-y:auto;max-height:65vh` : undefined} class=${`seats rs-seats${coop ? '' : ' seats--solo'}`}>
+    <main class=${`seats rs-seats${coop ? (facts.seats.length > 4 ? ' rs-seats--grid' : '') : ' seats--solo'}`} style=${`--seat-cols:${facts.seats.length > 8 ? 5 : 4}`}>
       ${facts.seats.map((s, i) => {
         const op = seatOperator(s, cards, { myId: me.playerId, myCard });
         // the player's outfit for that operator (header "Outfits"); null = the default art

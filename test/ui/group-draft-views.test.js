@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import { normalizeDraft, normalizeSp, normalizePersonalChoice } from '../../public/js/ui/gameLogic.js';
 import { otherBandGroups, teammateBands, draftClock, hasManualTeammateAfter } from '../../public/js/screens/bandDraft.js';
 import { ChoiceView, choicePage, defaultChoiceGroup, cardPickable, armedCard } from '../../public/js/ui/choiceOverlay.js';
-import { draftRequestScope, choiceRequestScope } from '../../public/js/ui/gameActions.js';
+import { actions, draftRequestScope, choiceRequestScope } from '../../public/js/ui/gameActions.js';
+import { net } from '../../public/js/net.js';
 import { validateC2S } from '../../shared/protocol.js';
 
 test('request identity omits absent legacy guards and retains current-stage guards', () => {
@@ -25,6 +26,18 @@ test('personal PREP choice identity stays separate from the public group draft s
   for (const scope of [choiceRequestScope(grouped), choiceRequestScope('personal:3:1')]) {
     assert.equal(validateC2S({ t: 'g.choice', idx: 2, ...scope }), null);
   }
+});
+
+test('the confirmation action sends valid grouped and personal choice requests', async (t) => {
+  const request = t.mock.method(net, 'request', async (type, fields) => {
+    assert.equal(validateC2S({ t: type, ...fields }), null);
+  });
+  assert.equal(await actions.choice(2, { draftId: 'sp:3:1', groupId: 2 }), true);
+  assert.equal(await actions.choice(1, 'personal:3:1'), true);
+  assert.deepEqual(request.mock.calls.map(call => call.arguments), [
+    ['g.choice', { idx: 2, draftId: 'sp:3:1', groupId: 2 }],
+    ['g.choice', { idx: 1, choiceId: 'personal:3:1' }],
+  ]);
 });
 
 const players = ['a1', 'a2', 'a3', 'b1', 'b2', 'b3'].map((playerId, seat) => ({

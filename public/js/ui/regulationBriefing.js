@@ -1,4 +1,3 @@
-import { AiParticipation } from './aiParticipation.js';
 import { FunRulesEntry } from './funRules.js';
 // 规程 INFO_CHECK (config.version.family === 'regulation'): the two-column briefing. Every other family keeps
 // screens/briefing.js's one column, so that file's markup stays the one the draft dialog and its tests share.
@@ -65,7 +64,7 @@ export function RegulationBriefing({ pub, gd, room, solo, info, players, me, rea
           localGroups=${localGroups} seat=${me?.seat ?? null} />
         <${MatchEnemies} pub=${pub} gd=${gd} layout="regulation" />
         <${MatchChatButton} class="mchat-brief-entry" />
-        <${AiParticipation} settings=${true} />
+
         <${LoadoutButton} from="briefing" size="md" class="reg-loadout" />
         <div class="reg-ready">
           <div class="brief-ready">
