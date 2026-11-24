@@ -508,10 +508,7 @@ export class Match {
     this.disabledBonds = bans.drawn;
     this.staticInactiveBonds = bans.staticOff;
     this.bannedChess = bans.banned;
-    this.poolGroups = createPoolGroups(this.gd, this.order, { banned: bans.banned });
-    this.playerPools = new Map(this.poolGroups.flatMap((group) =>
-      group.playerIds.map((id) => [id, group.pool])));
-    this.pool = this.poolGroups[0].pool;
+    this.setPoolGroups(createPoolGroups(this.gd, this.order, { banned: bans.banned }));
     // Each human's 自选 stock uses the same exclusion rule (player/diy.js initDiyStock), without randomness.
     // A bring-limited season stocks nothing until 选择自编 confirms; diyBanned is still the bond-excluded slots.
     // Solo regulation's provisional stocks are rebuilt when its INFO_CHECK group choice settles.
@@ -595,6 +592,12 @@ export class Match {
 
   setAiBandPolicy(policy) { return setAiBandPolicy(this, policy); }
   voteAiBand(playerId, msg) { return voteAiBand(this, playerId, msg); }
+
+  setPoolGroups(groups) {
+    this.poolGroups = groups;
+    this.playerPools = new Map(groups.flatMap(group => group.playerIds.map(id => [id, group.pool])));
+    this.pool = groups[0].pool;
+  }
 
   get itemPool() { return this.poolGroups[0]?.itemPool; }
 

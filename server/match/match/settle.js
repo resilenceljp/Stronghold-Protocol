@@ -21,7 +21,7 @@ export class MatchSettle {
     for (const ps of this.order) if (ps.pendingLayerGains) { ps.pendingLayerGains = null; ps.dirty(); }
     const cap = this.gd.lpCapPerRound;
     // a 联防 battle that could not run at all (synthetic result) must not wipe the leakers' losses: charge their own leaks
-    const uniteResults = plan ? [...plan.history, uniteResult].filter((r) => r && !r.synthetic) : [];
+    const uniteResults = plan ? [...(plan.history || []), uniteResult].filter((r) => r && !r.synthetic) : [];
     const uniteRan = uniteResults.length > 0;
     const survivors = plan ? (uniteResult && !uniteResult.synthetic ? uniteSurvivors(plan, uniteResult) : plannedUniteSurvivors(plan)) : null;
     // The 联防's outcome as data for the SETTLE view (m.public.uniteResult, views.js; GitHub #235, PR #112 by @Convey123):
@@ -32,7 +32,7 @@ export class MatchSettle {
     // itself. No ticker line: the official reports the outcome in the one dialog. null when no 联防 resolved.
     this.uniteResultView = uniteRan && plan.leakers.length ? {
       through: plan.leakers.reduce((n, lk) => n + Math.max(0, survivors.get(lk.playerId) || 0), 0),
-      helpers: [...plan.usedHelpers, ...plan.helpers].map((p) => p.playerId),
+      helpers: [...(plan.usedHelpers || []), ...plan.helpers].map((p) => p.playerId),
       leakers: plan.leakers.map((p) => p.playerId),
       losses: {},
     } : null;

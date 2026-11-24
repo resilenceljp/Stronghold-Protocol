@@ -10,7 +10,7 @@ import { buildNormalWave, buildBossWave } from '../waves.js';
 import { pairPlayers, bossPairSalt } from '../finalAssault.js';
 import { createRng, deriveSeed } from '../../sim/rng.js';
 import { OK, fail, DELAYS, BAND_TURN_SECONDS } from './common.js';
-import { SharedPool, bannedChessForBonds } from '../pool.js';
+import { createPoolGroups, bannedChessForBonds } from '../pool.js';
 import { botPickBondGroup } from '../botBondGroups.js';
 import { LEGACY_BOT } from '../botStrategyContract.js';
 import { diySlot, diySlotIds } from '../../../shared/diy.js';
@@ -125,12 +125,12 @@ export class MatchPhases {
     // INFO_CHECK has no shop roll or opening grants. Rebuild its provisional stock before the strategy draft.
     const drawn = [...this.disabledBonds, ...this.bondChoice.groups[1 - idx]].sort();
     const banned = bannedChessForBonds(this.gd, drawn, this.staticInactiveBonds);
-    const pool = new SharedPool(this.gd, { banned });
+    const poolGroups = createPoolGroups(this.gd, this.order, { banned });
     const off = new Set([...drawn, ...this.staticInactiveBonds]);
     const stocks = this.order.map(p => p.buildDiyStock(off));
     this.disabledBonds = drawn;
     this.bannedChess = banned;
-    this.pool = pool;
+    this.setPoolGroups(poolGroups);
     this.bondChoice.picked = idx;
     for (const [i, p] of this.order.entries()) {
       p.diyStock = stocks[i].stock;
