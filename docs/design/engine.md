@@ -446,7 +446,7 @@ the author video BV1UdAHzNEVj and their recall on 2026-10-24; other guardian ski
 
 In 规程, 暴躁铁皮's 大丑的愤怒 uses SEARCH: full attack SP and a targetable enemy in range are required.
 During the skill it also hits allies in range. The generated TAKE_DAMAGE rule remains as source data.
-Final Assault and Hidden Core also bank in-battle layers. Entertainment matches cap each bond at 9999 layers.
+Final Assault also banks in-battle layers; Hidden Core does not. Entertainment matches cap each bond at 9999 layers.
 
 ### Regulation MAP09 concealment tiles
 

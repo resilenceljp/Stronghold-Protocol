@@ -134,6 +134,7 @@ export class MatchProxy {
   setLoadout(playerId, loadout, ops) { return this._request('setLoadout', [playerId, loadout, ops]); }
   setAiBandPolicy(policy) { return this._request('setAiBandPolicy', [policy]); }
   voteAiBand(playerId, msg) { return this._request('voteAiBand', [playerId, msg]); }
+  monitorRoomControl(identity, command) { return this._request('monitorRoomControl', [identity, command]); }
   setFunRules(playerId, rules, revision) { return this._request('setFunRules', [playerId, rules, revision]); }
   requestSetupReroll(playerId, revision) { return this._request('requestSetupReroll', [playerId, revision]); }
   cancelSetupReroll(playerId, voteId) { return this._request('cancelSetupReroll', [playerId, voteId]); }

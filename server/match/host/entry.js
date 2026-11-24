@@ -1,3 +1,5 @@
+import { roomControlSnapshot, applyRoomControl } from '../adminRoomControl.js';
+import { validateC2S as validateMonitorCommand } from '../../../shared/protocol.js';
 // server/match/host/entry.js — a match host (DESIGN §32.6, P1c; the design study's §6.4 方案 B): one child process — or,
 // with the `worker` transport (SP_MATCH_HOST=worker), one worker thread (server/match/host/index.js) — per content set
 // with gameplay plugins, running every match of that set. Either has its own module table ("worker" below means either),
@@ -280,6 +282,19 @@ function handle(m) {
     let result;
     if (!match) result = { error: 'WRONG_PHASE', detail: 'no running match' };
     else if (m.method === 'diag') result = diag(match);
+    else if (m.method === 'monitorRoomControl') {
+      try {
+        const [identity, command] = m.args || [];
+        const room = { ...identity, match };
+        const srv = { lobby: { rooms: new Map([[room.code, room]]) }, registry: { all: () => [] }, monitorControlValidate: validateMonitorCommand };
+        if (command && !['pool', 'pressure', 'autoplay', 'manualAI', 'aiCommand'].includes(command.action)) {
+          throw Error('unsupported hosted operation');
+        }
+        result = command ? applyRoomControl(srv, command) : roomControlSnapshot(srv, { roomCode: room.code });
+      } catch (error) {
+        result = { error: 'BAD_TARGET', detail: error.message };
+      }
+    }
     else {
       try {
         // aiHandoverView / acceptAiHandover are ordinary match calls. Their reply is { ok } | { error, detail },

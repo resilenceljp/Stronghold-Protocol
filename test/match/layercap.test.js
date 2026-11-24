@@ -46,7 +46,7 @@ test('IN_BATTLE gains merged at settlement stop at 999 too; below the cap they a
   m.dispose();
 });
 
-test('boss fields allow layer gains and bank them at the entertainment cap', (t) => {
+test('final assault banks layers at the entertainment cap and hidden core never banks them', (t) => {
   for (const hidden of [false, true]) {
     const h = makeMatch({ mode: 'solo', seed: 81, fake: true, clientCombat: true }).start();
     const m = h.m;
@@ -58,12 +58,12 @@ test('boss fields allow layer gains and bank them at the entertainment cap', (t)
     ps.layers.yanShip = 9980;
     m.startFinalAssault(hidden);
     assert.ok(m.fields.length > 0);
-    assert.equal(m.fields[0].spec.flags.layerGainsEnabled, true);
+    assert.equal(m.fields[0].spec.flags.layerGainsEnabled, !hidden);
     assert.equal(m.fields[0].spec.flags.layerCap, 9999);
     m._finishFinal(hidden, () => ({
       perPlayer: { [ps.playerId]: { layerGains: { yanShip: 50, sargonShip: 3 }, leaked: [] } },
     }));
-    assert.equal(ps.layers.yanShip, 9999);
-    assert.equal(ps.layers.sargonShip, 3);
+    assert.equal(ps.layers.yanShip, hidden ? 9980 : 9999);
+    assert.equal(ps.layers.sargonShip || 0, hidden ? 0 : 3);
   }
 });

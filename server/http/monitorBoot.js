@@ -641,10 +641,10 @@ export async function startAdminServer(srv) {
 
     if(pathname==='/admin/room-control'){
       const reply=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
-      if(req.method==='GET'){try{return reply(200,roomControlSnapshot(srv,{roomCode:new URL(req.url,'http://127.0.0.1').searchParams.get('roomCode')}));}catch(error){return reply(400,{error:error.message});}}
+      if(req.method==='GET'){try{return reply(200,await roomControlSnapshot(srv,{roomCode:new URL(req.url,'http://127.0.0.1').searchParams.get('roomCode')}));}catch(error){return reply(400,{error:error.message});}}
       if(req.method!=='POST')return reply(405,{error:'method not allowed'});
       if(req.headers.host!==`127.0.0.1:${port}`||req.headers.origin||req.headers['x-stronghold-command']!=='local-monitor-room-control'||!req.headers['content-type']?.startsWith('application/json'))return reply(403,{error:'local monitor required'});
-      try{let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>8192)return reply(413,{error:'request too large'});}return reply(200,applyRoomControl(srv,JSON.parse(body)));}
+      try{let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>8192)return reply(413,{error:'request too large'});}return reply(200,await applyRoomControl(srv,JSON.parse(body)));}
       catch(error){return reply(400,{error:error.message});}
     }
     if(pathname==='/admin/clear-room'&&req.method==='POST'){
