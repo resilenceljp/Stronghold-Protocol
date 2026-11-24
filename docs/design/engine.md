@@ -444,6 +444,9 @@ until the cast clip ends too. `attackTurnSkill` returns the selected ability or 
 attack range, even at full HP. The official TAKE_DAMAGE row remains rawRule for provenance. The maintainer accepted
 the author video BV1UdAHzNEVj and their recall on 2026-10-24; other guardian skills keep their class rule.
 
+In 规程, 暴躁铁皮's 大丑的愤怒 uses SP_FULL so it can activate while unblocked, including with no target in
+range. Its SP still recovers through attacks. The generated TAKE_DAMAGE rule remains as source data.
+
 ### Regulation MAP09 concealment tiles
 
 The existing four-tile L on each normal/joint half and both Boss groups uses `tile_duel_grassland`, not plain floor.

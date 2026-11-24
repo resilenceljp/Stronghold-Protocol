@@ -793,6 +793,20 @@ test('fang2 S2 opens on deploy and hits both blocked enemies', () => {
 // ---------------------------------------------------------------------------------------------------------------
 // 暴躁铁皮
 
+test('acrbot S1 starts at full attack SP without being hit or blocking', () => {
+  for (const id of [ID.acrbot, ID.acrbotE]) {
+    const h = battle([op(1, id, 5, 0)]);
+    const unit = h.unit(1);
+    h.step();
+    assert.equal(unit.skill.active, false);
+    assert.equal(unit.blocking.length, 0);
+    unit.skill.gainSp(unit.skill.spCost, 'attack');
+    h.step();
+    assert.equal(unit.blocking.length, 0);
+    assert.equal(unit.skill.active, true);
+  }
+});
+
 test('acrbot S1 swings at an ally in the extended range', () => {
   assert.equal(rec('acrbot').skills[0].bb.base_attack_time, -0.6);
   assert.equal(rec('acrbot').skills[0].bb.atk, 1.6);
