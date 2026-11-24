@@ -859,6 +859,12 @@ describe('keyboard & settings', () => {
 });
 
 describe('result', () => {
+  test('normalizeResult keeps the full 13-operator entertainment lineup', () => {
+    const lineup = Array.from({ length: 13 }, (_, i) => ({ id: `unit-${i}` }));
+    const result = normalizeResult({ players: [{ playerId: 'p1', lineup }] }, null);
+    assert.deepEqual(result.players[0].lineup, lineup);
+  });
+
   test('normalizeResult fills from m.public and sorts by seat', () => {
     const pub = { lastRound: 14, difficulty: 'HARD', players: [{ playerId: 'b', seat: 1, name: 'B', lp: 4, bandId: 'band_x' }, { playerId: 'a', seat: 0, name: 'A' }] };
     const r = normalizeResult({ victory: true, roundsPassed: 14, players: [{ playerId: 'b', title: 'comment_2', lineup: [{ id: 'c1' }], stats: { kills: 3 } }, { playerId: 'a', title: { id: 'comment_1', name: '卫戍之星' } }, null] }, pub);

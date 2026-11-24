@@ -111,7 +111,7 @@ export class MatchBoss {
         routes: wave.routes,
         sharedBoss: this.bossPool,
         // the round's enemy effects for the leaders' mid-fight summons (server/sim/content/bosses.js summonMods)
-        flags: { layerGainsEnabled: !hidden, ...this.gd.dp, enemyScale: this.gd.enemyScale(this.round) },
+        flags: { layerGainsEnabled: true, ...this.gd.dp, enemyScale: this.gd.enemyScale(this.round) },
         fieldId,
         enemyOverrides: wave.overrides,
         waveId: wave.templateId,
@@ -582,7 +582,7 @@ export class MatchBoss {
         const ps = this.players.get(pid);
         if (pp) this.lastResults.set(pid, pp);
         if (pp && ps) {
-          if (!hidden && !res.synthetic) {
+          if (!res.synthetic) {
             for (const [bondId, n] of Object.entries(pp.layerGains || {})) ps.addLayers(bondId, n, { reason: 'battle' });
           }
           ps.pendingLayerGains = null;

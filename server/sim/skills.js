@@ -471,7 +471,13 @@ export class SkillRuntime {
     if (this.rule === 'SP_FULL') return true;
     // SEARCH: an enemy inside the initial attack range, every tick (librators / phalanxes and 安洁莉娜 do not attack
     // while the skill is off, so DEFAULT's "about to attack" never comes)
-    if (this.rule === 'SEARCH') return this._defaultCondition();
+    if (this.rule === 'SEARCH') {
+      if (this.spec.trigger?.enemyOnly === true) {
+        if (b.rangeChanged(u)) b._refreshRange(u);
+        return b.enemiesInKeys(u.rangeKeys, u, u.profile).length > 0;
+      }
+      return this._defaultCondition();
+    }
     // (CUSTOM_RANGE / SKILL_RANGE / GDGLOW_SKILL_2 / the DEFAULT condition: a registered ally target — 白铁's 铁钳号·原型机 —
     // counts like an enemy for a non-heal skill, `_allyTargetIn`)
     if (this.rule === 'CUSTOM_RANGE') {

@@ -301,7 +301,7 @@ An **unofficial, non-commercial fan remake** of Arknights' seasonal auto-chess t
 GitHub Actions 的「同步原版20p到独立分支」可手动运行，也会每日检查。原样保存到 `upstream/20p`，每个新提交保留 `upstream20/v版本-SHA` 快照。不会自动覆盖娱乐分支或重启服务器。
 本地 `npm run sync:upstream`；需要推送同步分支时 `npm run sync:upstream -- --push`。人工审查并合并上游后，再 `npm run sync:upstream -- --apply-version` 更新基线版本。扩展修订号独立递增。
 
-娱乐规则在开局简报中设置，包括部署位上限、七级商店和扩展整备区。
+娱乐规则在开局简报中设置，包括部署位上限、七级商店、扩展整备区和可选娱乐控制台。
 
 
 手机精简包、布局更新与本地安装说明：[fun.3说明](docs/FUN_MOBILE.md)。

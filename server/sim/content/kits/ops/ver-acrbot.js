@@ -18,7 +18,7 @@ function acrbot(_bb, chess, def) {
     if (id === S1) return {
       id, kind: 'duration', duration: posDur(rec),
       // Check range independently of the attack timer and of taking damage.
-      trigger: 'SEARCH',
+      trigger: { rule: 'SEARCH', enemyOnly: true },
       mods: {
         batPct: batMod(sbb.base_attack_time, chess, descOf(rec)),
         atkPct: num(sbb.atk),

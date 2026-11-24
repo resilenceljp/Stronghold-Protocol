@@ -34,7 +34,7 @@ export function normalizeResult(res, pub) {
       bandId: p.bandId ?? pp.bandId ?? null,
       roundsPassed: Number.isFinite(p.roundsPassed) ? p.roundsPassed : (Number.isFinite(r.roundsPassed) ? r.roundsPassed : 0),
       title,
-      lineup: (Array.isArray(p.lineup) ? p.lineup : Array.isArray(p.board) ? p.board : []).filter(isObj).slice(0, 12),
+      lineup: (Array.isArray(p.lineup) ? p.lineup : Array.isArray(p.board) ? p.board : []).filter(isObj).slice(0, 16),
       bonds: (Array.isArray(p.bonds) ? p.bonds : Array.isArray(pp.bonds) ? pp.bonds : []).filter(isObj),
       stats: isObj(p.stats) ? p.stats : {},
       trophies: Number.isFinite(p.trophies) ? p.trophies : 0,

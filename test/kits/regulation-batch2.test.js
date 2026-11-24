@@ -802,6 +802,10 @@ test('acrbot S1 requires full SP and an enemy in range, then hits enemies and al
     h.step();
     assert.equal(unit.skill.active, false, 'full SP and only an ally in range');
     const enemy = foe(h.battle, 9, 6, { atk: 0, hp: 20000 });
+    h.battle.addBuff(enemy, { key: 'test:stealth', flags: { stealth: true } });
+    h.run(0.3);
+    assert.equal(unit.skill.active, false, 'full SP and a stealthed enemy in range');
+    h.battle.addBuff(enemy, { key: 'test:reveal', flags: { reveal: true } });
     const allyHp = ally.hp, enemyHp = enemy.hp;
     h.run(0.3);
     assert.equal(unit.blocking.length, 0);

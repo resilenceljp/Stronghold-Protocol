@@ -545,7 +545,7 @@ describe('local stats: bounded storage', () => {
     });
     assert.ok(JSON.stringify(rec).length < 140_000, `${JSON.stringify(rec).length} chars`);
     assert.equal(rec.players.length, MAX_SEATS);
-    assert.equal(rec.players[0].lineup.length, 12);
+    assert.equal(rec.players[0].lineup.length, 16);
     assert.equal(rec.players[0].lineup[0].items.length, 4);
     assert.equal(rec.players[0].name.length, 24);
     assert.equal(Object.keys(rec.players[0].stats).length, 24);

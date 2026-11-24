@@ -1943,7 +1943,7 @@ export class Lobby {
     if(!room) return fail(ERR.NOT_IN_ROOM);
     if(room.hostId!==session.playerId) return fail(ERR.NOT_HOST);
     if(!room.match) return fail(ERR.WRONG_PHASE);
-    if (!msg.rules || Object.keys(msg.rules).some(key => !['shopLevel7', 'expandedBench', 'deployCap'].includes(key))) return fail(ERR.BAD_MSG);
+    if (!msg.rules || Object.keys(msg.rules).some(key => !['shopLevel7', 'expandedBench', 'deployCap', 'consoleEnabled'].includes(key))) return fail(ERR.BAD_MSG);
     const answer = this.callMatch(room, 'setFunRules', session.playerId, msg.rules, msg.setupRevision);
     return room.match.hosted ? Promise.resolve(answer).then(matchAnswer) : matchAnswer(answer);
   }
@@ -2297,7 +2297,7 @@ export class Lobby {
         // official mode of the difficulty
         modeId: room.content?.modeId || room.modeId || modeIdFor(room.mode, room.difficulty),
         // 「AI 队友最后选择」 (GitHub #338): fixed for the match
-        ...(room.ruleset === 'entertainment' ? { ruleset: room.ruleset } : {}),
+        ...(room.ruleset === 'entertainment' ? { ruleset: room.ruleset, ...(room.consoleEnabled ? { consoleEnabled: true } : {}) } : {}),
         ...(room.aiBandPolicy === 'vote' ? { aiBandPolicy: 'vote' } : {}),
         aiPicksLast: room.mode !== 'solo' && room.aiPicksLast === true,
         seats,
