@@ -121,6 +121,7 @@ const DEFAULTS = { threshold: 6, touchThreshold: 10, longPressMs: 480 };
  * @param {{
  *   hitPiece: (x, y) => (object|null),            // piece on the tile under canvas point (render/pick.js); piece.uid required
  *   pickTile: (x, y) => ({row, col}|null),        // grid tile under canvas point
+ *   geo?: () => typeof GEO,
  *   isOverCanvas?: (clientX, clientY) => boolean, // false when DOM UI covers the point (default true)
  *   canPlace?: (piece, row, col, target) => boolean,
  *   emit: (name, payload) => void,
@@ -174,7 +175,7 @@ export function createDragController(hooks) {
     st.last = e;
     const tile = tileAt(e.x, e.y);
     const over = overCanvas(e.clientX, e.clientY);
-    const slot = over && tile ? tileSlot(tile) : null;
+    const slot = over && tile ? tileSlot(tile, geo()) : null;
     const legal = !!slot && (slot.area === 'board' || !sameSlot(slot, st.from)) && isLegal(canPlace, st.piece, slot);
     setHoverTile(over ? tile : null);
     emit('pieceDragMove', { uid: st.piece.uid, piece: st.piece, x: e.x, y: e.y, clientX: e.clientX, clientY: e.clientY, target: slot, legal });
