@@ -449,3 +449,22 @@
 .gm__bonds--pf .bond.is-active .bond__core { background: var(--pf-bond-on) center / 129% 129% no-repeat; box-shadow: none; }
 .gm__bonds--pf .bond.is-active .bond__icon { filter: brightness(0) invert(1); }
 .gm__bonds--pf .bond.is-active .bond__glyph { color: #fff; }
+
+/* Without a loaded prefab, anchor the text to the card rather than its static position. */
+.scard.scard--reg-fallback .scard__namebar {
+  inset: auto .06rem .06rem;
+  height: .27rem;
+  background: rgba(8, 15, 13, .92);
+}
+.scard.scard--reg-fallback .scard__name {
+  inset: 0 .04rem;
+  display: block;
+  line-height: .27rem;
+  text-overflow: ellipsis;
+}
+.scard.scard--reg-fallback .scard__prof { display: none; }
+.scard.scard--reg-fallback .scard__bonds {
+  inset: auto .08rem .37rem;
+  max-height: .31rem;
+}
+.scard.scard--reg-fallback .scard__tierbox { left: .06rem; top: .05rem; bottom: auto; }

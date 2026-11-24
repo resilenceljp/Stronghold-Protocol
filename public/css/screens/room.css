@@ -892,7 +892,7 @@
 /* Keep the room chrome in place and scroll the seat grid independently. */
 .rs .rs-seats--grid {
   display: grid;
-  grid-template-columns: repeat(var(--seat-cols), minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(1.3rem, 1fr));
   grid-auto-rows: minmax(2.25rem, auto);
   gap: .16rem;
   align-content: start;
@@ -921,9 +921,3 @@
   background: #111c1b;
 }
 .rseat__strip > .num { margin-inline-end: auto; margin-inline-start: .06rem; }
-@media (max-width: 960px) {
-  .rs .rs-seats--grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@media (max-width: 590px) {
-  .rs .rs-seats--grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}

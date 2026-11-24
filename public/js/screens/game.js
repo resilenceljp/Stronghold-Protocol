@@ -1978,7 +1978,7 @@ function MatchScreen() {
     <div class="gm__field" ref=${hostRef} onContextMenu=${(e) => e.preventDefault()}></div>
     ${viewKind === 'loading' ? html`<div class="gm__loading"><${Spinner} label="LOADING FIELD" /></div>` : null}
     <div class="gm__vignette" aria-hidden="true"></div>
-    ${tempNotice ? html`<${TempRowNotice} equipHand=${equipHand} view=${view} count=${temp.count} items=${temp.items} label=${!drag && !facing}
+    ${tempNotice ? html`<${TempRowNotice} equipHand=${equipHand} geo=${benchGeo(priv?.hand?.length, prepCam.kind === 'bossPrep', priv?.temp?.length)} view=${view} count=${temp.count} items=${temp.items} label=${!drag && !facing}
       ready=${phase === PHASE.PREP && !!priv?.ready} />` : null}
     ${showPrep && view && viewKind !== 'loading' && priv && !pen ? html`<${StandInTags} view=${view} priv=${priv} getChess=${gd.chess} backups=${gd.backups} diyData=${{ chess: data.get('chess'), backups: data.get('backups') }} />` : null}
 

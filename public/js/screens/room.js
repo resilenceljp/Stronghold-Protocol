@@ -278,7 +278,7 @@ function CardPicker({ current, list, m, localSkins = {}, onPick, onClose }) {
  * `portraitDefault` the operator's default one (given when an outfit is worn): a picture that fails to load gives way to
  * the next, the last to the avatar frame.
  */
-function SeatCard({ seat, index, room, facts, myId, busy, onAddBot, onRemoveBot, onKick, onInvite, portrait = null, portraitDefault = null, operator = null, onPickCard = null, onSpectate = null, fresh = false }) {
+function SeatCard({ seat, index, gridCell, room, facts, myId, busy, onAddBot, onRemoveBot, onKick, onInvite, portrait = null, portraitDefault = null, operator = null, onPickCard = null, onSpectate = null, fresh = false }) {
   const [badArt, setBadArt] = useState([]);
   const coop = room.mode !== 'solo';
   // the 转场 flash: a seat that turns ready (or becomes the host's), and an AI teammate added while the room is open
@@ -292,7 +292,7 @@ function SeatCard({ seat, index, room, facts, myId, busy, onAddBot, onRemoveBot,
   if (!seat) {
     const canAdd = coop && facts.isHost;
     const invitable = coop && !facts.spectating;
-    return html`<article class="seat seat--empty rseat rseat--empty" style=${`--i:${index}`}>
+    return html`<article class="seat seat--empty rseat rseat--empty" style=${{ '--i': index, ...gridCell }}>
       <span class="rseat__clip" aria-hidden="true"></span>
       <header class="rseat__strip"><i></i><span class="num">P${index + 1}</span></header>
       <div class="rseat__art">
@@ -318,7 +318,7 @@ function SeatCard({ seat, index, room, facts, myId, busy, onAddBot, onRemoveBot,
   // an AI teammate's name without its 「AI·」 prefix on a phone (room.css; botNameParts)
   const botPrefix = botNameParts(seat);
   return html`<article class=${`seat rseat${isMe ? ' is-me' : ''}${isHostSeat ? ' is-host' : ''}${seat.isBot ? ' is-bot' : ''}${art ? ' has-art' : ''}${lit ? ' is-lit' : ''}${flash ? ' is-flash' : ''} is-${state}`}
-      style=${`--i:${index}`}>
+      style=${{ '--i': index, ...gridCell }}>
     <span class="rseat__clip" aria-hidden="true"></span>
     <header class="rseat__strip"><i></i><span class="num">P${index + 1}</span>${group ? html`<b class="rseat__group" style=${`--seat-group:${group.color}`} title=${t('{group}组 · 同组共享卡池', { group: group.label })}>${group.label}</b>` : null}</header>
     <div class="seat__art rseat__art">
@@ -725,6 +725,29 @@ export function RoomScreen() {
   };
 
   // the room wears its version's season look like the lobby (规程: data-season="act3autochess", room.css)
+  const gridCells = new Map();
+  if (coop && facts.seats.length > 4 && facts.occupied.length) {
+    const groups = poolGroupSizes(facts.occupied.length);
+    if (groups.length > 1) {
+      let offset = 0;
+      let gridRow = 1;
+      for (const size of groups) {
+        facts.occupied.slice(offset, offset + size).forEach((seat, i) => {
+          gridCells.set(seat.seat, { gridRow: gridRow + Math.floor(i / 4), gridColumn: i % 4 + 1 });
+        });
+        offset += size;
+        gridRow += Math.ceil(size / 4);
+      }
+      let empty = 0;
+      facts.seats.forEach((seat, index) => {
+        if (!seat) {
+          gridCells.set(index, { gridRow: gridRow + Math.floor(empty / 4), gridColumn: empty % 4 + 1 });
+          empty++;
+        }
+      });
+    }
+  }
+
   return html`<div class=${`screen room-screen rs${coop ? '' : ' rs--solo'}`} data-season=${seasonOf(roomVersion(room))} style=${`--d-color:${room.modeId ? info.color : DIFFICULTY_COLORS[room.difficulty] || 'var(--amber)'}; --n:${facts.seats.length}`}>
     <div class="rs__bg" aria-hidden="true"></div>
     <header class="topbar rs-top">
@@ -755,12 +778,12 @@ export function RoomScreen() {
       </div>
     </header>
 
-    <main class=${`seats rs-seats${coop ? (facts.seats.length > 4 ? ' rs-seats--grid' : '') : ' seats--solo'}`} style=${`--seat-cols:${facts.seats.length > 8 ? 5 : 4}`}>
+    <main class=${`seats rs-seats${coop ? (facts.seats.length > 4 ? ' rs-seats--grid' : '') : ' seats--solo'}`}>
       ${facts.seats.map((s, i) => {
         const op = seatOperator(s, cards, { myId: me.playerId, myCard });
         // the player's outfit for that operator (header "Outfits"); null = the default art
         const skin = op ? seatCardSkin(s, op.chess.charId, { myId: me.playerId, localSkins, players: facts.occupied, otherSkins }) : null;
-        return html`<${SeatCard} key=${s ? `p${s.playerId}` : `e${i}`} seat=${s} index=${i} room=${room} facts=${facts}
+        return html`<${SeatCard} key=${s ? `p${s.playerId}` : `e${i}`} seat=${s} index=${i} gridCell=${gridCells.get(i)} room=${room} facts=${facts}
           myId=${me.playerId} busy=${busy} onAddBot=${addBot} onRemoveBot=${removeBot} onKick=${kick} onInvite=${() => copy('code')} onSpectate=${spectate}
           portrait=${op ? chessPortraitUrl(data.get('assets'), op.chess, { skin }) : null}
           portraitDefault=${op && skin ? chessPortraitUrl(data.get('assets'), op.chess) : null} operator=${op?.chess} onPickCard=${() => setPicking(true)}

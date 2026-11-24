@@ -154,11 +154,11 @@ export function tempRowRule(ready) {
 /**
  * The temp row's notice: dashed red frame + label (count, what to do, what happens at the end of the prep — tempRowRule).
  * `label` false (a piece is being dragged / placed): the frame only, nothing over the pieces the player is moving.
- * @param {{ view: any, count: number, items?: number, label?: boolean, ready?: boolean, equipHand?: boolean }} props
+ * @param {{ view: any, count: number, items?: number, label?: boolean, ready?: boolean, equipHand?: boolean, geo?: typeof GEO }} props
  */
-export function TempRowNotice({ view, count, items = 0, label = true, ready = false, equipHand = false }) {
-  const a = useTileScreen(view, GEO.TEMP_ROW, GEO.TEMP_C0);
-  const b = useTileScreen(view, GEO.TEMP_ROW, GEO.TEMP_C0 + GEO.TEMP_SIZE - 1);
+export function TempRowNotice({ view, count, items = 0, label = true, ready = false, equipHand = false, geo = GEO }) {
+  const a = useTileScreen(view, geo.TEMP_ROW, geo.TEMP_C0);
+  const b = useTileScreen(view, geo.TEMP_ROW, geo.TEMP_C0 + geo.TEMP_SIZE - 1);
   let rem = 100;
   try { rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 100; } catch { /* default */ }
   const vw = globalThis.innerWidth || 1920;
@@ -166,10 +166,11 @@ export function TempRowNotice({ view, count, items = 0, label = true, ready = fa
   if (!f) return null;
   const pts = f.quad.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
   const pad = rem * 0.1;
-  const style = f.side === 'left' ? `left:${(f.left - pad).toFixed(1)}px;top:${f.y.toFixed(1)}px` : `left:${(f.right + pad).toFixed(1)}px;top:${f.y.toFixed(1)}px`;
+  const above = equipHand && geo.HAND_SIZE > GEO.HAND_SIZE;
+  const style = above ? `left:${((f.left + f.right) / 2).toFixed(1)}px;top:${(Math.min(...f.quad.map(p => p[1])) - pad).toFixed(1)}px` : f.side === 'left' ? `left:${(f.left - pad).toFixed(1)}px;top:${f.y.toFixed(1)}px` : `left:${(f.right + pad).toFixed(1)}px;top:${f.y.toFixed(1)}px`;
   return html`<div class=${equipHand ? 'tempnote tempnote--equipment' : 'tempnote'} aria-hidden="false" data-testid="temp-notice">
     ${!equipHand ? html`<svg class="tempnote__frame" aria-hidden="true"><polygon points=${pts} /></svg>` : null}
-    ${label ? html`<div class=${`tempnote__label is-${f.side}`} style=${style} role="status">
+    ${label ? html`<div class=${`tempnote__label is-${above ? 'above' : f.side}`} style=${style} role="status">
       <b class="tempnote__title">${equipHand ? t('装备区') : html`<${Icon} name="warn" />`}${equipHand ? null : items > 0 && items === count
         ? tParts('临时整备区 {n} 件道具待处理', { n: html`<span class="num">${count}</span>`, count })
         : tParts('临时整备区 {n} 个单位待处理', { n: html`<span class="num">${count}</span>`, count })}</b>

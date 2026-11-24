@@ -1,3 +1,4 @@
+import { REGULATION_EXPANDED_HAND_SIZE, LEGACY_EXPANDED_HAND_SIZE, LEGACY_EXPANDED_TEMP_SIZE } from '../../shared/bench.js';
 // Deliberate owner-approved optional rules. Standard matches never use these overrides.
 import { ERR } from '../../shared/constants.js';
 export const RULESETS = ['standard', 'entertainment', 'endless'];
@@ -71,5 +72,10 @@ export function consoleIntent(m, ps, msg) {
 }
 
 export function configureBench(gd, enabled) {
- gd.economy={...gd.economy,benchSize:enabled?22:gd._standardEconomy.benchSize,tempSize:enabled?11:gd._standardEconomy.tempSize};
+ const split = gd.config.version?.rules?.equipHand === true;
+ gd.economy = {
+  ...gd.economy,
+  benchSize: enabled ? (split ? REGULATION_EXPANDED_HAND_SIZE : LEGACY_EXPANDED_HAND_SIZE) : gd._standardEconomy.benchSize,
+  tempSize: enabled && !split ? LEGACY_EXPANDED_TEMP_SIZE : gd._standardEconomy.tempSize,
+ };
 }

@@ -1,3 +1,4 @@
+import { LEGACY_EXPANDED_HAND_SIZE, LEGACY_EXPANDED_TEMP_SIZE } from './bench.js';
 import { validFunRules } from './entertainmentRules.js';
 // Normative message catalogue (DESIGN §8). Used by server (validation) and client (building requests).
 // Every client→server message is `{ t, rid?, ...fields }`. Unknown `t` or invalid fields ⇒ ERR.BAD_MSG.
@@ -507,8 +508,8 @@ const isDir = (v) => DIRS.includes(v);
 const target = (v) => {
   if (!v || typeof v !== 'object') return false;
   if (v.area === 'board') return isInt(v.row, 0, GEO.ROWS - 1) && isInt(v.col, 0, GEO.COLS - 1);
-  if (v.area === 'hand') return isInt(v.idx, 0, GEO.HAND_SIZE - 1);
-  if (v.area === 'temp') return isInt(v.idx, 0, GEO.TEMP_SIZE - 1);
+  if (v.area === 'hand') return isInt(v.idx, 0, LEGACY_EXPANDED_HAND_SIZE - 1);
+  if (v.area === 'temp') return isInt(v.idx, 0, LEGACY_EXPANDED_TEMP_SIZE - 1);
   return false;
 };
 

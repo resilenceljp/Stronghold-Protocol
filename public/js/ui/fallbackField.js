@@ -1,4 +1,4 @@
-import { benchGeo } from '../../../shared/bench.js';
+import { benchGeo, handTile } from '../../../shared/bench.js';
 // DOM fallback for the Pixi field view (DESIGN §9 API). Used when public/js/render/app.js is missing or
 // fails to initialise, so the match stays playable: a flat tile board + 整备区, pieces as avatars with
 // tier chips, pointer drag & drop (same events as the render engine), and a simple battle view (units as
@@ -158,8 +158,16 @@ export function createFallbackView(host, opts = {}) {
   }
 
   const tilePos = (L, row, col) => ({ x: (col - st.rect.c0) * L.tile, y: (st.rect.r1 - row) * L.tile });
-  const handPos = (L, idx) => ({ x: (idx % (st.priv?.hand?.length===22?11:10)) * L.tile, y: (L.rows + 0.6 + (st.priv?.hand?.length===22?Math.floor(idx/11):0)) * L.tile });
-  const tempPos = (L, idx) => ({ x: ((st.priv?.hand?.length===22?0:GEO.TEMP_C0) + idx) * L.tile, y: (L.rows + (st.priv?.hand?.length===22?2.72:1.72)) * L.tile });
+  const trayGeo = () => benchGeo(st.priv?.hand?.length, false, equipHand() ? GEO.TEMP_SIZE : st.priv?.temp?.length);
+  const handPos = (L, idx) => {
+    const tile = handTile(idx, trayGeo());
+    return { x: tile.col * L.tile, y: (L.rows + 0.6 + (tile.row - GEO.HAND_ROW) * 1.12) * L.tile };
+  };
+  const tempPos = (L, idx) => {
+    const geo = trayGeo();
+    const offset = geo.TEMP_ROW < GEO.HAND_ROW ? 2.72 : 1.72;
+    return { x: (geo.TEMP_C0 + idx) * L.tile, y: (L.rows + offset) * L.tile };
+  };
 
   // ---- pieces (prep) ---------------------------------------------------------------------------------------
   function pieceArt(p) {
@@ -419,7 +427,7 @@ export function createFallbackView(host, opts = {}) {
       }
       const temp = Array.isArray(st.priv.temp) ? st.priv.temp : [];
       if (equipHand() || temp.some(Boolean)) {
-        for (let i = 0; i < GEO.TEMP_SIZE; i++) {
+        for (let i = 0; i < trayGeo().TEMP_SIZE; i++) {
           const pos = tempPos(L, i);
           hand.push(html`<div key=${`t${i}`} class="ff-slot ff-slot--temp" data-drop=${equipHand() ? 'temp' : undefined} data-idx=${i} style=${`transform:translate(${pos.x}px,${pos.y}px);width:${L.tile}px;height:${L.tile}px`}></div>`);
           const p = temp[i];
@@ -576,8 +584,11 @@ export function createFallbackView(host, opts = {}) {
       const br = root.querySelector('.ff-board')?.getBoundingClientRect();
       if (!br) return null;
       let p = null;
-      if (st.mode === 'prep' && row >= GEO.HAND_ROW && row <= GEO.HAND_ROW+(st.priv?.hand?.length===22?1:0) && col >=0 && col < (st.priv?.hand?.length===22?11:10)) p=handPos(L,col+(row-GEO.HAND_ROW)*11);
-      else if (row === benchGeo(st.priv?.hand?.length).TEMP_ROW && col >= benchGeo(st.priv?.hand?.length).TEMP_C0 && col < benchGeo(st.priv?.hand?.length).TEMP_C0 + GEO.TEMP_SIZE && st.mode === 'prep') p = tempPos(L, col - benchGeo(st.priv?.hand?.length).TEMP_C0);
+      const geo = trayGeo();
+      const cols = geo.HAND_COLS || geo.HAND_SIZE;
+      const idx = (row - GEO.HAND_ROW) * cols + col;
+      if (st.mode === 'prep' && row >= GEO.HAND_ROW && col >= 0 && col < cols && idx < geo.HAND_SIZE) p = handPos(L, idx);
+      else if (st.mode === 'prep' && row === geo.TEMP_ROW && col >= geo.TEMP_C0 && col < geo.TEMP_C0 + geo.TEMP_SIZE) p = tempPos(L, col - geo.TEMP_C0);
       else if (row >= st.rect.r0 && row <= st.rect.r1 && col >= st.rect.c0 && col <= st.rect.c1) p = tilePos(L, row, col);
       if (!p) return null;
       const x0 = br.left + p.x, y0 = br.top + p.y, s = L.tile;

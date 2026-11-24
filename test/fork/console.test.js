@@ -1,7 +1,10 @@
+import { benchGeo, benchStage, handTile } from '../../shared/bench.js';
+import { tileSlot } from '../../public/js/render/drag.js';
+import { validateC2S } from '../../shared/protocol.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Match } from '../../server/match/Match.js';
-import { getData } from '../../server/data.js';
+import { getData, getVersionData } from '../../server/data.js';
 import { VirtualScheduler } from '../../server/match/scheduler.js';
 import { consoleIntent } from '../../server/match/entertainment.js';
 import { awardRelic, chooseRelic } from '../../server/match/relics.js';
@@ -79,4 +82,34 @@ test('expanded bench and relic selection survive setup revisions; endless requir
   assert.equal(m.voteEndless(p, m.endlessVote.id, true).ok, true);
   assert.equal(m.ruleset, 'endless');
   assert.equal(m.round, 15);
+});
+
+test('regulation extends the operator row into the four cells before equipment', t => {
+  const data = getVersionData('act3autochess@V3_1');
+  const m = new Match({ data, mode: 'coop', difficulty: 'NORMAL', ruleset: 'entertainment',
+    seed: 24, scheduler: new VirtualScheduler(), botRehearsal: 0,
+    seats: [{ seat: 0, playerId: 'owner', name: 'Owner', isBot: false, connected: true }],
+    send() { return true; }, broadcast() {}, onEnd() {} });
+  t.after(() => m.dispose());
+  m.start();
+  assert.equal(m.setFunRules('owner', { expandedBench: true }, m.setupRevision).ok, true);
+  m.startRound(1);
+  m.phase = 'PREP';
+  const player = m.order[0];
+  assert.equal(player.hand.length, 14);
+  assert.equal(player.temp.length, 5);
+  const geo = benchGeo(player.hand.length);
+  const expandedStage = benchStage(m.stage, player.hand.length);
+  assert.equal(expandedStage.rows[8].slice(0, 4), 'aaaa');
+  assert.equal(expandedStage.rows[8].slice(4), m.stage.rows[8].slice(4));
+  const piece = player.acquireChess([...player.pool.entries.keys()].find(id => data.chess[id]?.tier === 1 && player.pool.left(id) > 0), { fromPool: false });
+  for (let idx = 10; idx < 14; idx++) {
+    const tile = handTile(idx, geo);
+    assert.deepEqual(tile, { row: 8, col: idx - 10 });
+    const to = tileSlot(tile, geo);
+    assert.equal(validateC2S({ t: 'g.move', uid: piece.uid, to }), null);
+    assert.equal(player.move(piece.uid, to).ok, true);
+    assert.equal(player.hand[idx]?.uid, piece.uid);
+  }
+  assert.deepEqual(tileSlot({ row: 8, col: 4 }, geo), { area: 'temp', idx: 0 });
 });

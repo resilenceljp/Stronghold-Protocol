@@ -1,12 +1,27 @@
 import { GEO } from './constants.js';
-export function benchGeo(size=10,boss=false,tempSize=5) {return size===22?{...GEO,HAND_SIZE:22,HAND_COLS:11,TEMP_ROW:6,TEMP_C0:0,TEMP_SIZE:tempSize}:GEO;}
+
+export const REGULATION_EXPANDED_HAND_SIZE = GEO.HAND_SIZE + GEO.TEMP_C0;
+export const LEGACY_EXPANDED_HAND_SIZE = 22;
+export const LEGACY_EXPANDED_TEMP_SIZE = 11;
+
+export function benchGeo(size=10,boss=false,tempSize=5) {return size===REGULATION_EXPANDED_HAND_SIZE ? {...GEO,HAND_SIZE:size,HAND_COLS:GEO.HAND_SIZE} : size===LEGACY_EXPANDED_HAND_SIZE?{...GEO,HAND_SIZE:22,HAND_COLS:11,TEMP_ROW:6,TEMP_C0:0,TEMP_SIZE:tempSize}:GEO;}
 /** Slot geometry shared by models, picking, dragging and UI actions.
  * @param {typeof GEO & {HAND_COLS?:number}} geo
  */
 export function handTile(idx,geo=GEO) {const cols=geo.HAND_COLS||geo.HAND_SIZE||Infinity;return {row:geo.HAND_ROW+Math.floor(idx/cols),col:idx%cols};}
 /** Render-only layout; simulation stage and deployment coordinates are unchanged. */
 export function benchStage(stage,size,tempSize=5,boss=false) {
- if(size!==22||!stage?.rows)return stage;
+ if (!stage?.rows) return stage;
+ if (size === REGULATION_EXPANDED_HAND_SIZE) {
+  const rows = [...stage.rows];
+  const row = boss ? 1 : GEO.TEMP_ROW;
+  const add = "a".repeat(GEO.TEMP_C0);
+  const original = rows[row];
+  if (typeof original !== 'string') return stage;
+  rows[row] = boss ? add + original.slice(GEO.TEMP_C0, -GEO.TEMP_C0) + add : add + original.slice(GEO.TEMP_C0);
+  return { ...stage, rows, extendedBench: true };
+ }
+ if(size!==LEGACY_EXPANDED_HAND_SIZE)return stage;
  const rows=[...stage.rows];
  const replace=(row,from,to,glyph)=>{rows[row]=(rows[row]||'#'.repeat(21)).split('').map((v,c)=>c>=from&&c<=to?glyph:v).join('');};
  if(boss){
