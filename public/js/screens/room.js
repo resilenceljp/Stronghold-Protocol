@@ -2,7 +2,7 @@ import { ForkRoomControls } from '../ui/forkRoom.js';
 import { AiParticipation } from '../ui/aiParticipation.js';
 import { poolGroupIdentity } from '../ui/gameLogic/groups.js';
 import { poolGroupSizes } from '../../../shared/playerCapacity.js';
-import { ROOM_CAPACITIES, DEFAULT_SEATS } from '../../../shared/constants.js';
+import { DEFAULT_SEATS } from '../../../shared/constants.js';
 // Room screen (同盟等待室), laid out like the event's room: 4 tall seat cards (the 名片干员 portrait or the avatar frame,
 // 创建者, the ready state at the bottom, the name plate under the card; an empty seat offers 邀请 — copies the key — and,
 // to the host, 添加 AI 队友; the host's 移出 / 移除 AI 队友 at a card's top right), the top bar (leave, mode and ping, 统计 /
@@ -430,7 +430,7 @@ function AiTakeoverToggle({ option, busy, onToggle }) {
  * ⚙ of the bottom pill (co-op): 同盟设置 — the 模拟难度 (opens 选择模拟协议: the host's 确认, the others' read-only view)
  * and the 「AI 队友最后选择」 switch. Closes on a click outside it or Esc.
  */
-function RoomOptions({ option, takeoverOption, onAiTakeover, soloOption = null, room, isHost, busy, onAiLast, onSoloUnlimited, onDifficulty, onClose, onCapacity, version = null }) {
+function RoomOptions({ option, takeoverOption, onAiTakeover, soloOption = null, room, isHost, busy, onAiLast, onSoloUnlimited, onDifficulty, onClose, myId, version = null }) {
   const info = difficultyInfo(room.mode, room.difficulty);
   const title = soloOption ? t('模拟设置') : t('同盟设置');
   useEffect(() => {
@@ -442,7 +442,7 @@ function RoomOptions({ option, takeoverOption, onAiTakeover, soloOption = null, 
   }, []);
   return html`<div class="rs-opts" role="dialog" aria-label=${title}>
     <h4>${title}</h4>
-    ${room.mode === 'coop' ? html`<label class="rs-opts__row"><span class="rs-opts__k">${t('人数')}</span><select value=${room.capacity || DEFAULT_SEATS} disabled=${!isHost || !!busy} onChange=${(e) => onCapacity(Number(e.currentTarget.value))}>${ROOM_CAPACITIES.map(n => html`<option value=${n}>${n}</option>`)}</select></label>` : null}
+    <${ForkRoomControls} room=${room} myId=${myId} />
     ${soloOption ? null : html`<div class="rs-opts__row" data-testid="room-opt-difficulty">
       <span class="rs-opts__k">${t('模拟难度')}</span>
       <button type="button" class="rs-opts__diff" disabled=${isHost && !!busy} onClick=${onDifficulty}
@@ -754,7 +754,7 @@ export function RoomScreen() {
       </div>
     </header>
 
-    <${AiParticipation} settings=${true} /><${ForkRoomControls} room=${room} myId=${me.playerId} />
+    <${AiParticipation} settings=${true} />
     <main style=${facts.seats.length > 4 ? `grid-template-columns:repeat(${facts.seats.length > 8 ? 5 : 4},minmax(0,1fr));overflow-y:auto;max-height:65vh` : undefined} class=${`seats rs-seats${coop ? '' : ' seats--solo'}`}>
       ${facts.seats.map((s, i) => {
         const op = seatOperator(s, cards, { myId: me.playerId, myCard });
@@ -793,7 +793,7 @@ export function RoomScreen() {
           ${aiLast || soloOpt ? html`<button type="button" class=${`rs-pill__gear${opts ? ' is-on' : ''}`} onClick=${() => setOpts((v) => !v)} title=${aiLast ? t('同盟设置') : t('模拟设置')} aria-label=${aiLast ? t('同盟设置') : t('模拟设置')}
             aria-expanded=${opts ? 'true' : 'false'}><${GearGlyph} /></button>` : null}
           ${opts && (aiLast || soloOpt) ? html`<${RoomOptions} takeoverOption=${aiTakeoverOption(room, me.playerId)} onAiTakeover=${setAiTakeover} option=${aiLast} soloOption=${soloOpt} room=${room} isHost=${facts.isHost} busy=${busy} onAiLast=${setAiLast}
-            onSoloUnlimited=${setSoloUnlimited} onCapacity=${(capacity) => run('capacity', () => net.request('room.setCapacity', { capacity }))} onDifficulty=${openProto} onClose=${() => setOpts(false)} version=${versionCtl} />` : null}
+            onSoloUnlimited=${setSoloUnlimited} myId=${me.playerId} onDifficulty=${openProto} onClose=${() => setOpts(false)} version=${versionCtl} />` : null}
         </div>
       </div>
       <div class="room-bar__right rs-foot__right">

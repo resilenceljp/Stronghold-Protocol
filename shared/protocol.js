@@ -530,11 +530,19 @@ export const C2S = {
   // the server applies `true` solely to a solo room of a version whose solo is timed, and ignores it otherwise, so a
   // default create stays the message it was.
   // modeId: an official mode of a laddered version's room mode (规程's solo: 极速模拟 / 规程等级 n); ignored elsewhere
-  'room.create': { mode: (v) => v === 'solo' || v === 'coop', difficulty: (v) => DIFFICULTIES.includes(v), test: (v) => v === true, version: isVersionId, soloUnlimited: isBool, modeId: isId, capacity: (v) => ROOM_CAPACITIES.includes(v), ruleset: (v) => v === 'standard' || v === 'entertainment', consoleEnabled: isBool, $optional: ['test', 'difficulty', 'version', 'soloUnlimited', 'modeId', 'capacity', 'ruleset', 'consoleEnabled'] },
-  'room.join': { $optional: ['testAck'], testAck: (v) => v === true, code: (v) => isStr(v, ROOM_CODE_LEN + 2) && /^[A-Za-z0-9]+$/.test(v) },
+  'room.create': { assetCache: isAssetCacheReadiness, mode: (v) => v === 'solo' || v === 'coop', difficulty: (v) => DIFFICULTIES.includes(v), test: (v) => v === true, version: isVersionId, soloUnlimited: isBool, modeId: isId, capacity: (v) => ROOM_CAPACITIES.includes(v), ruleset: (v) => v === 'standard' || v === 'entertainment', consoleEnabled: isBool, $optional: ['test', 'difficulty', 'version', 'soloUnlimited', 'modeId', 'capacity', 'ruleset', 'consoleEnabled', 'assetCache'] },
+  'room.join': { assetCache: isAssetCacheReadiness, $optional: ['testAck', 'assetCache'], testAck: (v) => v === true, code: (v) => isStr(v, ROOM_CODE_LEN + 2) && /^[A-Za-z0-9]+$/.test(v) },
   'p2p.enable': { enabled: isBool },
   'p2p.signal': { epoch: isId, to: isId, description: isPeerDescription, candidate: isPeerCandidate, $optional: ['description', 'candidate'] },
   'p2p.ready': { epoch: isId, ready: isBool, seq: (v) => Number.isSafeInteger(v) && v >= 0 },
+  'lobby.watch': { on: isBool, list: isBool, page: (v) => isInt(v, 0, 1e6), $optional: ['list', 'page'] },
+  // Admission metadata uses the existing wire-v1 extension slot; published position layouts stay unchanged.
+  'lobby.quickMatch': { capacity: (v) => ROOM_CAPACITIES.includes(v), assetCache: isAssetCacheReadiness, $optional: ['capacity', 'assetCache'] },
+  // Post-v1 types use the readable JSON fallback; public identities never expose hidden invitation codes.
+  'lobby.join': { roomId: isRoomId,
+    assetCache: isAssetCacheReadiness, $optional: ['assetCache'] },
+  'lobby.spectate': { roomId: isRoomId,
+    assetCache: isAssetCacheReadiness, $optional: ['assetCache'] },
   'room.leave': {},
   'room.ready': { ready: isBool },
   'room.setDifficulty': { difficulty: (v) => DIFFICULTIES.includes(v) },

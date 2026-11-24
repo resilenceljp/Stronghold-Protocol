@@ -52,7 +52,7 @@ async function fixture(t, { required = false, buildCatalog = async () => catalog
     server.serverSettings.poll();
   };
   const browserNet = async (getAssetCacheReadiness) => {
-    const net = new Net({ url, WebSocket, getAssetCacheReadiness });
+    const net = new Net({ url, WebSocket, getAssetCacheReadiness, compactWire: true });
     nets.push(net);
     let timer, stop;
     try {

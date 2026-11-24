@@ -191,6 +191,7 @@ export class LobbyDiscovery {
   accessById(session, { roomId, assetCache }, spectate) {
     const room = [...this.lobby.rooms.values()].find((candidate) => candidate.directoryId === roomId);
     if (!room) return fail(ERR.ROOM_NOT_FOUND);
+    if (spectate && this.lobby.roomOf(session) === room && room.seatOf(session.playerId)) return fail(ERR.ALREADY, 'seated as a player');
     if (!spectate && room.allowMatchmaking === false) return fail(ERR.BAD_TARGET, 'matchmaking disabled');
     // Existing handlers perform room/role/capacity and asset checks before changing any membership.
     return spectate ? this.lobby.spectate(session, { code: room.code, assetCache })

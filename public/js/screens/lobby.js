@@ -873,6 +873,7 @@ export function LobbyScreen() {
           <${SettingsButton} class="lobby-settings" variant="secondary" square=${true} />
           <${GuideButton} class="lobby-guide" variant="secondary" square=${true} />
           <${LobbyMediaButton} />
+          <${AssetCacheButton} compact=${true} />
           <${PwaInstallButton} class="lobby-pwa" square=${true} />
         </div>
       </div>
@@ -887,6 +888,7 @@ export function LobbyScreen() {
       <aside class="hub-side">
         <${AchievementCard} onOpen=${() => setAchOpen(true)} />
         <${HubTile} icon="key" label=${t('密钥加入')} en="JOIN WITH KEY" class="hub-tile--key" onClick=${() => setAllyOpen(true)} />
+        <${LobbyDiscovery} />
         <${TipsPanel} />
       </aside>
       <aside class="hub-right">

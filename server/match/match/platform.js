@@ -338,7 +338,7 @@ export class MatchPlatform {
     // a seat leaving during the strategy draft keeps its place in the order, like one gone before it: at its turn the AI
     // drafts for it (botControlled → scheduleBandBot; botPickBand's departedWeight: Touch while nobody else holds it,
     // never 歌利亚) and it keeps the 0 LP it left with (_applyBand; §37.65)
-    else if (phase === PHASE.BAND_DRAFT && this.draft && this.draftTurn() === ps.playerId) this.startDraftTurn();
+    else if (phase === PHASE.BAND_DRAFT && this.draft && this.draftTurn(ps.playerId) === ps.playerId) this.startDraftTurn(this.draftGroup(ps.playerId));
     // 选择自编: the last seat still choosing left — the others need not wait for the deadline
     else if (phase === PHASE.CUSTOM_CHECK) this.maybeEndCustom();
     else if (phase === PHASE.PREP) this.maybeEndPrep();

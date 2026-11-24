@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { startServer } from '../server/index.js';
 import { TestClient } from './helpers/wsClient.js';
-import { aiBandAction, beginAiBandVote } from '../server/aiBands.js';
+import { aiBandView, beginAiBandVote } from '../server/match/aiBandVote.js';
 import { takeoverVoters } from '../server/aiTakeover.js';
 import { ROOM_CAPACITIES } from '../shared/constants.js';
 import { poolGroupSizes } from '../shared/playerCapacity.js';
@@ -11,6 +11,7 @@ async function fixture(t) {
  t.after(async()=>{for(const c of clients)await c.terminate().catch(()=>{});await srv.close();});
  const player=async name=>{const c=await TestClient.connect(srv.url.replace('http','ws')+'/ws');clients.push(c);const w=await c.hello(name);c.id=w.playerId;c.token=w.token;return c;};
  const host=await player('Host');assert.equal((await host.request({t:'room.create',mode:'coop',difficulty:'NORMAL',capacity:12})).t,'ok');const room=[...srv.lobby.rooms.values()][0];
+ await host.request({ t: 'room.setAiTakeover', on: true });
  const a=await player('A'),b=await player('B');for(const c of [a,b]){await c.request({t:'room.join',code:room.code});await c.request({t:'room.ready',ready:true});}
  await host.request({t:'room.addBot'});const other=await player('Other');await other.request({t:'room.join',code:room.code});await other.request({t:'room.ready',ready:true});
  for(let i=0;i<3;i++)await host.request({t:'room.addBot'});
@@ -33,9 +34,9 @@ test('combat cannot accept a takeover and a majority rejection closes the reques
  await host.request({t:'room.aiVote',voteId:id,approve:false});assert.equal(room.aiTakeoverVotes.length,1);await a.request({t:'room.aiVote',voteId:id,approve:false});assert.equal(room.aiTakeoverVotes.length,0);assert.equal(bot.isBot,true);
 });
 test('AI strategy votes are group scoped and apply only on majority',async t=>{
- const {srv,room,m,host,a,other}=await fixture(t);room.aiBandPolicy='vote';m.phase='INFO_CHECK';m.enterBandDraft();const bot=m.order[3],g=m.draftGroup(bot.playerId);g.order=[bot.playerId];g.idx=0;g.done=false;m.clearDraftGroupTimer(g);assert.equal(beginAiBandVote(srv.lobby,room,bot,g),true);
- const id=m.gd.bandIds().find(id=>m.gd.bandAllowed(id)&&!m.bandTaken(id,bot.playerId));const action=c=>aiBandAction(srv.lobby,srv.registry.byId(c.id),{t:'room.aiBandVote',draftId:m.draft.id,botId:bot.playerId,bandId:id});
- assert.ok(action(other).error);assert.ok(aiBandAction(srv.lobby,srv.registry.byId(host.id),{t:'room.aiBandVote',draftId:'stale',botId:bot.playerId,bandId:id}).error);assert.ok(!action(host).error);assert.equal(m.draft.picks[bot.playerId],undefined);assert.ok(!action(a).error);assert.equal(m.draft.picks[bot.playerId],id);assert.equal(room.aiBandVotes.length,0);
+ const {srv,room,m,host,a,other}=await fixture(t);m.aiBandPolicy='vote';m.phase='INFO_CHECK';m.enterBandDraft();const bot=m.order[3],g=m.draftGroup(bot.playerId);g.order=[bot.playerId];g.idx=0;g.done=false;m.clearDraftGroupTimer(g);assert.equal(beginAiBandVote(m,bot),true);
+ const id=m.gd.bandIds().find(id=>m.gd.bandAllowed(id)&&!m.bandTaken(id,bot.playerId));const action=(c,draftId=m.draft.id)=>c.request({t:'room.aiBandVote',draftId,botId:bot.playerId,bandId:id});
+ assert.equal((await action(other)).t,'error');assert.equal((await action(host,'stale')).t,'error');assert.equal((await action(host)).t,'ok');assert.equal(m.draft.picks[bot.playerId],undefined);assert.equal((await action(a)).t,'ok');assert.equal(m.draft.picks[bot.playerId],id);assert.equal(aiBandView(m).length,0);
 });
 
 test('a group without online humans delegates to the online host only',()=>{
@@ -43,7 +44,7 @@ test('a group without online humans delegates to the online host only',()=>{
  assert.deepEqual(takeoverVoters(room,'bot'),['host']);seats[0].connected=false;assert.deepEqual(takeoverVoters(room,'bot'),[]);
 });
 test('AI policy is host-only before drafting and invalidates prior briefing readiness',async t=>{
- const {srv,room,m,host,a}=await fixture(t);const action=(c,policy)=>aiBandAction(srv.lobby,srv.registry.byId(c.id),{t:'room.aiPolicy',policy});
- m.phase='INFO_CHECK';const revision=m.setupRevision;m.order[0].infoReady=true;assert.ok(action(a,'vote').error);assert.ok(!action(host,'vote').error);assert.equal(room.aiBandPolicy,'vote');assert.equal(m.setupRevision,revision+1);assert.equal(m.order[0].infoReady,false);
- m.phase='PREP';assert.ok(action(host,'auto').error);assert.equal(room.aiBandPolicy,'vote');
+ const {srv,room,m,host,a}=await fixture(t);const action=(c,policy)=>c.request({t:'room.aiPolicy',policy});
+ m.phase='INFO_CHECK';const revision=m.setupRevision;m.order[0].infoReady=true;assert.equal((await action(a,'vote')).t,'error');assert.equal((await action(host,'vote')).t,'ok');assert.equal(room.aiBandPolicy,'vote');assert.equal(m.setupRevision,revision+1);assert.equal(m.order[0].infoReady,false);
+ m.phase='PREP';assert.equal((await action(host,'auto')).t,'error');assert.equal(room.aiBandPolicy,'vote');
 });

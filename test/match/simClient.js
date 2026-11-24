@@ -1,3 +1,4 @@
+import { MAX_SEATS } from '../../shared/constants.js';
 // test/match/simClient.js — a scripted "browser" under client-side combat (DESIGN §14) for Match tests: it answers
 // b.start (authoritative) by simulating the spec with the shared sim (server/sim/spec.js createBattleFromSpec), reports
 // b.progress / b.result through `send` (every frame passes shared/protocol.js validateC2S, like the platform), syncs

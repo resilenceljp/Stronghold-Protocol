@@ -8,7 +8,7 @@ export async function runMatch(m, done, { maxSteps = 5e6 } = {}) {
         if (m.externalAI.inflight.size) continue;
       }
       if (done()) return true;
-      if (!m.sched.runNext()) return false;
+      if (!(m.sched.source ?? m.sched).runNext()) return false;
     }
     return done();
   } catch (error) {

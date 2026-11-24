@@ -979,6 +979,8 @@ export class Lobby {
   /** The session's socket closed. @param {import('./net.js').Session} session */
   onDisconnect(session) {
     this.peerRelay.disconnect(session);
+    this.discovery.forget(session.playerId);
+    this.discovery.changed();
     this.clearResync(session.playerId); // the next resume resyncs immediately
     const room = this.roomOf(session);
     // a solo run may be resumed within singleReconnectTime (24 h); everything else keeps the registry's window
@@ -1044,7 +1046,7 @@ export class Lobby {
   // room.* handlers
   // ---------------------------------------------------------------------------------------------------
 
-  create(session, { mode, difficulty: asked, test, version: askedVersion, soloUnlimited, modeId: askedMode, capacity = DEFAULT_SEATS, ruleset = 'standard', consoleEnabled = false } = {}) {
+  create(session, { mode, difficulty: asked, test, version: askedVersion, soloUnlimited, modeId: askedMode, assetCache, capacity = DEFAULT_SEATS, ruleset = 'standard', consoleEnabled = false } = {}) {
     // A test room exists only when the process switch allowed it. The check runs before the room is built.
     if (test === true && this.testEnabled !== true) return fail(ERR.TEST_DISABLED);
     // the official version (header "Official versions"): left out, the server's default
@@ -1058,6 +1060,8 @@ export class Lobby {
     if (this.emergency.active) return fail(ERR.SERVER_EMERGENCY);
     if (!ROOM_CAPACITIES.includes(capacity)) return fail(ERR.BAD_MSG, 'invalid capacity');
     if (!['standard', 'entertainment'].includes(ruleset) || (ruleset === 'standard' && consoleEnabled)) return fail(ERR.BAD_MSG);
+    const admission = this.assetCacheAdmission(assetCache);
+    if (admission) return admission;
     const cur = this.roomOf(session);
     if (cur && cur.match) return fail(ERR.ROOM_STARTED, 'leave your running match first');
     if (this.rooms.size >= this.opts.maxRooms) return fail(ERR.INTERNAL, 'too many rooms');
@@ -2871,6 +2875,7 @@ export class Lobby {
 
   /** room.state after AI-handover votes have been reconciled. */
   emitRoomState(room) {
+    this.discovery.changed();
     if (room.disposed) return;
     if (this.trustedRuntime) {
       const state = room.toState(this.now()), prev = room.trustedPrevious;
