@@ -22,7 +22,7 @@ export function handTile(idx, geo = GEO) {
   if (geo.HAND_SIZE === REGULATION_EXPANDED_HAND_SIZE && idx === geo.HAND_SIZE - 1) {
     return { row: geo.HAND_ROW, col: GEO.HAND_SIZE };
   }
-  const cols = geo.HAND_COLS || geo.HAND_SIZE;
+  const cols = geo.HAND_COLS || geo.HAND_SIZE || Infinity;
   return { row: geo.HAND_ROW + Math.floor(idx / cols), col: idx % cols };
 }
 
