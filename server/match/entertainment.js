@@ -1,4 +1,5 @@
-import { REGULATION_EXPANDED_HAND_SIZE, LEGACY_EXPANDED_HAND_SIZE, LEGACY_EXPANDED_TEMP_SIZE } from '../../shared/bench.js';
+import { isConsoleAcrbot } from '../../shared/entertainmentRules.js';
+import { REGULATION_EXPANDED_HAND_SIZE, REGULATION_EXPANDED_TEMP_SIZE, LEGACY_EXPANDED_HAND_SIZE, LEGACY_EXPANDED_TEMP_SIZE } from '../../shared/bench.js';
 // Deliberate owner-approved optional rules. Standard matches never use these overrides.
 import { ERR } from '../../shared/constants.js';
 export const RULESETS = ['standard', 'entertainment', 'endless'];
@@ -41,7 +42,7 @@ export function consoleIntent(m, ps, msg) {
   if (!Number.isInteger(n) || n < 1 || n > 9999) return fail(ERR.BAD_MSG);
   if (msg.kind === 'chess' || msg.kind === 'item') {
     const rec = msg.kind === 'chess' ? ps.gd.chess(msg.id) : ps.gd.item(msg.id);
-    if (!rec || rec.isHidden || (rec.isDiy && !rec.diyFor)) return fail(ERR.BAD_TARGET);
+    if (!rec || (rec.isHidden && !isConsoleAcrbot(msg.kind, rec)) || (rec.isDiy && !rec.diyFor)) return fail(ERR.BAD_TARGET);
     // Never reserve shared chess copies for a free console grant. Normal merge/onGain hooks still run.
     const piece = msg.kind === 'chess' ? ps.acquireChess(msg.id, { source: 'console', fromPool: false })
       : ps.acquireItem(msg.id, { source: 'console', consoleGrant: true });
@@ -76,6 +77,6 @@ export function configureBench(gd, enabled) {
  gd.economy = {
   ...gd.economy,
   benchSize: enabled ? (split ? REGULATION_EXPANDED_HAND_SIZE : LEGACY_EXPANDED_HAND_SIZE) : gd._standardEconomy.benchSize,
-  tempSize: enabled && !split ? LEGACY_EXPANDED_TEMP_SIZE : gd._standardEconomy.tempSize,
+  tempSize: enabled ? (split ? REGULATION_EXPANDED_TEMP_SIZE : LEGACY_EXPANDED_TEMP_SIZE) : gd._standardEconomy.tempSize,
  };
 }

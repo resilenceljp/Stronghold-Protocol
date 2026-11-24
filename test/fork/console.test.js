@@ -84,7 +84,7 @@ test('expanded bench and relic selection survive setup revisions; endless requir
   assert.equal(m.round, 15);
 });
 
-test('regulation extends the operator row into the four cells before equipment', t => {
+test('regulation expanded bench supports extra operator and equipment slots plus normal Acrbot grants', t => {
   const data = getVersionData('act3autochess@V3_1');
   const m = new Match({ data, mode: 'coop', difficulty: 'NORMAL', ruleset: 'entertainment',
     seed: 24, scheduler: new VirtualScheduler(), botRehearsal: 0,
@@ -96,12 +96,14 @@ test('regulation extends the operator row into the four cells before equipment',
   m.startRound(1);
   m.phase = 'PREP';
   const player = m.order[0];
-  assert.equal(player.hand.length, 14);
-  assert.equal(player.temp.length, 5);
+  assert.equal(player.hand.length, 15);
+  assert.equal(player.temp.length, 7);
   const geo = benchGeo(player.hand.length);
   const expandedStage = benchStage(m.stage, player.hand.length);
   assert.equal(expandedStage.rows[8].slice(0, 4), 'aaaa');
-  assert.equal(expandedStage.rows[8].slice(4), m.stage.rows[8].slice(4));
+  assert.equal(expandedStage.rows[8].slice(4, 9), m.stage.rows[8].slice(4, 9));
+  assert.equal(expandedStage.rows[8].slice(9, 11), 'AA');
+  assert.equal(expandedStage.rows[7][10], 'a');
   const piece = player.acquireChess([...player.pool.entries.keys()].find(id => data.chess[id]?.tier === 1 && player.pool.left(id) > 0), { fromPool: false });
   for (let idx = 10; idx < 14; idx++) {
     const tile = handTile(idx, geo);
@@ -112,4 +114,17 @@ test('regulation extends the operator row into the four cells before equipment',
     assert.equal(player.hand[idx]?.uid, piece.uid);
   }
   assert.deepEqual(tileSlot({ row: 8, col: 4 }, geo), { area: 'temp', idx: 0 });
+  const operatorSlot = tileSlot(handTile(14, geo), geo);
+  assert.deepEqual(operatorSlot, { area: 'hand', idx: 14 });
+  assert.equal(player.move(piece.uid, operatorSlot).ok, true);
+  const itemId = Object.keys(data.items).find(id => !data.items[id].isHidden);
+  const item = player.acquireItem(itemId, { consoleGrant: true });
+  for (const idx of [5, 6]) {
+    const slot = tileSlot({ row: 8, col: 4 + idx }, geo);
+    assert.deepEqual(slot, { area: 'temp', idx });
+    assert.equal(player.move(item.uid, slot).ok, true);
+  }
+  m.consoleEnabled = true;
+  assert.equal(consoleIntent(m, player, { kind: 'chess', id: 'chess_char_5_22_a' }).ok, true);
+  assert.ok(player.hand.some(p => p?.id === 'chess_char_5_22_a'));
 });

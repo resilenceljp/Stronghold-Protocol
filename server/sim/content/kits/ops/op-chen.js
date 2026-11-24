@@ -62,22 +62,6 @@ function activeModule(chess) {
 /** Absolute tile keys of a skill range at the unit's tile and facing (a 技能范围 ignores 攻击距离: no extend). */
 const keysOf = (unit, grid) => absoluteRangeKeys(grid, unit.tileR, unit.tileC, unit.dir, 0);
 
-/**
- * A skill that strikes ground enemies only cannot be opened while its range holds no ground enemy: every activation path
- * (the strategy's SKILL_RANGE, content) is refused and the charge stays — the pattern of 莎草 S2 (ops/chess_char_2_06-papyrs.js,
- * non-enumerable: never serialised).
- */
-function guardActivation(battle, unit, grid) {
-  const sk = unit.skill;
-  if (!sk || Object.prototype.hasOwnProperty.call(sk, 'activate')) return;
-  const activate = sk.activate;
-  const ok = () => battle.unitsInGrid(unit, grid, { side: 'enemy' }).some((e) => !e.isFlying);
-  Object.defineProperty(sk, 'activate', {
-    configurable: true, writable: true, enumerable: false,
-    value(reason, opts) { return ok() ? activate.call(this, reason, opts) : false; },
-  });
-}
-
 export default {
   char_010_chen: (bb, chess) => {
     const t0 = talentBb(chess, 0), t1 = talentBb(chess, 1);
@@ -136,9 +120,10 @@ export default {
           duration: S3_CLIP,
           flags: { invulnerable: true, noBlock: true },
           attack: { noAttack: true },
-          // [ASSUMED] its slashes and its guard (guardActivation) take ground enemies only: 白铁's 铁钳号 alone does not open
+          // [ASSUMED] its slashes and its activation guard take ground enemies only: 白铁's 铁钳号 alone does not open
           // it (skills.js allyTargetsOk) — the skill ends at once without a target
           allyTargets: false,
+          canActivate: (battle, unit) => battle.unitsInGrid(unit, grid3, { side: 'enemy' }).some((e) => !e.isFlying),
           onStart({ battle, unit }) {
             battle.releaseBlocked(unit); // 无法阻挡
             unit.mem.chenS3 = { t: 0, n: 0, target: null };
@@ -199,7 +184,6 @@ export default {
         battle.on('beforeStatus', (c) => {
           if (c.target === unit && unit.mem.chenS3 && (c.status === 'stun' || c.status === 'freeze')) c.cancel = true;
         }, { owner: unit });
-        if (unit.skill?.id === S3) guardActivation(battle, unit, grid3);
       },
     };
   },

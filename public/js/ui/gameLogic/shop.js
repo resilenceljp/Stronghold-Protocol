@@ -1,7 +1,7 @@
+import { benchGeo } from '../../../../shared/bench.js';
 // ui/gameLogic/shop.js — shop prices, merges, offers, the ready-funds prompt, the shop bar's fold on 准备. Re-exported from
 // ../gameLogic.js.
 
-import { GEO } from '../../../../shared/constants.js';
 import { isObj } from './shared.js';
 import { t, tName } from '../../../../shared/i18n.js';
 
@@ -71,8 +71,9 @@ export function mergeTarget(priv, chessId, getChess = () => null) {
 /** Whether every hand slot is taken (the server refuses every purchase / reward pick then: HAND_FULL, GitHub #82). */
 export function handFull(priv, kind = 'chess', config = null) {
   if (kind === 'item' && config?.version?.rules?.equipHand === true) {
-    const row = Array.isArray(priv?.temp) ? priv.temp.slice(0, GEO.TEMP_SIZE) : [];
-    return row.length >= GEO.TEMP_SIZE && row.every((p) => p != null);
+    const capacity = benchGeo(priv?.hand?.length).TEMP_SIZE;
+    const row = Array.isArray(priv?.temp) ? priv.temp.slice(0, capacity) : [];
+    return row.length >= capacity && row.every((p) => p != null);
   }
   const hand = Array.isArray(priv?.hand) ? priv.hand : [];
   return hand.length > 0 && hand.every((p) => p != null);

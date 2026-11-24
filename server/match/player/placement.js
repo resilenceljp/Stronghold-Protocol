@@ -10,7 +10,7 @@ import { msg, dn } from '../../../shared/i18n.js';
 import { tileKey, parseKey, inField, canPlace, placeClass, freeSlot, pieceDir, parseDir, ownerRangeKeys } from '../board.js';
 import { attackRangeGrid, loadoutRecord, resolveRecordLoadout } from '../../../shared/loadoutRecord.js';
 import { summonPlacementGrid } from '../../../shared/summonPlacement.js';
-import { OK, fail, TEMP_SIZE } from './common.js';
+import { OK, fail } from './common.js';
 
 export class PlayerPlacement {
   /**
@@ -37,7 +37,7 @@ export class PlayerPlacement {
     }
     if (this.equipHand && to.area === 'temp') {
       if (piece.kind !== 'item') return fail(ERR.BAD_TILE);
-      if (!Number.isInteger(to.idx) || to.idx < 0 || to.idx >= TEMP_SIZE) return fail(ERR.BAD_TARGET);
+      if (!Number.isInteger(to.idx) || to.idx < 0 || to.idx >= this.gd.tempSize) return fail(ERR.BAD_TARGET);
       const occ = this.temp[to.idx];
       if (occ === piece) return OK;
       const due = occ && this.tempDue(piece);
@@ -45,7 +45,7 @@ export class PlayerPlacement {
       this._putTemp(to.idx, piece);
       if (occ) {
         this._putTemp(loc.idx, occ);
-        if (loc.idx >= TEMP_SIZE) this._tempDue.set(occ.uid, due);
+        if (loc.idx >= this.gd.tempSize) this._tempDue.set(occ.uid, due);
       }
       this.recompute();
       return OK;

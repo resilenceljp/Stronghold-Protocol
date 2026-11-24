@@ -1,3 +1,4 @@
+import { isConsoleAcrbot } from '../../../shared/entertainmentRules.js';
 // Optional room-local sandbox console. Every operation is validated by the server.
 import { useState } from '../../vendor/hooks.module.js';
 import { html, Button, Modal } from './components.js';
@@ -27,9 +28,9 @@ export function EntertainmentConsole({ priv, editable }) {
   const bondIds=rec=>Array.from(new Set([...(rec.bonds||[]),rec.giveBondId,rec.requiresBondId].filter(Boolean)));
   const isCatalog=tab==='chess'||tab==='item';
   const all=Object.entries(data.get(key)||{}).map(([id,rec])=>[id,tab==='chess'&&rec?.isDiy?ownDiyRecord(rec,priv,{chess:data.get('chess'),backups:data.get('backups')}):rec])
-    .filter(([,rec])=>rec&&!rec.isHidden&&(!rec.isDiy||rec.diyFor)&&(tab!=='enemy'||(!rec.templateSlot&&!rec.tokenOnly&&['NORMAL','ELITE'].includes(rec.rank))));
+    .filter(([,rec])=>rec&&(!rec.isHidden||isConsoleAcrbot(tab,rec))&&(!rec.isDiy||rec.diyFor)&&(tab!=='enemy'||(!rec.templateSlot&&!rec.tokenOnly&&['NORMAL','ELITE'].includes(rec.rank))));
   const options=core=>Array.from(new Set(all.flatMap(([,rec])=>bondIds(rec).filter(id=>!!bonds[id]?.isCore===core)))).sort();
-  const records=all.filter(([id,rec])=>(!search||`${id} ${rec.name||''} ${rec.subProfessionName||''} ${bondIds(rec).map(b=>bonds[b]?.name||b).join(' ')}`.toLowerCase().includes(search.toLowerCase()))&&
+  const records=all.filter(([id,rec])=>(!search||`${id} ${rec.name||''} ${isConsoleAcrbot(tab,rec)?'大丑':''} ${rec.subProfessionName||''} ${bondIds(rec).map(b=>bonds[b]?.name||b).join(' ')}`.toLowerCase().includes(search.toLowerCase()))&&
     (!isCatalog||((!tier||String(rec.tier)===tier)&&(!profession||tab!=='chess'||rec.profession===profession)&&(!faction||bondIds(rec).includes(faction))&&(!tag||bondIds(rec).includes(tag)))))
     .sort((a,b)=>Number(!!b[1].diyFor)-Number(!!a[1].diyFor));
   const select=(label,value,set,entries)=>html`<label>${t(label)} <select aria-label=${t(label)} value=${value} onChange=${e=>set(e.target.value)}><option value="">${t('全部')}</option>${entries.map(([id,name])=>html`<option value=${id}>${name}</option>`)}</select></label>`;

@@ -7,13 +7,12 @@
 // the player state).
 
 import { tileKey, boardOrder, freeSlot } from '../board.js';
-import { TEMP_SIZE } from './common.js';
 import { N_, msg, dn } from '../../../shared/i18n.js';
 
 export class PlayerPieces {
   /** Free slot in the card's regular row (equipment has its own row only in 规程). */
   handSlot(kind) {
-    return freeSlot(this.equipHand && kind === 'item' ? this.temp.slice(0, TEMP_SIZE) : this.hand);
+    return freeSlot(this.equipHand && kind === 'item' ? this.temp.slice(0, this.gd.tempSize) : this.hand);
   }
 
   /** Unequipped cards, including overflow, in the existing hand-then-temp scan order. */
@@ -30,7 +29,7 @@ export class PlayerPieces {
   _stowSplit(piece, { allowTemp = true, preferIdx = null } = {}) {
     const item = piece.kind === 'item';
     const row = item ? this.temp : this.hand;
-    const size = item ? TEMP_SIZE : row.length;
+    const size = item ? this.gd.tempSize : row.length;
     // [ASSUMED] The equipment row fills right-to-left, like the regular hand.
     const i = Number.isInteger(preferIdx) && preferIdx >= 0 && preferIdx < size && row[preferIdx] == null
       ? preferIdx : this.handSlot(piece.kind);
@@ -40,14 +39,14 @@ export class PlayerPieces {
       return item ? 'temp' : 'hand';
     }
     if (!allowTemp) return null;
-    this._putTemp(Math.max(TEMP_SIZE, this.temp.length), piece);
+    this._putTemp(Math.max(this.gd.tempSize, this.temp.length), piece);
     return 'temp';
   }
 
   _fillSplitHand() {
     let moved = 0;
     // Arrival order within each kind; a full row must not prevent the other row from refilling.
-    for (let j = TEMP_SIZE; j < this.temp.length; j++) {
+    for (let j = this.gd.tempSize; j < this.temp.length; j++) {
       const p = this.temp[j];
       if (!p) continue;
       const i = this.handSlot(p.kind);
@@ -57,7 +56,7 @@ export class PlayerPieces {
       else this.hand[i] = p;
       moved++;
     }
-    this.temp = this.temp.slice(0, TEMP_SIZE).concat(this.temp.slice(TEMP_SIZE).filter(Boolean));
+    this.temp = this.temp.slice(0, this.gd.tempSize).concat(this.temp.slice(this.gd.tempSize).filter(Boolean));
     return moved;
   }
 
@@ -172,8 +171,8 @@ export class PlayerPieces {
 
   /** Overflow refill order: the visible row right-to-left, then the hidden queue. */
   tempPieces() {
-    if (this.equipHand) return this.temp.slice(TEMP_SIZE).filter(Boolean);
-    return this.temp.slice(0, TEMP_SIZE).reverse().concat(this.temp.slice(TEMP_SIZE)).filter(Boolean);
+    if (this.equipHand) return this.temp.slice(this.gd.tempSize).filter(Boolean);
+    return this.temp.slice(0, this.gd.tempSize).reverse().concat(this.temp.slice(this.gd.tempSize)).filter(Boolean);
   }
 
   /**

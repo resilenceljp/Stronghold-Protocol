@@ -801,11 +801,23 @@ test('acrbot S1 requires full SP and an enemy in range, then hits enemies and al
     unit.skill.gainSp(unit.skill.spCost, 'attack');
     h.step();
     assert.equal(unit.skill.active, false, 'full SP and only an ally in range');
+    const side = foe(h.battle, 9, 4, { atk: 0, hp: 20000 });
+    side.x = 4.48; // Occupies the adjacent tile, but its collider overlaps the unit's tile.
+    side.blockedBy = unit;
+    unit.blocking.push(side);
+    h.battle._buildEnemyIndex();
+    assert.equal(unit.skill.activate('test'), false, 'side block cannot open the skill');
+    h.step();
+    assert.equal(unit.skill.active, false);
+    h.battle.releaseBlocked(unit);
+    side.hidden = true;
+
     const enemy = foe(h.battle, 9, 6, { atk: 0, hp: 20000 });
     h.battle.addBuff(enemy, { key: 'test:stealth', flags: { stealth: true } });
     h.run(0.3);
     assert.equal(unit.skill.active, false, 'full SP and a stealthed enemy in range');
     h.battle.addBuff(enemy, { key: 'test:reveal', flags: { reveal: true } });
+    unit.atkCd = 0;
     const allyHp = ally.hp, enemyHp = enemy.hp;
     h.run(0.3);
     assert.equal(unit.blocking.length, 0);
@@ -830,7 +842,10 @@ test('acrbot S1 swings at an ally in the extended range', () => {
   ]);
   let startHp = 0;
   h.battle.on('battleStart', () => {
+    const trigger = foe(h.battle, 9, 6, { atk: 0 });
+    h.battle._buildEnemyIndex();
     assert.ok(open(h.unit(1)));
+    trigger.hidden = true;
     // The garrison swing exceeds 摆渡人's HP. Half HP also keeps her under 夏栎's 70% shelter, which would cut 10%.
     const ally = h.unit(2);
     h.battle.addBuff(ally, { key: 'test:hp', mods: { hpFlat: 20000 } });
@@ -909,6 +924,8 @@ test('acrbot elite blocked damage is 85% and S1 cleanses stun', () => {
   const bot = stun.unit(1);
   assert.equal(stun.battle.applyStatus(bot, 'stun', { duration: 5 }), true);
   assert.ok(bot.findBuff('stun'));
+  foe(stun.battle, 9, 6, { atk: 0 });
+  stun.battle._buildEnemyIndex();
   assert.ok(open(bot));
   assert.equal(bot.findBuff('stun'), null);
   assert.equal(stun.battle.applyStatus(bot, 'stun', { duration: 5 }), false);

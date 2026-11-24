@@ -1343,3 +1343,6 @@
 .cmd-aim.is-plain .cmd-aim__c { -webkit-mask: none; mask: none; clip-path: polygon(50% 0, 100% 72%, 100% 100%, 50% 32%, 0 100%, 0 72%); }
 .command-draft { display: flex; gap: .16rem; flex-wrap: wrap; }
 .command-draft__card { flex: 1 1 1.8rem; padding: .16rem; border: 1px solid #7fffc966; }
+
+.gm.is-placing .gm__bonds { visibility: hidden; }
+.gm.is-placing .gm__bonds * { pointer-events: none; }

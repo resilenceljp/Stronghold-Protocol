@@ -12,3 +12,6 @@ export function validFunRules(v) {
  &&(v.relicsEnabled===undefined||typeof v.relicsEnabled==='boolean')
  &&(v.relicIds===undefined||(Array.isArray(v.relicIds)&&v.relicIds.length<=RELICS.length&&new Set(v.relicIds).size===v.relicIds.length&&v.relicIds.every(id=>RELICS.some(r=>r.id===id))));
 }
+
+export const isConsoleAcrbot = (kind, rec) =>
+  kind === 'chess' && rec?.charId === 'char_618_acrbot' && !rec.isGolden;

@@ -54,9 +54,10 @@ export function pieceSlot(piece) {
 export function tileSlot(tile, geo = GEO) {
   if (!tile || !Number.isInteger(tile.row) || !Number.isInteger(tile.col)) return null;
   const { row, col } = tile;
-  const cols=geo.HAND_COLS||geo.HAND_SIZE;
-  const handIdx = (row - geo.HAND_ROW) * cols + col;
-  if (row >= geo.HAND_ROW && col >= 0 && col < cols && handIdx < geo.HAND_SIZE) return { area: 'hand', idx: handIdx };
+  for (let idx = 0; idx < geo.HAND_SIZE; idx++) {
+    const hand = handTile(idx, geo);
+    if (hand.row === row && hand.col === col) return { area: 'hand', idx };
+  }
   if (row === geo.TEMP_ROW && col >= geo.TEMP_C0 && col < geo.TEMP_C0 + geo.TEMP_SIZE) return { area: 'temp', idx: col - geo.TEMP_C0 };
   const F = geo.FIELD;
   if (row >= F.r0 && row <= F.r1 && col >= F.c0 && col <= F.c1) return { area: 'board', row, col };

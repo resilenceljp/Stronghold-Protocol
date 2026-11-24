@@ -2481,7 +2481,7 @@ function buyOffer(m, ps, index) {
 
 /** §35.14 [ASSUMED]: room for an item only the plan asks for (items.buy): an immediate carrier or 2 free hand slots. */
 function planItemRoom(m, ps, slot) {
-  const free = countFree(ps.equipHand ? ps.temp.slice(0, GEO.TEMP_SIZE) : ps.hand);
+  const free = countFree(ps.equipHand ? ps.temp.slice(0, ps.gd.tempSize) : ps.hand);
   if (!free) return false;
   const immediate = (ps.gd || m.gd).item(slot.id)?.itemType === 'EQUIP' && !!itemTarget(m, ps, slot);
   return immediate || free >= 2;

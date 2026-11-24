@@ -1323,3 +1323,14 @@ button.ally-card:disabled .ally-card__bar { filter: grayscale(.5) brightness(.8)
 .proto__body[data-season="act3autochess"] .ladder__grid, .proto__body[data-season="act3autochess"] .pcard { background: linear-gradient(180deg, #2a1411, #160c0a); border-color: rgba(232, 223, 196, .26); }
 .proto-reg-art { position: absolute; inset: 0; display: grid; place-items: center; }
 .proto-reg-art img { width: 92%; height: 88%; object-fit: contain; filter: drop-shadow(0 .1rem .4rem rgba(0, 0, 0, .7)); -webkit-mask: radial-gradient(75% 70% at 50% 50%, #000 55%, transparent 100%); mask: radial-gradient(75% 70% at 50% 50%, #000 55%, transparent 100%); }
+
+.ally-create-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: .12rem;
+  padding: .12rem .16rem;
+  background: #142421;
+  border: 1px solid #396457;
+}

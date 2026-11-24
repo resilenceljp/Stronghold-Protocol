@@ -1,3 +1,4 @@
+import { benchGeo } from '../../../../shared/bench.js';
 // ui/gameLogic/placement.js — deploy maps and the canPlace mirror of the server rules. Re-exported from ../gameLogic.js.
 
 import { GEO } from '../../../../shared/constants.js';
@@ -337,7 +338,7 @@ export function canPlace(ctx, uid, target) {
 
   if (target.area === 'temp' && ctx.equipHand) {
     if (piece.kind !== 'item') return no('BAD_TILE', t('装备区只能放入装备'));
-    if (!Number.isInteger(target.idx) || target.idx < 0 || target.idx >= GEO.TEMP_SIZE) return no('BAD_TILE', t('无法放置在该位置'));
+    if (!Number.isInteger(target.idx) || target.idx < 0 || target.idx >= benchGeo(ctx.priv?.hand?.length).TEMP_SIZE) return no('BAD_TILE', t('无法放置在该位置'));
     if (src.area === 'temp' && src.idx === target.idx) return no('ALREADY', t('位置未变化'));
     return { ok: true, action: ctx.priv.temp?.[target.idx] ? 'swap' : 'move' };
   }

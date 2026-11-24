@@ -585,9 +585,9 @@ export function createFallbackView(host, opts = {}) {
       if (!br) return null;
       let p = null;
       const geo = trayGeo();
-      const cols = geo.HAND_COLS || geo.HAND_SIZE;
-      const idx = (row - GEO.HAND_ROW) * cols + col;
-      if (st.mode === 'prep' && row >= GEO.HAND_ROW && col >= 0 && col < cols && idx < geo.HAND_SIZE) p = handPos(L, idx);
+      const idx = Array.from({ length: geo.HAND_SIZE }, (_, i) => handTile(i, geo))
+        .findIndex(tile => tile.row === row && tile.col === col);
+      if (st.mode === 'prep' && idx >= 0) p = handPos(L, idx);
       else if (st.mode === 'prep' && row === geo.TEMP_ROW && col >= geo.TEMP_C0 && col < geo.TEMP_C0 + geo.TEMP_SIZE) p = tempPos(L, col - geo.TEMP_C0);
       else if (row >= st.rect.r0 && row <= st.rect.r1 && col >= st.rect.c0 && col <= st.rect.c1) p = tilePos(L, row, col);
       if (!p) return null;

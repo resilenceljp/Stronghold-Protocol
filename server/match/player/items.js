@@ -4,7 +4,7 @@
 // Installed on PlayerState.prototype by server/match/PlayerState.js (a method container: never instantiated; `this` is
 // the player state).
 
-import { ERR, GEO } from '../../../shared/constants.js';
+import { ERR } from '../../../shared/constants.js';
 import { chessIsDiy, itemForbidsDiy } from '../../../shared/itemRules.js';
 import { morphSlotPolicy, ruleOption } from '../../../shared/plugins/rules.js';
 import { tileKey, inField, parseDir, freeSlot } from '../board.js';
@@ -205,7 +205,7 @@ export class PlayerItems {
       return OK;
     }
     const handAt = freeSlot(this.hand);
-    const tempAt = freeSlot(this.temp.slice(0, GEO.TEMP_SIZE));
+    const tempAt = freeSlot(this.temp.slice(0, this.gd.tempSize));
     if (handAt < 0 && tempAt < 0) return fail(ERR.HAND_FULL);
     const piece = loc.piece;
     this._detach(loc);

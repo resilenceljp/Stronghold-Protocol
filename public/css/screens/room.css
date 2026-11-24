@@ -921,3 +921,11 @@
   background: #111c1b;
 }
 .rseat__strip > .num { margin-inline-end: auto; margin-inline-start: .06rem; }
+
+/* Keep the roster frame and the identity plate readable in dense rooms. */
+.rs .rs-seats--grid { border: 1px solid rgba(103, 175, 156, .35); padding-block: .19rem; }
+.rs-seats--grid .rseat__plate { min-height: .55rem; grid-template-rows: auto; }
+.rs-seats--grid .rseat__plate .avatar { grid-row: 1; max-width: .45rem; max-height: .45rem; }
+.rs-seats--grid .seat__art.rseat__art { flex: none; }
+.rseat__strip > .num { margin-inline-end: 0; }
+.rseat__strip .rseat__group { margin-inline-end: auto; }

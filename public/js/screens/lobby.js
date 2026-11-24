@@ -716,8 +716,10 @@ export function AllianceSelect({ onClose, onCreate, difficulty = 'FUNNY', code, 
           <button type="button" class="ally-guide" onClick=${() => openGuide(0)}><span class="ally-guide__icon"><${Icon} name="book" /></span>${t('玩法说明')}</button>
         </section>
         <section class="ally-side">
+          <div class="ally-create-options">
           ${onRuleset ? html`<${EntertainmentChoice} value=${ruleset} onChange=${onRuleset}/>` : null}
           ${onCapacity ? html`<label class="create-box__test"><span>${t('人数')}</span><select value=${capacity} onChange=${(e) => onCapacity(Number(e.target.value))}>${ROOM_CAPACITIES.map(n => html`<option value=${n}>${n}</option>`)}</select></label>` : null}
+          </div>
           <button type="button" class="ally-card ally-card--create ally-create" data-testid="alliance-create" data-difficulty=${difficulty}
               disabled=${!online || busy === 'create'} aria-busy=${busy === 'create' ? 'true' : 'false'} onClick=${() => onCreate()}>
             <span class="ally-card__art"><${CreateArt} /></span>

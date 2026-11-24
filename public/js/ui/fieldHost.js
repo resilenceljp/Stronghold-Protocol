@@ -95,6 +95,7 @@ export function hudBands(kind, size, opts) {
   let safeBottom = 0;
   let corner = 0;
   let bondsBottom = 0;
+  let shopBand = 0;
   try {
     rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 100;
     // 异形屏适配 (ui/screenFit.js): the board's host may not start at the viewport's top — the HUD rects are measured from it
@@ -105,10 +106,12 @@ export function hudBands(kind, size, opts) {
     // #678 adds 44 px arrows; a native scrollbar can make the strip taller still.
     // Keep the same minimum band before mount and while collapsed, so toggling cannot shrink it.
     const bonds = document.querySelector('.gm__bonds')?.getBoundingClientRect();
-    if (bonds?.height > 0) bondsBottom = Math.max(0, bonds.bottom - oy);
-    if (folded || partial) {
-      if (hud && hud.bottom - oy > 0) safeBottom = Math.max(0, h - (hud.bottom - oy));
-      corner = cornerBand(h, oy);
+    if (bonds?.height > 0) bondsBottom = Math.max(0, bonds.bottom - oy + rem * .4);
+    if (hud && hud.bottom - oy > 0) safeBottom = Math.max(0, h - (hud.bottom - oy));
+    corner = cornerBand(h, oy);
+    if (!folded && !partial && document.querySelector('.gm--reg')) {
+      const shopTools = document.querySelector('.shopbar--reg .shopbar__tools')?.getBoundingClientRect();
+      shopBand = shopTools?.height > 0 ? h - (shopTools.top - oy) : rem * (h <= 430 ? 2.84 : 4.36);
     }
   } catch { /* ignore */ }
   const bottom = folded
@@ -117,7 +120,7 @@ export function hudBands(kind, size, opts) {
       // [ASSUMED] #692: CSS scales the whole bar to 70% around its bottom-right anchor (.2rem above the bottom).
       ? Math.max(safeBottom + rem * 0.2 + (rem * (HUD_REM.shopBarTop - 0.2) + HUD_REM.shopBarBorderPx) * 0.7,
         corner || safeBottom + rem * HUD_REM.cornerTop)
-      : rem * HUD_REM.shopBarTop + HUD_REM.shopBarBorderPx;
+      : Math.max(shopBand, corner, safeBottom + rem * HUD_REM.shopBarTop + HUD_REM.shopBarBorderPx);
   return {
     top: Math.min(h * 0.4, Math.max(bondsBottom, safeTop + Math.max(rem * HUD_REM.bondStripBottom,
       rem * HUD_REM.bondStripTop + HUD_REM.bondArrowPx))),
