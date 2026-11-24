@@ -8,6 +8,7 @@ import { html, Button, Icon } from './components.js';
 import { StepHeader, ExitModal } from './matchChrome.js';
 import { MatchBondGroups, MatchBondRow, BannedByBond, MatchBondDialog, regulationCoreAbsent, RegulationHead } from './matchInfo.js';
 import { MatchEnemies } from './matchEnemies.js';
+import { MatchChatButton } from "./matchChat.js";
 import { LoadoutButton } from '../screens/loadout.js';
 import { UnofficialMark, VersionTag } from './pluginTag.js';
 import { SetupReroll } from './setupReroll.js';
@@ -61,6 +62,7 @@ export function RegulationBriefing({ pub, gd, room, solo, info, players, me, rea
         <${StagePreview} stage=${stage} choice=${choice} name=${stageName} pool=${pool} stageId=${pub?.stageId || ''}
           localGroups=${localGroups} seat=${me?.seat ?? null} />
         <${MatchEnemies} pub=${pub} gd=${gd} layout="regulation" />
+        <${MatchChatButton} class="mchat-brief-entry" />
         <${LoadoutButton} from="briefing" size="md" class="reg-loadout" />
         <div class="reg-ready">
           <div class="brief-ready">
