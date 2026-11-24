@@ -143,7 +143,6 @@ import { toast } from '../ui/toasts.js';
 import { LoadoutButton } from './loadout.js';
 
 import { benchStage,benchGeo } from '../../../shared/bench.js';
-import { RelicPanel } from '../ui/relicPanel.js';
 import { BriefingScreen } from './briefing.js';
 import { BandDraftScreen } from './bandDraft.js';
 import { DiyCheckScreen } from './diyCheck.js';

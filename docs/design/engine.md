@@ -444,8 +444,9 @@ until the cast clip ends too. `attackTurnSkill` returns the selected ability or 
 attack range, even at full HP. The official TAKE_DAMAGE row remains rawRule for provenance. The maintainer accepted
 the author video BV1UdAHzNEVj and their recall on 2026-10-24; other guardian skills keep their class rule.
 
-In 规程, 暴躁铁皮's 大丑的愤怒 uses SP_FULL so it can activate while unblocked, including with no target in
-range. Its SP still recovers through attacks. The generated TAKE_DAMAGE rule remains as source data.
+In 规程, 暴躁铁皮's 大丑的愤怒 uses SEARCH: full attack SP and a targetable enemy in range are required.
+During the skill it also hits allies in range. The generated TAKE_DAMAGE rule remains as source data.
+Final Assault and Hidden Core also bank in-battle layers. Entertainment matches cap each bond at 9999 layers.
 
 ### Regulation MAP09 concealment tiles
 

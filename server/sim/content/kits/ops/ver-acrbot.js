@@ -17,8 +17,8 @@ function acrbot(_bb, chess, def) {
   const { skills, skill } = kitSkills(chess, def, (id, rec, sbb) => {
     if (id === S1) return {
       id, kind: 'duration', duration: posDur(rec),
-      // Fire at full SP even when this unit has no enemy to block or take damage from.
-      trigger: 'SP_FULL',
+      // Check range independently of the attack timer and of taking damage.
+      trigger: 'SEARCH',
       mods: {
         batPct: batMod(sbb.base_attack_time, chess, descOf(rec)),
         atkPct: num(sbb.atk),

@@ -793,17 +793,21 @@ test('fang2 S2 opens on deploy and hits both blocked enemies', () => {
 // ---------------------------------------------------------------------------------------------------------------
 // 暴躁铁皮
 
-test('acrbot S1 starts at full attack SP without being hit or blocking', () => {
+test('acrbot S1 requires full SP and an enemy in range, then hits enemies and allies', () => {
   for (const id of [ID.acrbot, ID.acrbotE]) {
-    const h = battle([op(1, id, 5, 0)]);
-    const unit = h.unit(1);
+    const h = battle([op(1, id, 5, 0), op(2, ID.varkis, 7, 0)]);
+    const unit = h.unit(1), ally = h.unit(2);
     h.step();
-    assert.equal(unit.skill.active, false);
-    assert.equal(unit.blocking.length, 0);
     unit.skill.gainSp(unit.skill.spCost, 'attack');
     h.step();
+    assert.equal(unit.skill.active, false, 'full SP and only an ally in range');
+    const enemy = foe(h.battle, 9, 6, { atk: 0, hp: 20000 });
+    const allyHp = ally.hp, enemyHp = enemy.hp;
+    h.run(0.3);
     assert.equal(unit.blocking.length, 0);
     assert.equal(unit.skill.active, true);
+    assert.ok(ally.hp < allyHp, 'the same skill hits the ally in range');
+    assert.ok(enemy.hp < enemyHp, 'the same skill hits the enemy in range');
   }
 });
 

@@ -295,13 +295,13 @@ An **unofficial, non-commercial fan remake** of Arknights' seasonal auto-chess t
 本仓库是 resilenceljp 的独立非商业扩展，非原作者仓库。
 - 原始复刻：[sganggs/Stronghold-Protocol](https://github.com/sganggs/Stronghold-Protocol)。
 - 20人核心：[LongQianChen 的 feat/IncreasePlayerCapacity 分支](https://github.com/LongQianChen/Stronghold-Protocol/tree/feat/IncreasePlayerCapacity)，保留分组卡池、20人和既有修复。
-- 本地扩展：娱乐控制台、无尽模拟、藏品、可选规则和 monitor 监视台。
+- 本地扩展：娱乐规则、无尽续局和 monitor 监视台。
 - 当前上游基础版本 **0.2.4**，扩展版本 **0.3.0-20p-fun.14**；基线 SHA 见 `UPSTREAM.json`。之前独立编号0.2.5改用来源明确的版本号。
 
 GitHub Actions 的「同步原版20p到独立分支」可手动运行，也会每日检查。原样保存到 `upstream/20p`，每个新提交保留 `upstream20/v版本-SHA` 快照。不会自动覆盖娱乐分支或重启服务器。
 本地 `npm run sync:upstream`；需要推送同步分支时 `npm run sync:upstream -- --push`。人工审查并合并上游后，再 `npm run sync:upstream -- --apply-version` 更新基线版本。扩展修订号独立递增。
 
-本次设置集中于开局信息的下一页：控制台、练度、部署位、额外起始资金、藏品开关及候选池。娱乐和无尽都支持；普通模式保持原规则。藏品三选一在下一回合休整时完成，满练度只使用现有游戏数据支持的练度、技能和模组，不虚构缺失等级。
+娱乐规则在开局简报中设置，包括部署位上限、七级商店和扩展整备区。
 
 
 手机精简包、布局更新与本地安装说明：[fun.3说明](docs/FUN_MOBILE.md)。
