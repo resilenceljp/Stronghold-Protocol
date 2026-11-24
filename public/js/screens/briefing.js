@@ -23,6 +23,7 @@ import { RegulationBriefing, regulationBriefingLayout } from '../ui/regulationBr
 import { LoadoutButton } from './loadout.js';
 import { UnofficialMark, VersionTag } from '../ui/pluginTag.js';
 import { SetupReroll } from '../ui/setupReroll.js';
+import { MatchChatButton } from '../ui/matchChat.js';
 import { actions } from '../ui/gameActions.js';
 import { sortedPlayers, phaseTotalSeconds, pregameStepCount, pregameStepIndex } from '../ui/gameLogic.js';
 import { useStore } from '../store.js';
@@ -91,6 +92,7 @@ export function BriefingScreen() {
     </main>
     <${SetupReroll} pub=${pub} />
     <footer class="brief__foot">
+      <${MatchChatButton} class="mchat-brief-entry" />
       <${LoadoutButton} from="briefing" size="lg" class="brief-loadout" />
       <div class="brief-ready">
         <span class="brief-ready__txt">${t('已就绪')}<b class="num">${readyN}</b><span class="num">/${players.length}</span></span>

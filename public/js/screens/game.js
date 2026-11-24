@@ -105,6 +105,8 @@ import { MatchBondDialog, matchInfoModel, regulationCoreAbsent } from '../ui/mat
 import { Ticker } from '../ui/ticker.js';
 import { EmoteWheel } from '../ui/emotes.js';
 import { BandCommand, CommandDraft } from '../ui/bandCommand.js';
+import { MatchChatButton, MatchChatHost } from '../ui/matchChat.js';
+import { chatStore, chatActions } from '../matchChat.js';
 import { EffectsList } from '../ui/effectsList.js';
 import { CombatHud } from '../ui/combatHud.js';
 import { LeaderRank, loadLeaderRankHidden, saveLeaderRankHidden, useLeaderRankSpot } from '../ui/leaderRank.js';
@@ -241,7 +243,8 @@ export function GameScreen() {
     ${voteRoom && (hasResult || mode === 'result') ? html`<${VersionVote} room=${voteRoom} class="vervote--float" />` : null}
     ${(away || autoplay) && !hasResult && mode !== 'result' && !ended ? html`<${AwayOverlay} />` : null}
     ${ended && !hasResult && mode !== 'result' ? html`<${MatchEnded} />` : null}
-    ${!hasResult && mode !== 'result' ? html`<${TestConsole} />` : null}`;
+    ${!hasResult && mode !== 'result' ? html`<${TestConsole} />` : null}
+    ${!hasResult && mode !== 'result' && !ended ? html`<${MatchChatHost} phase=${pub.phase} away=${away || autoplay} />` : null}`;
 }
 
 // ---- match screen ----------------------------------------------------------------------------------------
@@ -261,6 +264,8 @@ function MatchScreen() {
   const myId = useStore((s) => s.me.playerId);
   const conn = useStore((s) => s.connection, shallowEqual);
   const emotes = useStore((s) => s.emotes);
+  const chatOpen = useStore((s) => s.open, Object.is, chatStore);
+  const hasChat = useStore((s) => !!s.matchId, Object.is, chatStore);
   const roomSolo = useStore((s) => s.room?.mode === 'solo');
   const spectator = useStore((s) => isSpectating(s.room, s.me.playerId));
   const playerSettings = useSettings();
@@ -321,6 +326,9 @@ function MatchScreen() {
   const showMetrics = metricsSetting && !modRoom && !spectator;
   useEffect(() => { if (!showMetrics) setMetricsOpen(false); }, [showMetrics]);
   const [emoteOpen, setEmoteOpen] = useState(false);
+  useEffect(() => {
+    if (chatOpen) { setEmoteOpen(false); setDetail(null); setBondOpen(null); setDrawer(null); }
+  }, [chatOpen]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [drag, setDrag] = useState(null);                // { uid, kind, id } while dragging a piece
@@ -1956,7 +1964,7 @@ function MatchScreen() {
     bonds: data.list('bonds'), chess: (id) => data.lookup('chess', id), mode: getMode(pub?.modeId),
   }) : null;
 
-  return html`<div class=${cx('screen', 'gm', `gm--${mode}`, regView && 'gm--reg', isBossPhase(phase) && 'is-boss', drag && 'is-dragging', barCollapsed && 'is-collapsed', deployPartial && 'is-deploy-partial', (sp || hasPersonalChoice || offerBlocksPrep(pub?.offers)) && 'has-sp', sp && 'has-spdraft', pen && 'is-pen', readyWhy && 'has-readywhy')}
+  return html`<div class=${cx('screen', 'gm', hasChat && 'has-chat', spectator && 'is-spectator', `gm--${mode}`, regView && 'gm--reg', isBossPhase(phase) && 'is-boss', drag && 'is-dragging', barCollapsed && 'is-collapsed', deployPartial && 'is-deploy-partial', (sp || hasPersonalChoice || offerBlocksPrep(pub?.offers)) && 'has-sp', sp && 'has-spdraft', pen && 'is-pen', readyWhy && 'has-readywhy')}
       data-camera=${pen ? 'pen' : camKind}>
     <div class="gm__field" ref=${hostRef} onContextMenu=${(e) => e.preventDefault()}></div>
     ${viewKind === 'loading' ? html`<div class="gm__loading"><${Spinner} label="LOADING FIELD" /></div>` : null}
@@ -2035,7 +2043,7 @@ function MatchScreen() {
       <div class="gm__corner">
         <${AiTakeoverPanel} />
         ${showMetrics && metricsOpen ? html`<${CombatMetricsPanel} myId=${myId} onClose=${() => setMetricsOpen(false)} />` : null}
-        ${spectator ? null : html`<${EmoteWheel} open=${emoteOpen} onToggle=${setEmoteOpen} onSend=${(id) => actions.emote(id)} disabled=${conn.status !== 'online'} />`}
+        ${spectator ? null : html`<${EmoteWheel} open=${emoteOpen} onToggle=${(open) => { if (open) chatActions.setOpen(false); setEmoteOpen(open); }} onSend=${(id) => actions.emote(id)} disabled=${conn.status !== 'online'} />`}
         ${showMetrics ? html`<button type="button" class="gm__gear gm__metrics" aria-label=${t('作战统计')} title=${t('作战统计')} aria-expanded=${metricsOpen}
           aria-controls="combat-metrics-panel" onKeyDown=${(e) => { if (e.key === ' ') e.stopPropagation(); }} onClick=${() => {
             setMetricsOpen(!metricsOpen);
@@ -2046,6 +2054,7 @@ function MatchScreen() {
           }}><${Icon} name="signal" /></button>` : null}
         ${prepLoadoutOpen && phase === PHASE.PREP && priv && !priv.ready && !spectator
           ? html`<${LoadoutButton} from="prep" size="sm" />` : null}
+        <${MatchChatButton} class="gm__chat" onBeforeOpen=${() => { setEmoteOpen(false); setDetail(null); setBondOpen(null); setDrawer(null); }} />
         <button type="button" class="gm__gear" aria-label=${t('设置')} title=${t('设置')} onClick=${() => setSettingsOpen(true)}><${GIcon} name="gear" /></button>
         <button type="button" class="gm__gear gm__guide" aria-label=${t('玩法说明')} title=${t('玩法说明')} onClick=${() => openGuide(0)}><${Icon} name="book" /></button>
         <${FullscreenButton} class="gm__gear gm__fs" />

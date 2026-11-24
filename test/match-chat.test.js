@@ -53,7 +53,7 @@ test('sender rate budget survives callers reconnecting, room budget bounds simul
   now = 2000;
   assert.ok(chat.append(sender(), 'refilled').message);
   const room = new MatchChat({ now: () => now });
-  for (let n = 0; n < 20; n++) assert.ok(room.append(sender(`p_${n}`, n), 'simultaneous').message);
+  for (let n = 0; n < 20; n++) assert.ok(room.append(sender(`p_${n}`, n % 4), 'simultaneous').message);
   assert.equal(room.append({ playerId: 'spectator', name: '观战', seat: null, spectator: true }, 'over total').error, ERR.RATE);
   now += 100;
   assert.ok(room.append({ playerId: 'spectator', name: '观战', seat: null, spectator: true }, 'refilled total').message);

@@ -67,9 +67,10 @@ export const HUD_REM = Object.freeze({
  * board ('prep') or the Final Assault half ('bossPrep'); null for every other camera. The prep camera keeps the bench /
  * temp rows and the field's back row clear of them (render/projection.js clearHud; user playtest #5 item 9: the rem
  * floor of 40 px makes the HUD relatively taller on phones in landscape and the shop bar covered the bench).
- * The bottom band is the shop bar's — also for an eliminated player's own board (no shop bar: the band only costs size
+ * The bottom band is at least the shop bar's — also for an eliminated player's own board (no shop bar: the band only costs size
  * there, while a camera following the bar's presence would have to re-frame whenever it appears, e.g. when the private
- * state arrives after the prep camera was set) — unless `opts.shop === false`: the player folded the shop (收起) and the
+ * state arrives after the prep camera was set); a taller chat corner is also kept clear. With `opts.shop === false` the
+ * player folded the shop (收起) and the
  * own prep board moved to the official shop-collapsed camera (public issue #5: the board did not grow; screens/game.js
  * asks for it only while a folded bar is shown). Its band is the higher of the folded tab (bottom right) and the corner
  * buttons' hit areas (交流 / ⚙ / 📖 / ⛶, bottom left, measured by `cornerBand`: on a narrow phone two rows of 34 px buttons
@@ -133,7 +134,7 @@ export function hudBands(kind, size, opts) {
  * @param {number} [oy] the board host's top in client px (异形屏适配 moves it down)
  */
 function cornerBand(h, oy = 0) {
-  const btns = document.querySelectorAll('.gm__corner .gm__gear, .gm__corner .ewheel__btn');
+  const btns = document.querySelectorAll('.gm__corner .gm__gear, .gm__corner .ewheel__btn, .gm__corner .mchat-toggle');
   if (!btns || !btns.length) return 0;
   const root = document.documentElement;
   const tap = root?.classList?.contains('sp-coarse') ? parseFloat(getComputedStyle(root).getPropertyValue('--tap-min')) || 0 : 0;
