@@ -37,6 +37,7 @@ export function isAnnouncementPublishedAt(value) {
 /**
  * Validate untrusted HTTP metadata and return a copy with only the public fields, or null.
  * The items are in publication order, newest first; dates never determine this order or suppression.
+ * The latest publication revision survives deletion, even if no articles remain.
  * @param {any} raw
  * @returns {AnnouncementIndex|null}
  */
@@ -54,7 +55,7 @@ export function readAnnouncementIndex(raw) {
     ids.add(item.id); revisions.add(item.revision);
     items.push({ id: item.id, title: item.title, publishedAt: item.publishedAt, revision: item.revision });
   }
-  if (items.length ? raw.revision !== items[0].revision : raw.revision !== '') return null;
+  if ((items.length || raw.revision !== '') && !isAnnouncementRevision(raw.revision)) return null;
   if (raw.pinnedId !== null && (!isAnnouncementId(raw.pinnedId) || !ids.has(raw.pinnedId))) return null;
   return { revision: raw.revision, pinnedId: raw.pinnedId, items };
 }
@@ -62,6 +63,15 @@ export function readAnnouncementIndex(raw) {
 /** The single pinned announcement wins, otherwise the most recently published one. @param {AnnouncementIndex|null} index */
 export function defaultAnnouncementId(index) {
   return index?.pinnedId || index?.items?.[0]?.id || null;
+}
+
+/** Display the pinned article first without changing the persisted publication order.
+ * @param {Pick<AnnouncementIndex, 'items'|'pinnedId'>} index
+ * @returns {AnnouncementMetadata[]}
+ */
+export function announcementHistoryItems(index) {
+  const pinned = index.items.find((item) => item.id === index.pinnedId);
+  return pinned ? [pinned, ...index.items.filter((item) => item.id !== pinned.id)] : index.items.slice();
 }
 
 /** Suppression lasts until another publication, independent of the date, selected article or pinned ID. */

@@ -68,8 +68,8 @@ function clientPool(getUrl) {
   };
 }
 
-async function createRoom(c, mode = 'coop', difficulty = 'NORMAL') {
-  const r = await c.request({ t: 'room.create', mode, difficulty, capacity: MAX_SEATS });
+async function createRoom(c, mode = 'coop', difficulty = 'NORMAL', capacity = MAX_SEATS) {
+  const r = await c.request({ t: 'room.create', mode, difficulty, capacity });
   assert.equal(r.t, 'ok', JSON.stringify(r));
   return c.waitFor('room.state', (s) => s.hostId === c.id && s.mode === mode);
 }
@@ -695,7 +695,7 @@ describe('websocket lobby', () => {
     assert.equal(st.inMatch, false);
     assert.equal(st.seats.length, MAX_SEATS);
     assert.deepEqual(st.seats[0], { seat: 0, playerId: host.id, name: 'Host', isBot: false, ready: false, connected: true });
-    assert.deepEqual(st.seats.slice(1), [null, null, null]);
+    assert.deepEqual(st.seats.slice(1), Array(MAX_SEATS - 1).fill(null));
 
     const guest = await pool.player('Guest');
     const joined = await joinRoom(guest, st.code.toLowerCase());
@@ -761,7 +761,7 @@ describe('websocket lobby', () => {
 
   test('room full, solo rooms admit one human and no AI', async () => {
     const host = await pool.player('H');
-    const st = await createRoom(host);
+    const st = await createRoom(host, 'coop', 'NORMAL', 4);
     const guests = [];
     for (let i = 0; i < 2; i++) {
       const g = await pool.player(`G${i}`);
@@ -784,7 +784,7 @@ describe('websocket lobby', () => {
   // community report #26 (a remake feature): spectator seats — server/lobby.js header
   test('spectator seats: join / cap / leave / host removal; never a player, never acting, never keeping a room', async () => {
     const host = await pool.player('Host');
-    const st = await createRoom(host);
+    const st = await createRoom(host, 'coop', 'NORMAL', 4);
     assert.deepEqual(st.spectators, []);
     const guest = await pool.player('Guest');
     await joinRoom(guest, st.code);
