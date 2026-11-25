@@ -463,3 +463,33 @@ test('a deploy-time passive fires the skill animation window; a deploy-timed ski
   assert.deepEqual(t.eventsOf('skill').map((e) => e[2]), [1, 0], 'and the skill ended');
   assert.equal(tx.skill.ready, false, 'one charge per deployment');
 });
+
+
+test('automatic healing uses the skill area and waits for an eligible injured ally', () => {
+  for (const trigger of ['SP_FULL', 'DEFAULT']) {
+    const h = makeBattle({
+      defs: { chess: { medic: sniperWith({}, { id: 'medic' }), ally: sniperWith({}, { id: 'ally' }) } },
+      units: [{ chessId: 'medic', row: 10, col: 4 }, { chessId: 'ally', row: 10, col: 8 }],
+      kits: { medic: () => ({ skill: {
+        kind: 'duration', duration: 5, spCost: 1, spType: 'none', trigger, heal: true,
+        targeting: { rangeGrid: [[0, 0], [0, 3]] },
+      } }) },
+    });
+    h.step();
+    const medic = h.unit('medic'), ally = h.unit('ally');
+    medic.skill.gainSp(1, 'test');
+    h.run(0.5);
+    assert.equal(medic.skill.activations, 0, 'full HP');
+    ally.hp -= 1;
+    h.run(0.5);
+    assert.equal(medic.skill.activations, 0, 'outside skill range');
+    h.b.moveRedeploy(ally, 10, 7);
+    ally.hp = ally.s.maxHp - 1;
+    const block = h.b.addBuff(ally, { key: 'test:heal-free', flags: { healFree: true } });
+    h.run(0.5);
+    assert.equal(medic.skill.activations, 0, 'unhealable target');
+    assert.equal(medic.skill.ready, true);
+    h.b.removeBuff(ally, block);
+    assert.ok(h.runUntil(() => medic.skill.active, 1), 'eligible target in the extended skill range');
+  }
+});

@@ -108,6 +108,8 @@ export class SkillRuntime {
     this.triggerEnemies = !!trig.enemies; // mixed attack/heal skills may also open for a selectable enemy
     this.triggerHpAtMost = Number.isFinite(+trig.hpAtMost) && +trig.hpAtMost > 0 ? +trig.hpAtMost : 1;
     this.healSkill = s.heal ?? (unit.profile && unit.profile.dmgType === 'heal' && !!unit.profile.heal);
+    // NEVER and an empty trigger grid leave target selection to the kit that calls activate.
+    this.waitsForHealTarget = this.healSkill && !this.triggerEnemies && this.rule !== 'NEVER' && this.triggerGrid?.length !== 0;
     // the official skill strategies automate the manual 开启: only MANUAL skills wait for the operation cooldown
     this.manual = String(d.skillType ?? 'MANUAL').toUpperCase() === 'MANUAL';
     this.opReadyAt = -Infinity;   // no automatic cast before this battle time (AUTO_OP_COOLDOWN)
@@ -421,6 +423,10 @@ export class SkillRuntime {
     if (TICK_RULES.has(this.rule)) {
       if (this._tickRuleSatisfied()) this.activate(this.rule);
     } else if (this.rule !== 'TAKE_DAMAGE' && this.rule !== 'NEVER') {
+      if (this.waitsForHealTarget && changesRange(this.spec.targeting) && this._hasHealTarget()) {
+        this.activate('DEFAULT');
+        return;
+      }
       // DEFAULT (and unknown rules) for units that cannot attack right now: check the initial range every tick;
       // content trigger ranges are checked every tick for everyone (nothing may be in the unit's own range)
       const prof = u.profile;
@@ -465,10 +471,25 @@ export class SkillRuntime {
     return b.injuredAlliesInKeys(keys, u).some((a) => a.hpRatio <= lim);
   }
 
+  /** Match the skill's healing area, including range changes that only apply after activation. */
+  _hasHealTarget() {
+    const u = this.unit;
+    const b = this.battle;
+    const targeting = this.spec.targeting;
+    const grid = targeting?.rangeGrid || this.triggerGrid || u.rangeGrid || [[0, 0]];
+    const extend = (targeting?.noRangeExtend ? 0 : u.s.rangeExtend) + (targeting?.rangeExtend || 0);
+    const keys = this.rule === 'GDGLOW_SKILL_2' ? ALL_TILES : absoluteRangeKeys(grid, u.tileR, u.tileC, u.dir, extend);
+    const includeElement = !!(this.spec.attack?.heal?.elementHealRatio || u.profile?.heal?.elementHealRatio);
+    return b.injuredAlliesInKeys(keys, u, includeElement).some((ally) =>
+      (ally === u || !ally.s.flags.isolated)
+      && (!ally.s.flags.healFree || u.profile?.healThrough?.(u, ally))
+      && (!this.triggerAllies || ally.hpRatio <= this.triggerHpAtMost + 1e-9));
+  }
+
   _tickRuleSatisfied() {
     const b = this.battle;
     const u = this.unit;
-    if (this.rule === 'SP_FULL') return true;
+    if (this.rule === 'SP_FULL' || this.waitsForHealTarget) return true;
     // SEARCH: an enemy inside the initial attack range, every tick (librators / phalanxes and 安洁莉娜 do not attack
     // while the skill is off, so DEFAULT's "about to attack" never comes)
     if (this.rule === 'SEARCH') {
@@ -552,6 +573,7 @@ export class SkillRuntime {
     const u = this.unit;
     if (!u.alive || !u.deployed) return false;
     if (this.spec.canActivate && !this.spec.canActivate(this.battle, u)) return false;
+    if (!free && this.waitsForHealTarget && !this._hasHealTarget()) return false;
     if (!free) {
       const wasFull = this.charges >= this.maxCharges;
       this.charges--;

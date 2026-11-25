@@ -69,7 +69,7 @@ function pasngr(bb, chess, def) {
     },
     skchr_pasngr_3: {
       kind: 'charges',
-      trigger: 'SEARCH',
+      ...(def?.skill?.trigger?.rule === 'SP_FULL' ? { trigger: 'SEARCH' } : {}),
       canActivate: (battle, unit) => stormTargets(battle, unit).length > 0,
       onStart({ battle, unit }) {
         const cands = stormTargets(battle, unit);

@@ -53,7 +53,7 @@ function blkkgt(bb, chess, def) {
     // (3 when blocked) of dot_scale × ATK; the talent procs at 100 % meanwhile (skill active + bb.prob)
     skchr_blkkgt_2: {
       kind: instantKind(def),
-      trigger: 'SEARCH',
+      ...(def?.skill?.trigger?.rule === 'SP_FULL' ? { trigger: 'SEARCH' } : {}),
       canActivate: (battle, unit) => groundSkillTargets(battle, unit).length > 0,
       onStart({ battle, unit }) {
         const c = groundSkillTargets(battle, unit);
@@ -92,7 +92,7 @@ function blkkgt(bb, chess, def) {
     },
     skill: {
       kind: 'duration',
-      trigger: 'SEARCH',
+      ...(def?.skill?.trigger?.rule === 'SP_FULL' ? { trigger: 'SEARCH' } : {}),
       canActivate: (battle, unit) => battle.enemiesInKeys(castKeys(unit), unit, airProfile(unit)).length > 0,
       duration: slashes * iv,
       ...(skillGrid ? { targeting: { rangeGrid: skillGrid } } : {}),

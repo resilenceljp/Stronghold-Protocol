@@ -195,7 +195,7 @@ export default {
       trait: { heal: { mode: 'single' }, healThrough: (healer, a) => isProstsOf(a, healer) },
       skills: {
         [S1]: { kind: num(s1?.maxChargeTime, 1) > 1 ? 'charges' : 'instant', attack: { healScale: num(b1.heal_scale, 1) } },
-        [S2]: { kind: 'duration', attack: { canAttack: (battle, unit) => s2CanAttack(battle, unit) } },
+        [S2]: { kind: 'duration', heal: false, attack: { canAttack: (battle, unit) => s2CanAttack(battle, unit) } },
         [S3]: {
           kind: 'duration',
           mods: { atkPct: num(b3.atk), batPct: batMod(b3.base_attack_time, chess), blockCnt: num(b3.block_cnt), hpFlat: num(b3.max_hp) },

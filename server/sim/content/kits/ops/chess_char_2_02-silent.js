@@ -25,7 +25,7 @@ export default {
     const tb = traitBb(chess);
     return {
       skill: {
-        kind: 'instant', heal: true,
+        kind: 'instant', heal: false,
         trigger: { rule: 'SP_FULL' },
         onStart({ battle, unit }) { releaseSkillSummon(battle, unit, tokId, { cap: cnt }); },
       },

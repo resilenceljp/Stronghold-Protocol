@@ -325,11 +325,12 @@ test('chnut S2 range does not reach the idle [2,1] tile', () => {
   ]);
   h.battle.on('battleStart', () => {
     h.unit(2).hp = 400;
-    assert.ok(open(h.unit(1)));
+    assert.equal(open(h.unit(1)), false);
   });
   h.step();
-  assert.equal(h.unit(1).stats.attacks, 0);
-  assert.equal(h.unit(2).hp, 400);
+  assert.equal(h.unit(1).skill.ready, true);
+  assert.equal(h.unit(1).skill.active, false);
+  approx(h.unit(2).hp - 400, 319, 1e-4, 'idle heal still reaches the ally');
 });
 
 // ---------------------------------------------------------------------------------------------------------------

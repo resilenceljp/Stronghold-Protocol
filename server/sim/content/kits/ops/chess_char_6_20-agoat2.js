@@ -14,9 +14,7 @@ function agoat2(bb, chess, def) {
   const elemLoad = (a) => (a.elem ? a.elem.burn + a.elem.neural + a.elem.necrosis + a.elem.apoptosis + a.elem.erosion : 0);
   const skills = {
     // S1 无声润物 (toggle, heal): ATK +atk, one extra heal target, every ally of her range recovers ep_heal_ratio × ATK
-    // 元素损伤 per second. 自动触发 with effects on allies only (nothing to target): on as soon as its SP is full (SP_FULL,
-    // the owner's decision of 2026-10-05, like 浊心斯卡蒂 S2 / 引星棘刺 S1); until 0.2.0 the data's DEFAULT heal rule kept
-    // it off until an ally of her range was injured, so its 元素损伤 recovery never ran on a field without HP damage
+    // 元素损伤 per second. Its automatic cast waits for an ally needing either HP or elemental recovery.
     skchr_agoat2_1: {
       kind: 'toggle',
       heal: true,
