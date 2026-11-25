@@ -28,6 +28,8 @@ const CHAR = Object.freeze({
   fang2: 'char_1036_fang2',
   acrbot: 'char_618_acrbot',
   blkkgt: 'char_4116_blkkgt',
+  pasngr: 'char_472_pasngr',
+  irene: 'char_4009_irene',
 });
 
 /** Normal `_a` whose charId matches. Elite is that record's goldenId. */
@@ -967,5 +969,27 @@ test('Regulation Degenbrecher waits at full SP until an enemy enters each equipp
       h.run(0.6);
       assert.ok(unit.skill.activations > 0, `${id} skill ${skillIndex + 1}: enemy entered range`);
     }
+  }
+});
+
+
+test('Regulation Passenger S3 and Irene S2/S3 wait for a visible target within skill range', () => {
+  const cases = [[ID.pasngr, 2], [ID.pasngrE, 2], [ID.irene, 1], [ID.ireneE, 1], [ID.irene, 2], [ID.ireneE, 2]];
+  for (const [id, skillIndex] of cases) {
+    const h = battle([op(1, id, 5, skillIndex)]);
+    const enemy = foe(h.battle, 9, 14);
+    h.step();
+    const unit = h.unit(1);
+    unit.skill.gainSp(9999, 'test');
+    h.run(0.6);
+    assert.equal(unit.skill.activations, 0, id);
+    assert.equal(unit.skill.ready, true, id);
+    enemy.x = 6;
+    h.battle.addBuff(enemy, { key: 'test:stealth', flags: { stealth: true } });
+    h.run(0.4);
+    assert.equal(unit.skill.activations, 0, id);
+    h.battle.addBuff(enemy, { key: 'test:reveal', flags: { reveal: true } });
+    h.run(0.6);
+    assert.ok(unit.skill.activations > 0, id);
   }
 });
