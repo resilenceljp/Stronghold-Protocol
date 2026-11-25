@@ -46,7 +46,7 @@ export function consoleIntent(m, ps, msg) {
     // Never reserve shared chess copies for a free console grant. Normal merge/onGain hooks still run.
     const piece = msg.kind === 'chess' ? ps.acquireChess(msg.id, { source: 'console', fromPool: false })
       : ps.acquireItem(msg.id, { source: 'console', consoleGrant: true });
-    if (!piece) return fail(ERR.HAND_FULL);
+    if (!piece) return fail(ERR.BAD_TARGET);
   } else if (msg.kind === 'layers') {
     if (!ps.gd.bond(msg.id)) return fail(ERR.BAD_TARGET);
     ps.addLayers(msg.id, n, { reason: 'console' });

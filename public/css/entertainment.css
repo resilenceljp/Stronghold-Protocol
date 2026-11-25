@@ -86,3 +86,10 @@
 .ai-policy__options { display: flex; gap: .05rem; }
 .ai-policy__options button { flex: 1; }
 .ai-policy__options button[aria-pressed="true"] { color: var(--text-on-mint); background: var(--mint-400); }
+
+.console-catalog.console-catalog--paired { grid-template-columns: minmax(0, 1fr); }
+.console-form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 750px) {
+  .console-form-row .console-card { gap: 5px; padding: 5px; }
+  .console-form-row .console-card img { width: clamp(20px, 6vw, 40px); height: clamp(20px, 6vw, 40px); }
+}

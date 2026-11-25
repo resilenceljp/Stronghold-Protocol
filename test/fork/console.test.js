@@ -1,3 +1,4 @@
+import { consoleFormRows } from '../../public/js/ui/entertainmentConsole.js';
 import { benchGeo, benchStage, handTile } from '../../shared/bench.js';
 import { tileSlot } from '../../public/js/render/drag.js';
 import { validateC2S } from '../../shared/protocol.js';
@@ -127,4 +128,26 @@ test('regulation expanded bench supports extra operator and equipment slots plus
   m.consoleEnabled = true;
   assert.equal(consoleIntent(m, player, { kind: 'chess', id: 'chess_char_5_22_a' }).ok, true);
   assert.ok(player.hand.some(p => p?.id === 'chess_char_5_22_a'));
+  assert.equal(consoleIntent(m, player, { kind: 'chess', id: 'chess_char_5_22_b' }).ok, true);
+  assert.ok(player.hand.some(p => p?.id === 'chess_char_5_22_b'));
+
+  const bannedId = Object.keys(data.chess).find(id => {
+    const record = data.chess[id];
+    return !record.isHidden && !record.isDiy && !record.isGolden && record.bonds?.length;
+  });
+  m.disabledBonds = [...new Set([...m.disabledBonds, ...data.chess[bannedId].bonds])];
+  assert.ok(m.chessExcluded(player.gd.chess(bannedId)));
+  assert.equal(player.acquireChess(bannedId, { fromPool: false }), null);
+  for (let i = 0; i < 3; i++) {
+    assert.equal(consoleIntent(m, player, { kind: 'chess', id: bannedId }).ok, true);
+  }
+});
+
+
+test('console forms stay paired even when normal and elite are returned out of order', () => {
+  const normal = ['a', { baseId: 'a' }];
+  const solo = ['solo', {}];
+  const elite = ['b', { baseId: 'a', isGolden: true }];
+  assert.deepEqual(consoleFormRows([elite, solo, normal]), [['a', [normal, elite]], ['solo', [solo, null]]]);
+  assert.deepEqual(consoleFormRows([elite]), [['a', [null, elite]]]);
 });

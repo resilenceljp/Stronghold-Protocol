@@ -10,6 +10,17 @@ import { ownDiyRecord } from './gameLogic/diy.js';
 import { PROF_NAME } from './loadoutModel.js';
 import { t } from '../../../shared/i18n.js';
 
+export function consoleFormRows(records) {
+  const pairs = new Map();
+  for (const entry of records) {
+    const [id, rec] = entry;
+    const base = rec.baseId || id;
+    if (!pairs.has(base)) pairs.set(base, [null, null]);
+    pairs.get(base)[rec.isGolden ? 1 : 0] = entry;
+  }
+  return [...pairs.entries()];
+}
+
 export function EntertainmentConsole({ priv, editable }) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState('chess');
@@ -41,6 +52,13 @@ export function EntertainmentConsole({ priv, editable }) {
     catch (e) { toastError(e); }
     finally { setBusy(false); }
   };
+  const card = ([id, rec]) => {
+    const image = tab === 'chess' ? chessPortraitUrl(data.get('assets'), rec) : tab === 'item' ? itemIconUrl(data.get('assets'), rec) : null;
+    return html`<button type="button" key=${id} disabled=${busy} class=${`console-card ${rec.isGolden ? 'is-golden' : ''}`} onClick=${() => grant(id)}>
+      ${image ? html`<img src=${image} alt="" loading="lazy" />` : null}
+      <span><b>${rec.name || id}${rec.isGolden ? ` · ${t('精锐')}` : ''}</b><small>${id}</small>${isCatalog?html`<small>${rec.diyFor?`${t('自选')} · `:''}${t('品阶')} ${rec.tier}${tab==='chess'?` · ${t(PROF_NAME[rec.profession]||rec.profession)}${rec.subProfessionName?` / ${rec.subProfessionName}`:''}`:''}</small><small>${bondIds(rec).map(id=>bonds[id]?.name||id).join(' · ')||t('无盟约限制')}</small>`:null}
+        ${tab === 'layers' ? html`<small>${t('当前层数')} ${(priv.bonds || []).find((b) => b.bondId === id)?.layers || 0} / ${priv.layerCap}</small>` : null}</span><b>＋</b></button>`;
+  };
   return html`<div class="entertainment-console-entry">
     <${Button} size="sm" variant="secondary" disabled=${!editable} onClick=${() => setOpen(true)}>${t('控制台')}<//>
     <${Modal} open=${open && editable} title=${t('娱乐控制台')} micro="ENTERTAINMENT CONSOLE" tone="red" width="min(1000px,92vw)"
@@ -66,13 +84,12 @@ export function EntertainmentConsole({ priv, editable }) {
           ${select('阵营',faction,setFaction,options(true).map(id=>[id,bonds[id]?.name||id]))}
           ${select('盟约',tag,setTag,options(false).map(id=>[id,bonds[id]?.name||id]))}
         </div>`:null}
-        <div class="console-catalog">${records.map(([id, rec]) => {
-          const image = tab === 'chess' ? chessPortraitUrl(data.get('assets'), rec) : tab === 'item' ? itemIconUrl(data.get('assets'), rec) : null;
-          return html`<button type="button" key=${id} disabled=${busy} class=${`console-card ${rec.isGolden ? 'is-golden' : ''}`} onClick=${() => grant(id)}>
-            ${image ? html`<img src=${image} alt="" loading="lazy" />` : null}
-            <span><b>${rec.name || id}${rec.isGolden ? ` · ${t('精锐')}` : ''}</b><small>${id}</small>${isCatalog?html`<small>${rec.diyFor?`${t('自选')} · `:''}${t('品阶')} ${rec.tier}${tab==='chess'?` · ${t(PROF_NAME[rec.profession]||rec.profession)}${rec.subProfessionName?` / ${rec.subProfessionName}`:''}`:''}</small><small>${bondIds(rec).map(id=>bonds[id]?.name||id).join(' · ')||t('无盟约限制')}</small>`:null}
-              ${tab === 'layers' ? html`<small>${t('当前层数')} ${(priv.bonds || []).find((b) => b.bondId === id)?.layers || 0} / ${priv.layerCap}</small>` : null}</span><b>＋</b></button>`;
-        })}</div>`}
+        <div class=${isCatalog ? 'console-catalog console-catalog--paired' : 'console-catalog'}>
+          ${isCatalog ? consoleFormRows(records).map(([base, forms]) => html`
+            <div class="console-form-row" key=${base}>
+              ${forms.map(form => form ? card(form) : html`<span aria-hidden="true"></span>`)}
+            </div>`) : records.map(card)}
+        </div>`}
     <//>
   </div>`;
 }

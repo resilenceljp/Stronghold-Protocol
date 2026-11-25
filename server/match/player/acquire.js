@@ -63,7 +63,8 @@ export class PlayerAcquire {
   acquireChess(chessId, { source = 'grant', toTemp = false, fromPool = true, silent = false } = {}) {
     const rec = this.gd.chess(chessId);
     // a DIY slot is only ever this player's own 自选 piece: a slot it has not filled has no body (甄选干员) to gain
-    if (!rec || (rec.isDiy && !rec.diyFor) || this.m.bondChoice?.picked === null || this.m.chessExcluded(rec)) return null;
+    const consoleGrant = source === 'console' && !fromPool;
+    if (!rec || (rec.isDiy && !rec.diyFor) || this.m.bondChoice?.picked === null || (!consoleGrant && this.m.chessExcluded(rec))) return null;
     const base = this.gd.baseIdOf(chessId);
     const need = rec.isGolden ? this.gd.goldenCopies : 1;
     // the shared pool, or this player's stock of a slotted 自选 piece (player/diy.js poolOf)

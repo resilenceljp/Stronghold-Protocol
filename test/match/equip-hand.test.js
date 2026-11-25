@@ -1,3 +1,4 @@
+import { describeError } from '../../public/js/ui/toasts.js';
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { getVersionData } from '../../server/data.js';
@@ -47,13 +48,20 @@ test('regulation keeps five permanent equipment slots separate from ten characte
 });
 
 test('normal buys and reward picks require a free slot in their own row, including merge-completing cards', t => {
-  const { ps, items, chars, fill } = setup(t);
+  const { ps, item, items, chars, fill } = setup(t);
   fill('item');
+  const overflow = item(6);
+  assert.ok(ps.tempPieces().includes(overflow));
   ps.shop.slots = [{ kind: 'item', id: items[0], basePrice: 1 }, { kind: 'chess', id: chars[0], basePrice: 1 }];
-  assert.deepEqual(ps.buy(0), { error: ERR.HAND_FULL }); assert.ok(ps.buy(1).ok);
+  const refused = ps.buy(0);
+  assert.deepEqual(refused, { error: ERR.HAND_FULL, detail: 'equipment row full' });
+  assert.equal(describeError({ code: refused.error, detail: refused.detail }), '装备区已满');
+  assert.ok(ps.buy(1).ok);
   ps.offers = [{ slots: [{ kind: 'item', id: items[0], price: 0 }] }];
-  assert.deepEqual(ps.pickReward(0), { error: ERR.HAND_FULL });
-  ps.destroy(ps.temp[4].uid); fill('chess');
+  assert.deepEqual(ps.pickReward(0), { error: ERR.HAND_FULL, detail: 'equipment row full' });
+  ps.destroy(ps.temp[4].uid);
+  assert.equal(ps.temp[4], overflow);
+  ps.destroy(overflow.uid); fill('chess');
   assert.ok(ps.pickReward(0).ok);
   ps.shop.slots = [{ kind: 'chess', id: chars[3], basePrice: 1 }, { kind: 'item', id: items[6], basePrice: 1 }];
   assert.deepEqual(ps.buy(0), { error: ERR.HAND_FULL });
@@ -67,7 +75,7 @@ test('forced overflow is private, notifies its owner, and refills each kind in a
   fill('item'); fill('chess'); h.sent.length = 0;
   const c1 = chess(12), i1 = item(6), c2 = chess(13), i2 = item(7);
   assert.deepEqual(ps.tempPieces(), [c1, i1, c2, i2]);
-  const v = ps.privateView(); assert.equal(v.stashCount, 4); assert.equal(v.temp.length, 5);
+  const v = ps.privateView(); assert.equal(v.stashCount, 4); assert.equal(v.stashItems, 2); assert.equal(v.temp.length, 5);
   assert.ok(!JSON.stringify(v).includes(`"uid":${i1.uid},`));
   const notices = h.sent.filter(([, msg]) => msg.t === 'm.toast');
   assert.equal(notices.length, 8); assert.ok(notices.every(([id]) => id === ps.playerId));
@@ -119,9 +127,10 @@ test('unequip uses only equipment slots and moves respect the two row types', t 
   const other = item(1); const at = ps.find(other.uid).idx;
   assert.ok(ps.move(it.uid, { area: 'temp', idx: at }).ok); assert.equal(ps.temp[0], other);
   assert.ok(ps.equip(it.uid, op.uid).ok); fill('item');
-  assert.deepEqual(ps.unequip(it.uid), { error: ERR.HAND_FULL }); assert.ok(op.items.includes(it));
+  assert.deepEqual(ps.unequip(it.uid), { error: ERR.HAND_FULL, detail: 'equipment row full' }); assert.ok(op.items.includes(it));
   assert.equal(validateC2S({ t: 'g.move', uid: other.uid, to: { area: 'temp', idx: 4 } }), null);
-  assert.ok(validateC2S({ t: 'g.move', uid: other.uid, to: { area: 'temp', idx: 5 } }));
+  assert.equal(validateC2S({ t: 'g.move', uid: other.uid, to: { area: 'temp', idx: 5 } }), null);
+  assert.deepEqual(ps.move(other.uid, { area: 'temp', idx: 5 }), { error: ERR.BAD_TARGET });
 });
 
 test('merge returns equipment to its row and queues overflow while tokens use the character hand', t => {
@@ -195,7 +204,7 @@ test('client placement, drag, shop and Ready use the loaded equipHand rule', t =
   assert.deepEqual(tempInfo(ps.privateView(), config), { count: 0, items: 0 }); assert.equal(tempReadyReason(ps.privateView(), config), null);
   fill('item'); item(7);
   const priv = ps.privateView(); assert.equal(tempInfo(priv, config).count, 1);
-  assert.match(tempReadyReason(priv, config), /暂存 1 个单位/);
+  assert.match(tempReadyReason(priv, config), /装备暂存 1 件/);
   assert.equal(shopBlockReason('buy', { priv, config, editable: true, slot: { kind: 'item', price: 0 } }), '装备区已满');
   assert.equal(shopBlockReason('buy', { priv, config, editable: true, slot: { kind: 'chess', price: 0 } }), null);
 });

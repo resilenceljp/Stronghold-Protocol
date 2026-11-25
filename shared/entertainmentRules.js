@@ -14,4 +14,4 @@ export function validFunRules(v) {
 }
 
 export const isConsoleAcrbot = (kind, rec) =>
-  kind === 'chess' && rec?.charId === 'char_618_acrbot' && !rec.isGolden;
+  kind === 'chess' && rec?.charId === 'char_618_acrbot';

@@ -113,6 +113,7 @@ export function describeError(err) {
   // blocked by NOT_READY keep the generic texts.
   if (err.code === 'NOT_READY' && err.detail === 'at least one player must remain seated') return t('至少保留一名参赛博士');
   if (err.code === 'ROOM_FULL' && err.detail === 'no free spectator seat') return t('观战席已满');
+  if (err.code === 'HAND_FULL' && err.detail === 'equipment row full') return t('装备区已满');
   if (err.code && Object.hasOwn(ERR_TEXT, err.code)) return t(ERR_TEXT[err.code]);
   if (typeof err.message === 'string' && err.message) return t(err.message);
   if (typeof err.msg === 'string' && err.msg) return t(err.msg);

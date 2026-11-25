@@ -36,6 +36,7 @@ import { uiUrl } from './assetUrls.js';
 import { reducedMotion } from './device.js';
 import { serverNow } from '../store.js';
 import { isCombatPhase, isBossPhase, prepCapsuleLabel, bossFrac, bossPctText, fmtNum, shopBlockReason } from './gameLogic.js';
+import { splitStashReason } from './gameLogic/shop.js';
 import { overtimeState, overtimeDrainPerSec, remainAt } from './matchStatus.js';
 import { hotkeyLabelOf, useSettings, settingsStore } from './settings.js';
 import { usePrefabPack } from './prefab/view.js';
@@ -352,7 +353,7 @@ export function pendingTip(lp, pending, { unite = false, cap = 10, left = null }
  * @returns {{ count: number, items: number }}
  */
 export function tempInfo(priv, config = data.get('config')) {
-  if (config?.version?.rules?.equipHand === true) return { count: priv?.stashCount || 0, items: 0 };
+  if (config?.version?.rules?.equipHand === true) return { count: priv?.stashCount || 0, items: priv?.stashItems || 0 };
   const list = (Array.isArray(priv?.temp) ? priv.temp : []).filter((p) => p && typeof p === 'object');
   return { count: list.length, items: list.filter((p) => p.kind === 'item').length };
 }
@@ -363,7 +364,7 @@ export const TEMP_RULE = N_('放入整备区或战场、配发或使用后才能
 /** Why 准备就绪 is refused while the temp row holds pieces (null when it is empty). */
 export function tempReadyReason(priv, config = data.get('config')) {
   const info = tempInfo(priv, config);
-  if (config?.version?.rules?.equipHand === true) return info.count ? t('暂存 {count} 个单位：{rule}', { count: info.count, rule: t('有空位时自动移入；休整期结束时仍在暂存的单位将被销毁') }) : null;
+  if (config?.version?.rules?.equipHand === true) return splitStashReason(priv);
   return info.count ? t('临时整备区还有 {count} 个单位：{rule}', { count: info.count, rule: t(TEMP_RULE) }) : null;
 }
 

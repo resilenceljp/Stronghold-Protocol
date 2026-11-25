@@ -136,6 +136,17 @@ export function offerHeader(offer) {
   return { title, micro: 'SPECIAL', sub: items ? t('免费选择 1 件') : t('免费选择 1 名'), icon: 'refresh', items, pill: t('{title}待选择', { title }), ...tail };
 }
 
+export function splitStashReason(priv) {
+  const info = { count: priv?.stashCount || 0, items: priv?.stashItems || 0 };
+  if (!info.count) return null;
+  const operators = info.count - info.items;
+  const summary = [
+    operators > 0 ? t('干员暂存 {count} 个', { count: operators }) : '',
+    info.items > 0 ? t('装备暂存 {count} 件', { count: info.items }) : '',
+  ].filter(Boolean).join(' · ');
+  return t('{summary}：{rule}', { summary, rule: t('对应栏有空位时自动移入；休整期结束时仍在暂存的内容将被销毁') });
+}
+
 /**
  * Why a shop action is unavailable (null when available).
  * @param {'buy'|'reward'|'refresh'|'freeze'|'levelUp'|'ready'} kind
@@ -149,7 +160,7 @@ export function shopBlockReason(kind, { priv, editable, slot, config = null } = 
     if (priv.commandDraft) return t('请先完成指令选择');
     if (priv.personalChoice) return t('请先完成教鞭选择');
     return priv.canReady === false ? (config?.version?.rules?.equipHand === true
-      ? t('暂存 {count} 个单位：{rule}', { count: priv.stashCount || 0, rule: t('有空位时自动移入；休整期结束时仍在暂存的单位将被销毁') })
+      ? splitStashReason(priv) || t('当前无法准备就绪')
       : t('临时整备区不为空，请先处理溢出的资源')) : null;
   }
   if (!editable) {

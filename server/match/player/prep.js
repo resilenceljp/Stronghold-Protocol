@@ -33,7 +33,7 @@ export class PlayerPrep {
     if (slot.kind === 'item') {
       if (!this.gd.item(slot.id)) return fail(ERR.BAD_TARGET);
       // Already displayed equipment rewards survive stock exhaustion (#624, maintainer 2026-10-14).
-      if (handFull) return fail(ERR.HAND_FULL);
+      if (handFull) return fail(ERR.HAND_FULL, this.equipHand ? 'equipment row full' : undefined);
     } else if (slot.kind === 'chess') {
       const rec = this.gd.chess(slot.id);
       if (!rec || (rec.isDiy && !rec.diyFor) || this.m.chessExcluded(rec)) return fail(ERR.BAD_TARGET);

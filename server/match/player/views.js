@@ -109,6 +109,7 @@ export class PlayerViews {
     const slots = this.shop.slots.map((s) => (s ? { kind: s.kind, id: s.id, price: this.priceOf(s), basePrice: s.basePrice, sold: !!s.sold, frozen: !!s.frozen } : null));
     const offer = this.offers[0] || null;
     const free = this.shop.freeRefreshes > 0;
+    const stash = this.equipHand ? this.tempPieces() : [];
     const board = [];
     for (const { r, c, piece } of boardOrder(this.board)) board.push(this.pieceView(piece, [r, c]));
     // a boss round's prep: the partner's board on its half of the boss field (Match.bossMateView, item 51)
@@ -149,7 +150,7 @@ export class PlayerViews {
       },
       hand: this.hand.map((p) => (p ? this.pieceView(p) : null)),
       temp: (this.equipHand ? this.temp.slice(0, this.gd.tempSize) : this.temp).map((p) => (p ? this.pieceView(p) : null)),
-      ...(this.equipHand ? { stashCount: this.tempPieces().length } : {}),
+      ...(this.equipHand ? { stashCount: stash.length, stashItems: stash.filter(p => p.kind === 'item').length } : {}),
       board,
       // The stage's 外勤医疗 reserve medic is present during prep, but is not a draggable board piece.
       prepMapChars: this.m.prepMapChars(this),

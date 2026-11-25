@@ -198,7 +198,7 @@ export class PlayerItems {
     const loc = this.find(itemUid);
     if (!loc || loc.piece.kind !== 'item' || loc.area !== 'equipped') return fail(ERR.BAD_TARGET);
     if (this.equipHand) {
-      if (this.handSlot('item') < 0) return fail(ERR.HAND_FULL);
+      if (this.handSlot('item') < 0) return fail(ERR.HAND_FULL, 'equipment row full');
       this._detach(loc);
       this.stow(loc.piece, { allowTemp: false });
       this.recompute();

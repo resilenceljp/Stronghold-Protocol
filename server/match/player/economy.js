@@ -243,7 +243,7 @@ export class PlayerEconomy {
       if (!this.gd.item(slot.id)) return fail(ERR.BAD_TARGET);
       // Already displayed equipment stays purchasable after stock runs out (#624, maintainer 2026-10-14).
       // acquireItem records the debt. Future rolls still exclude empty stock. SOLD_OUT is only this slot, already sold.
-      if (handFull) return fail(ERR.HAND_FULL);
+      if (handFull) return fail(ERR.HAND_FULL, this.equipHand ? 'equipment row full' : undefined);
       this.spend(price);
       slot.sold = true;
       piece = this.acquireItem(slot.id, { source: 'buy', displayed: true });
